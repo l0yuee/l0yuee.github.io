@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>lzeroyuee&#39;s blog</title>
+  
+  <subtitle>一只咸鱼的日常</subtitle>
+  <link href="http://lzeroyuee.cn/atom.xml" rel="self"/>
+  
+  <link href="http://lzeroyuee.cn/"/>
+  <updated>2021-01-31T14:26:37.582Z</updated>
+  <id>http://lzeroyuee.cn/</id>
+  
+  <author>
+    <name>lzeroyuee</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Hello</title>
+    <link href="http://lzeroyuee.cn/2021/01/31/hello-world/"/>
+    <id>http://lzeroyuee.cn/2021/01/31/hello-world/</id>
+    <published>2021-01-31T12:32:10.598Z</published>
+    <updated>2021-01-31T14:26:37.582Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;博客迁移中。&lt;/p&gt;
+</summary>
+        
+      
+    
+    
+    
+    
+  </entry>
+  
+</feed>
