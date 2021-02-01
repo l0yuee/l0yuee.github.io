@@ -1,10 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Hello</title>
-    <url>/2021/01/31/hello-world/</url>
-    <content><![CDATA[<p>博客迁移中。</p>
+    <title>旧博客文章合集</title>
+    <url>/2021/02/01/%E6%97%A7%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0%E5%90%88%E9%9B%86/</url>
+    <content><![CDATA[<p>旧博客文章合集</p>
+<a id="more"></a>
+
+
+
+<h2 id="内核"><a href="#内核" class="headerlink" title="内核"></a>内核</h2><ul>
+<li><p><a href="http://lzeroyuee.cn/old-blog/Windows%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6%20-%20lZeroyuee's%20Blog.html">Windows驱动框架</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/Windows%E5%86%85%E6%A0%B8%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%A3%85%E8%BD%BD%20-%20lZeroyuee's%20Blog.html">Windows内核驱动的装载</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%88%86%E6%9E%90PsSetCreateProcessNotifyRoutineEx%E5%AF%BB%E6%89%BE%E7%9B%B8%E5%BA%94%E7%B3%BB%E7%BB%9F%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0%E5%9C%B0%E5%9D%80%20-%20lZeroyuee's%20Blog.html">分析PsSetCreateProcessNotifyRoutineEx寻找相应系统回调函数地址</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%9C%A8x86%E4%B8%8B%E5%86%99x64%E4%BB%A3%E7%A0%81%E4%BB%A5%E6%89%B0%E4%B9%B1%E8%B0%83%E8%AF%95%E5%99%A8%20-%20lZeroyuee's%20Blog.html">在x86下写x64代码以扰乱调试器</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/x64%E5%86%85%E6%A0%B8%EF%BC%9A%E8%BF%87%E6%BB%A4%E9%A9%B1%E5%8A%A8%20-%20lZeroyuee's%20Blog.html">x64内核：过滤驱动</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/x64%E5%86%85%E6%A0%B8%EF%BC%9A%E6%B3%A8%E5%86%8C%E7%B3%BB%E7%BB%9F%E5%9B%9E%E8%B0%83%20-%20lZeroyuee's%20Blog.html">x64内核：注册系统回调</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/x64%E5%88%86%E9%A1%B5%20-%20%E8%8E%B7%E5%8F%96PTE%E5%9F%BA%E5%9D%80%20-%20lZeroyuee's%20Blog.html">x64分页 - 获取PTE基址</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/SMEP%E5%92%8CSMAP%20-%20lZeroyuee's%20Blog.html">SMEP和SMAP</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%86%85%E6%A0%B8%E9%A1%B5%E8%A1%A8%E9%9A%94%E7%A6%BB%E4%B8%8ECFG%E9%98%B2%E5%BE%A1%E6%9C%BA%E5%88%B6%20-%20lZeroyuee's%20Blog.html">内核页表隔离与CFG防御机制</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%88%9D%E8%AF%86win32%E5%A0%86%20-%20lZeroyuee's%20Blog.html">初识win32堆</a></p>
+</li>
+</ul>
+<h2 id="攻防"><a href="#攻防" class="headerlink" title="攻防"></a>攻防</h2><ul>
+<li><p><a href="http://lzeroyuee.cn/old-blog/Detours%E5%85%A5%E9%97%A8%20-%20lZeroyuee's%20Blog.html">Detours入门</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/Frida%E5%B0%8F%E8%AF%95%20-%20lZeroyuee's%20Blog.html">Frida小试</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/yara%E8%A7%84%E5%88%99%E5%B0%8F%E8%AE%B0%20-%20lZeroyuee's%20Blog.html">yara规则小记</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/%E4%BD%BF%E7%94%A8idapython%E8%84%9A%E6%9C%AC%E8%A7%A3%E7%A0%81%E6%A0%B7%E6%9C%AC%E4%B8%AD%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2%20-%20lZeroyuee's%20Blog.html">使用idapython脚本解码样本中的字符串</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/Clipboard%E6%B3%A8%E5%85%A5%20-%20lZeroyuee's%20Blog.html">Clipboard注入</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%8F%8D%E8%B0%83%E8%AF%95%E6%80%BB%E7%BB%93%20-%20lZeroyuee's%20Blog.html">反调试总结</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/RC4%20%E7%AE%97%E6%B3%95%20-%20lZeroyuee's%20Blog.html">RC4 算法</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/Shellcode%20to%20UUID%20-%20lZeroyuee's%20Blog.html">Shellcode to UUID</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/TLS%E5%9B%9E%E8%B0%83%20-%20lZeroyuee's%20Blog.html">TLS回调</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/SSH%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%20-%20lZeroyuee's%20Blog.html">SSH端口转发</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%AE%89%E8%A3%85proxychains-ng%E9%85%8D%E5%90%88ssr%E4%BB%A3%E7%90%86%20-%20lZeroyuee's%20Blog.html">安装proxychains-ng配合ssr代理</a></p>
+</li>
+</ul>
+<h2 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h2><ul>
+<li><p><a href="http://lzeroyuee.cn/old-blog/CVE-2010-2883%E5%88%86%E6%9E%90%20-%20lZeroyuee's%20Blog.html">CVE-2010-2883分析</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/CVE-2012-1876%E5%88%86%E6%9E%90%20-%20lZeroyuee's%20Blog.html">CVE-2012-1876分析</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/CVE-2020-0787%E5%88%86%E6%9E%90%20-%20lZeroyuee's%20Blog.html">CVE-2020-0787分析</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/Win10%20ConDrv-BSOD%20-%20lZeroyuee's%20Blog.html">Win10 ConDrv-BSOD</a></p>
+</li>
+</ul>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><ul>
+<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%85%B3%E4%BA%8E%E6%9F%90%E5%85%AC%E5%8F%B8%E9%9D%A2%E8%AF%95%E7%9A%84%E6%A0%B7%E6%9C%AC%20-%20lZeroyuee's%20Blog.html">关于某公司面试的样本</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%85%B3%E4%BA%8ESB360.exe%E7%9A%84%E6%A0%B7%E6%9C%AC%E5%88%86%E6%9E%90%20-%20lZeroyuee's%20Blog.html">关于SB360.exe的样本分析</a></p>
+</li>
+<li><p><a href="http://lzeroyuee.cn/old-blog/%E6%9F%90%E5%8E%82APT%E6%A0%B7%E6%9C%AC%E5%88%86%E6%9E%90%E5%B8%88%E7%9A%84%E9%9D%A2%E8%AF%95%E6%80%BB%E7%BB%93%20-%20lZeroyuee's%20Blog.html">某厂APT样本分析师的面试总结</a></p>
+</li>
+</ul>
 ]]></content>
+      <categories>
+        <category>过去</category>
+      </categories>
+      <tags>
+        <tag>过去</tag>
+      </tags>
   </entry>
   <entry>
     <title>早期个人笔记</title>
@@ -183,86 +257,6 @@
 <p><a href="https://github.com/l0yuee/NotesOn51asm/blob/master/third/%E5%86%85%E6%A0%B8/%E5%86%85%E6%A0%B8%EF%BC%9A%E6%94%BB%E9%98%B2%E7%9B%B8%E5%85%B3.pdf">内核：攻防相关</a></p>
 <h3 id="漏洞入门"><a href="#漏洞入门" class="headerlink" title="漏洞入门"></a>漏洞入门</h3><p><a href="https://github.com/l0yuee/NotesOn51asm/blob/master/third/%E6%BC%8F%E6%B4%9E/%E6%BC%8F%E6%B4%9E%E5%9F%BA%E7%A1%80.pdf">漏洞基础</a></p>
 <p><a href="https://github.com/l0yuee/NotesOn51asm/blob/master/third/%E6%BC%8F%E6%B4%9E/ROP.pdf">ROP</a></p>
-]]></content>
-      <categories>
-        <category>过去</category>
-      </categories>
-      <tags>
-        <tag>过去</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>旧博客文章合集</title>
-    <url>/2021/02/01/%E6%97%A7%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0%E5%90%88%E9%9B%86/</url>
-    <content><![CDATA[<p>旧博客文章合集</p>
-<a id="more"></a>
-
-
-
-<h2 id="内核"><a href="#内核" class="headerlink" title="内核"></a>内核</h2><ul>
-<li><p><a href="http://lzeroyuee.cn/old-blog/Windows%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6%20-%20lZeroyuee's%20Blog.html">Windows驱动框架</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/Windows%E5%86%85%E6%A0%B8%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%A3%85%E8%BD%BD%20-%20lZeroyuee's%20Blog.html">Windows内核驱动的装载</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%88%86%E6%9E%90PsSetCreateProcessNotifyRoutineEx%E5%AF%BB%E6%89%BE%E7%9B%B8%E5%BA%94%E7%B3%BB%E7%BB%9F%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0%E5%9C%B0%E5%9D%80%20-%20lZeroyuee's%20Blog.html">分析PsSetCreateProcessNotifyRoutineEx寻找相应系统回调函数地址</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%9C%A8x86%E4%B8%8B%E5%86%99x64%E4%BB%A3%E7%A0%81%E4%BB%A5%E6%89%B0%E4%B9%B1%E8%B0%83%E8%AF%95%E5%99%A8%20-%20lZeroyuee's%20Blog.html">在x86下写x64代码以扰乱调试器</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/x64%E5%86%85%E6%A0%B8%EF%BC%9A%E8%BF%87%E6%BB%A4%E9%A9%B1%E5%8A%A8%20-%20lZeroyuee's%20Blog.html">x64内核：过滤驱动</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/x64%E5%86%85%E6%A0%B8%EF%BC%9A%E6%B3%A8%E5%86%8C%E7%B3%BB%E7%BB%9F%E5%9B%9E%E8%B0%83%20-%20lZeroyuee's%20Blog.html">x64内核：注册系统回调</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/x64%E5%88%86%E9%A1%B5%20-%20%E8%8E%B7%E5%8F%96PTE%E5%9F%BA%E5%9D%80%20-%20lZeroyuee's%20Blog.html">x64分页 - 获取PTE基址</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/SMEP%E5%92%8CSMAP%20-%20lZeroyuee's%20Blog.html">SMEP和SMAP</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%86%85%E6%A0%B8%E9%A1%B5%E8%A1%A8%E9%9A%94%E7%A6%BB%E4%B8%8ECFG%E9%98%B2%E5%BE%A1%E6%9C%BA%E5%88%B6%20-%20lZeroyuee's%20Blog.html">内核页表隔离与CFG防御机制</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%88%9D%E8%AF%86win32%E5%A0%86%20-%20lZeroyuee's%20Blog.html">初识win32堆</a></p>
-</li>
-</ul>
-<h2 id="攻防"><a href="#攻防" class="headerlink" title="攻防"></a>攻防</h2><ul>
-<li><p><a href="http://lzeroyuee.cn/old-blog/Detours%E5%85%A5%E9%97%A8%20-%20lZeroyuee's%20Blog.html">Detours入门</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/Frida%E5%B0%8F%E8%AF%95%20-%20lZeroyuee's%20Blog.html">Frida小试</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/yara%E8%A7%84%E5%88%99%E5%B0%8F%E8%AE%B0%20-%20lZeroyuee's%20Blog.html">yara规则小记</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/%E4%BD%BF%E7%94%A8idapython%E8%84%9A%E6%9C%AC%E8%A7%A3%E7%A0%81%E6%A0%B7%E6%9C%AC%E4%B8%AD%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2%20-%20lZeroyuee's%20Blog.html">使用idapython脚本解码样本中的字符串</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/Clipboard%E6%B3%A8%E5%85%A5%20-%20lZeroyuee's%20Blog.html">Clipboard注入</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%8F%8D%E8%B0%83%E8%AF%95%E6%80%BB%E7%BB%93%20-%20lZeroyuee's%20Blog.html">反调试总结</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/RC4%20%E7%AE%97%E6%B3%95%20-%20lZeroyuee's%20Blog.html">RC4 算法</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/Shellcode%20to%20UUID%20-%20lZeroyuee's%20Blog.html">Shellcode to UUID</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/TLS%E5%9B%9E%E8%B0%83%20-%20lZeroyuee's%20Blog.html">TLS回调</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/SSH%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91%20-%20lZeroyuee's%20Blog.html">SSH端口转发</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%AE%89%E8%A3%85proxychains-ng%E9%85%8D%E5%90%88ssr%E4%BB%A3%E7%90%86%20-%20lZeroyuee's%20Blog.html">安装proxychains-ng配合ssr代理</a></p>
-</li>
-</ul>
-<h2 id="漏洞分析"><a href="#漏洞分析" class="headerlink" title="漏洞分析"></a>漏洞分析</h2><ul>
-<li><p><a href="http://lzeroyuee.cn/old-blog/CVE-2010-2883%E5%88%86%E6%9E%90%20-%20lZeroyuee's%20Blog.html">CVE-2010-2883分析</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/CVE-2012-1876%E5%88%86%E6%9E%90%20-%20lZeroyuee's%20Blog.html">CVE-2012-1876分析</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/CVE-2020-0787%E5%88%86%E6%9E%90%20-%20lZeroyuee's%20Blog.html">CVE-2020-0787分析</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/Win10%20ConDrv-BSOD%20-%20lZeroyuee's%20Blog.html">Win10 ConDrv-BSOD</a></p>
-</li>
-</ul>
-<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><ul>
-<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%85%B3%E4%BA%8E%E6%9F%90%E5%85%AC%E5%8F%B8%E9%9D%A2%E8%AF%95%E7%9A%84%E6%A0%B7%E6%9C%AC%20-%20lZeroyuee's%20Blog.html">关于某公司面试的样本</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/%E5%85%B3%E4%BA%8ESB360.exe%E7%9A%84%E6%A0%B7%E6%9C%AC%E5%88%86%E6%9E%90%20-%20lZeroyuee's%20Blog.html">关于SB360.exe的样本分析</a></p>
-</li>
-<li><p><a href="http://lzeroyuee.cn/old-blog/%E6%9F%90%E5%8E%82APT%E6%A0%B7%E6%9C%AC%E5%88%86%E6%9E%90%E5%B8%88%E7%9A%84%E9%9D%A2%E8%AF%95%E6%80%BB%E7%BB%93%20-%20lZeroyuee's%20Blog.html">某厂APT样本分析师的面试总结</a></p>
-</li>
-</ul>
 ]]></content>
       <categories>
         <category>过去</category>
