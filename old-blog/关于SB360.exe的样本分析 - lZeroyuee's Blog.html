@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<!-- saved from url=(0047)http://#/archives/analyze-SB3xx.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>关于SB360.exe的样本分析 - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="前言科锐的一次小项目样本信息样本名称：SB360.execonsys21样本MD5：SB360.exe - 7560f767a867541538dc7d3e82df6dc5consys21 - ...">
+<meta name="keywords" content="逆向">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://#/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://#/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://#/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="关于SB360.exe的样本分析 » lZeroyuee&#39;s Blog » RSS 2.0" href="http://#/feed/archives/analyze-SB3xx.html">
+<link rel="alternate" type="application/rdf+xml" title="关于SB360.exe的样本分析 » lZeroyuee&#39;s Blog » RSS 1.0" href="http://#/feed/rss/archives/analyze-SB3xx.html">
+<link rel="alternate" type="application/atom+xml" title="关于SB360.exe的样本分析 » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://#/feed/atom/archives/analyze-SB3xx.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-21'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-21'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-21'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _IVIN = //'HE'
+'2'+//'kqT'
+'73'+''///*'FGZ'*/'FGZ'
++//'bG6'
+'c96'+//'J'
+'0e9'+'d'//'A'
++'21'//'cZx'
++'269'//'P'
++'7'//'Vo'
++//'b'
+'b'+'02'//'f'
++//'7'
+'2'+'ef7'//'D5g'
++/* '7a'//'7a' */''+'0QW'//'0QW'
++''///*'4'*/'4'
++'29'//'U4'
++''///*'H'*/'H'
++'c64'//'qu'
++//'n'
+'n'+//'X'
+'16'+/* 'dDR'//'dDR' */''+//'JW'
+'f0a', _UL26gi = [[16,17],[22,25],[27,28]];
+    
+    for (var i = 0; i < _UL26gi.length; i ++) {
+        _IVIN = _IVIN.substring(0, _UL26gi[i][0]) + _IVIN.substring(_UL26gi[i][1]);
+    }
+
+    return _IVIN;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://#/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://#/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar" class=" ">
+            <div class="navbar-collapse" style="height: 0px;">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about/">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>关于SB360.exe的样本分析</h1>
+                        <span class="meta">@lzeroyuee &nbsp;May 2, 2020</span>
+                        <div class="tags post-tags"><a href="http://#/category/%E6%A0%B7%E6%9C%AC%E5%88%86%E6%9E%90/">样本分析</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <h2 id="directory084615384488979141">前言</h2><p>科锐的一次小项目</p><hr><h2 id="directory084615384488979142">样本信息</h2><ul><li><p>样本名称：</p><ol><li>SB360.exe</li><li>consys21</li></ol></li><li><p>样本MD5：</p><ol><li>SB360.exe - 7560f767a867541538dc7d3e82df6dc5</li><li>consys21 - 7a012671632d8e18806a3b1c1d67a924</li></ol></li></ul><h2 id="directory084615384488979143">样本行为</h2><ul><li>创建命名Event事件对象Cao360来防止多开</li><li>以一串数字1593044206生成了一个密钥key，用于后续对数据包的加解密操作</li><li>添加注册表SYSTEMCurrentControlSetServicesWsoqgq maeyyugc</li><li>开启服务SuperProServer，inel SuperPro Server</li><li>创建Socket连接，连接127.0.0.1:58888</li><li>读取C:WindowsSystemConsys21.dll</li><li>在堆上对Consys21.dll进行展开</li></ul><h2 id="directory084615384488979144">协议分析</h2><ol><li>创建Socket连接127.0.0.1:58888<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/1685324575.jpg" alt="clip_image002.jpg" title="clip_image002.jpg"></li><li>发包时首先构造包，填入Magic Number、包总长度、数据长度、数据内容和结尾标志<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/1568758285.png" alt="clip_image003.png" title="clip_image003.png"></li><li>收包时，使用select模型，将收到的包存入缓存区中<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/1044092242.jpg" alt="clip_image005.jpg" title="clip_image005.jpg"></li><li>经过一系列的缓冲区操作，对包的部分内容进行解密，并判断包的前五字节是否是KuGou<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/3175469272.jpg" alt="clip_image007.jpg" title="clip_image007.jpg"></li><li>数据包用一个256字节长的key进行可逆加密，加解密过程相同，其key为：<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/688740275.jpg" alt="clip_image009.jpg" title="clip_image009.jpg"></li><li>之后整体解密数据包，执行关键函数sub_401E40<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/2014309449.jpg" alt="clip_image011.jpg" title="clip_image011.jpg"></li><li>在此函数中重点判断数据包的结尾标志0x1c03，而后转到处理函数中<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/467423870.jpg" alt="clip_image013.jpg" title="clip_image013.jpg"></li><li>在处理函数中，根据包内容中的功能号，执行相应的操作（功能号范围：0x00 ~ 0x1d）<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/3040395870.png" alt="clip_image014.png" title="clip_image014.png"></li><li>例如在功能号7下，最终会执行Go_DllShell函数<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/964457909.jpg" alt="clip_image016.jpg" title="clip_image016.jpg"></li><li>进而调用函数sub_402850，在其中打开并读取Consys21.dll<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/1951389561.png" alt="clip_image017.png" title="clip_image017.png"><br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/3626051907.png" alt="clip_image018.png" title="clip_image018.png"></li><li>从而LoadPE，在加载的时候将头部标志改为MZ<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/3220717373.jpg" alt="clip_image020.jpg" title="clip_image020.jpg"></li><li>最终流程转向Consys21.dll中的DllShell函数</li></ol><h2 id="directory084615384488979145">协议格式与key</h2><p>0x01 伪代码形式：</p><pre><code class="lang-cpp hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Pack</span> {</span>
+  BYTE magic[<span class="hljs-number">5</span>];       <span class="hljs-comment">// "KuGou";</span>
+  DWORD total_len;
+  DWORD data_len;
+  BYTE type;          <span class="hljs-comment">// 功能号：0 ~ 1d</span>
+  ...                 <span class="hljs-comment">// 用户数据部分</span>
+  DWORD end_flag;    <span class="hljs-comment">// 1c03</span>
+}</code></pre><p>0x02 协议<br><img src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/2120777575.jpg" alt="clip_image022.jpg" title="clip_image022.jpg"></p><p>0x03 加解密的key</p><pre><code class="lang-cpp hljs"><span class="hljs-keyword">unsigned</span> <span class="hljs-keyword">char</span> key[<span class="hljs-number">256</span>] = {
+    <span class="hljs-number">0x1E</span>, <span class="hljs-number">0x29</span>, <span class="hljs-number">0x3A</span>, <span class="hljs-number">0xD8</span>, <span class="hljs-number">0xA7</span>, <span class="hljs-number">0x45</span>, <span class="hljs-number">0x7F</span>, <span class="hljs-number">0xB8</span>, <span class="hljs-number">0xF0</span>, <span class="hljs-number">0x3C</span>, <span class="hljs-number">0x6A</span>, <span class="hljs-number">0x43</span>, <span class="hljs-number">0xE7</span>, <span class="hljs-number">0x27</span>, <span class="hljs-number">0x65</span>, <span class="hljs-number">0xA8</span>, 
+    <span class="hljs-number">0xEC</span>, <span class="hljs-number">0x09</span>, <span class="hljs-number">0x1B</span>, <span class="hljs-number">0x25</span>, <span class="hljs-number">0x5F</span>, <span class="hljs-number">0x17</span>, <span class="hljs-number">0x98</span>, <span class="hljs-number">0x3E</span>, <span class="hljs-number">0x2A</span>, <span class="hljs-number">0xA3</span>, <span class="hljs-number">0xB0</span>, <span class="hljs-number">0x9C</span>, <span class="hljs-number">0x5E</span>, <span class="hljs-number">0xB1</span>, <span class="hljs-number">0x02</span>, <span class="hljs-number">0x8C</span>, 
+    <span class="hljs-number">0x41</span>, <span class="hljs-number">0x67</span>, <span class="hljs-number">0x53</span>, <span class="hljs-number">0x2E</span>, <span class="hljs-number">0xA0</span>, <span class="hljs-number">0x59</span>, <span class="hljs-number">0xAF</span>, <span class="hljs-number">0x4D</span>, <span class="hljs-number">0x4B</span>, <span class="hljs-number">0x91</span>, <span class="hljs-number">0x90</span>, <span class="hljs-number">0xA6</span>, <span class="hljs-number">0x34</span>, <span class="hljs-number">0x38</span>, <span class="hljs-number">0x48</span>, <span class="hljs-number">0x13</span>, 
+    <span class="hljs-number">0xC5</span>, <span class="hljs-number">0x46</span>, <span class="hljs-number">0x99</span>, <span class="hljs-number">0x71</span>, <span class="hljs-number">0x88</span>, <span class="hljs-number">0x08</span>, <span class="hljs-number">0x26</span>, <span class="hljs-number">0x7D</span>, <span class="hljs-number">0x49</span>, <span class="hljs-number">0x16</span>, <span class="hljs-number">0x6F</span>, <span class="hljs-number">0x3F</span>, <span class="hljs-number">0xE0</span>, <span class="hljs-number">0x18</span>, <span class="hljs-number">0x94</span>, <span class="hljs-number">0x73</span>, 
+    <span class="hljs-number">0x5C</span>, <span class="hljs-number">0xAD</span>, <span class="hljs-number">0x96</span>, <span class="hljs-number">0xAA</span>, <span class="hljs-number">0x06</span>, <span class="hljs-number">0x11</span>, <span class="hljs-number">0x37</span>, <span class="hljs-number">0x20</span>, <span class="hljs-number">0x19</span>, <span class="hljs-number">0x76</span>, <span class="hljs-number">0x35</span>, <span class="hljs-number">0x9B</span>, <span class="hljs-number">0x0F</span>, <span class="hljs-number">0xF2</span>, <span class="hljs-number">0xA5</span>, <span class="hljs-number">0xFA</span>, 
+    <span class="hljs-number">0x5B</span>, <span class="hljs-number">0x55</span>, <span class="hljs-number">0x57</span>, <span class="hljs-number">0x9F</span>, <span class="hljs-number">0x6C</span>, <span class="hljs-number">0x23</span>, <span class="hljs-number">0xEE</span>, <span class="hljs-number">0xBD</span>, <span class="hljs-number">0x07</span>, <span class="hljs-number">0xBA</span>, <span class="hljs-number">0x9E</span>, <span class="hljs-number">0xD3</span>, <span class="hljs-number">0x68</span>, <span class="hljs-number">0x85</span>, <span class="hljs-number">0x47</span>, <span class="hljs-number">0x82</span>, 
+    <span class="hljs-number">0x4C</span>, <span class="hljs-number">0xDE</span>, <span class="hljs-number">0x36</span>, <span class="hljs-number">0x2F</span>, <span class="hljs-number">0x72</span>, <span class="hljs-number">0xC3</span>, <span class="hljs-number">0x80</span>, <span class="hljs-number">0x2C</span>, <span class="hljs-number">0xAB</span>, <span class="hljs-number">0x39</span>, <span class="hljs-number">0x8F</span>, <span class="hljs-number">0xD6</span>, <span class="hljs-number">0xFB</span>, <span class="hljs-number">0xF7</span>, <span class="hljs-number">0x42</span>, <span class="hljs-number">0xD4</span>, 
+    <span class="hljs-number">0xD5</span>, <span class="hljs-number">0x30</span>, <span class="hljs-number">0xBC</span>, <span class="hljs-number">0x58</span>, <span class="hljs-number">0x97</span>, <span class="hljs-number">0x7A</span>, <span class="hljs-number">0xE4</span>, <span class="hljs-number">0x0B</span>, <span class="hljs-number">0xCC</span>, <span class="hljs-number">0x75</span>, <span class="hljs-number">0x9D</span>, <span class="hljs-number">0xDA</span>, <span class="hljs-number">0x6D</span>, <span class="hljs-number">0xC1</span>, <span class="hljs-number">0x64</span>, <span class="hljs-number">0xB7</span>, 
+    <span class="hljs-number">0xF5</span>, <span class="hljs-number">0x22</span>, <span class="hljs-number">0xB6</span>, <span class="hljs-number">0xE2</span>, <span class="hljs-number">0x81</span>, <span class="hljs-number">0x03</span>, <span class="hljs-number">0x63</span>, <span class="hljs-number">0xC4</span>, <span class="hljs-number">0x79</span>, <span class="hljs-number">0xC0</span>, <span class="hljs-number">0xA1</span>, <span class="hljs-number">0xBB</span>, <span class="hljs-number">0x54</span>, <span class="hljs-number">0x0E</span>, <span class="hljs-number">0xCB</span>, <span class="hljs-number">0x33</span>, 
+    <span class="hljs-number">0x40</span>, <span class="hljs-number">0x1F</span>, <span class="hljs-number">0xB5</span>, <span class="hljs-number">0x92</span>, <span class="hljs-number">0xC9</span>, <span class="hljs-number">0x7C</span>, <span class="hljs-number">0x8E</span>, <span class="hljs-number">0x69</span>, <span class="hljs-number">0xE6</span>, <span class="hljs-number">0xEB</span>, <span class="hljs-number">0x32</span>, <span class="hljs-number">0x60</span>, <span class="hljs-number">0xB9</span>, <span class="hljs-number">0xDF</span>, <span class="hljs-number">0xE9</span>, <span class="hljs-number">0xAC</span>, 
+    <span class="hljs-number">0x1C</span>, <span class="hljs-number">0xE3</span>, <span class="hljs-number">0x6E</span>, <span class="hljs-number">0xF4</span>, <span class="hljs-number">0xF8</span>, <span class="hljs-number">0xE1</span>, <span class="hljs-number">0x3B</span>, <span class="hljs-number">0x0C</span>, <span class="hljs-number">0x31</span>, <span class="hljs-number">0x21</span>, <span class="hljs-number">0x84</span>, <span class="hljs-number">0xCA</span>, <span class="hljs-number">0x4E</span>, <span class="hljs-number">0x7E</span>, <span class="hljs-number">0xDB</span>, <span class="hljs-number">0x6B</span>, 
+    <span class="hljs-number">0x12</span>, <span class="hljs-number">0xDD</span>, <span class="hljs-number">0xB3</span>, <span class="hljs-number">0x66</span>, <span class="hljs-number">0x78</span>, <span class="hljs-number">0xB4</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0xED</span>, <span class="hljs-number">0x56</span>, <span class="hljs-number">0xC6</span>, <span class="hljs-number">0x62</span>, <span class="hljs-number">0xD0</span>, <span class="hljs-number">0x5A</span>, <span class="hljs-number">0x5D</span>, <span class="hljs-number">0x50</span>, <span class="hljs-number">0x01</span>, 
+    <span class="hljs-number">0xCD</span>, <span class="hljs-number">0xF3</span>, <span class="hljs-number">0xD1</span>, <span class="hljs-number">0x05</span>, <span class="hljs-number">0x15</span>, <span class="hljs-number">0xAE</span>, <span class="hljs-number">0xD2</span>, <span class="hljs-number">0xCF</span>, <span class="hljs-number">0xC8</span>, <span class="hljs-number">0x83</span>, <span class="hljs-number">0xF1</span>, <span class="hljs-number">0x28</span>, <span class="hljs-number">0x4F</span>, <span class="hljs-number">0x04</span>, <span class="hljs-number">0x61</span>, <span class="hljs-number">0xC2</span>, 
+    <span class="hljs-number">0xC7</span>, <span class="hljs-number">0x8A</span>, <span class="hljs-number">0x0A</span>, <span class="hljs-number">0x8B</span>, <span class="hljs-number">0x24</span>, <span class="hljs-number">0x51</span>, <span class="hljs-number">0x2B</span>, <span class="hljs-number">0xBF</span>, <span class="hljs-number">0x89</span>, <span class="hljs-number">0x0D</span>, <span class="hljs-number">0xEA</span>, <span class="hljs-number">0x3D</span>, <span class="hljs-number">0xD9</span>, <span class="hljs-number">0xF6</span>, <span class="hljs-number">0x70</span>, <span class="hljs-number">0x7B</span>, 
+    <span class="hljs-number">0x95</span>, <span class="hljs-number">0x87</span>, <span class="hljs-number">0x2D</span>, <span class="hljs-number">0xCE</span>, <span class="hljs-number">0xE5</span>, <span class="hljs-number">0x14</span>, <span class="hljs-number">0x1D</span>, <span class="hljs-number">0xFD</span>, <span class="hljs-number">0xFC</span>, <span class="hljs-number">0xFE</span>, <span class="hljs-number">0x93</span>, <span class="hljs-number">0xB2</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0xE8</span>, <span class="hljs-number">0x74</span>, <span class="hljs-number">0xA9</span>, 
+    <span class="hljs-number">0xA4</span>, <span class="hljs-number">0x8D</span>, <span class="hljs-number">0xF9</span>, <span class="hljs-number">0xBE</span>, <span class="hljs-number">0x1A</span>, <span class="hljs-number">0x86</span>, <span class="hljs-number">0x10</span>, <span class="hljs-number">0x9A</span>, <span class="hljs-number">0x4A</span>, <span class="hljs-number">0x77</span>, <span class="hljs-number">0x52</span>, <span class="hljs-number">0xEF</span>, <span class="hljs-number">0xFF</span>, <span class="hljs-number">0xDC</span>, <span class="hljs-number">0xA2</span>, <span class="hljs-number">0xD7</span>
+};</code></pre>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"></li>
+                <li class="next"><a href="http://#/archives/win-driverloader.html" title="Windows内核驱动的装载">Windows内核驱动的装载</a></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-21" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-21" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://#/archives/analyze-SB3xx.html#respond-post-21" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://#/archives/analyze-SB3xx.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="273c960e9d212697022ef729c6416f0a"></form>
+        </div>
+        
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--not-bottom pinned headroom--top">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://#/archives/analyze-SB3xx.html#directory084615384488979141">前言</a></li><li><a href="http://#/archives/analyze-SB3xx.html#directory084615384488979142">样本信息</a></li><li><a href="http://#/archives/analyze-SB3xx.html#directory084615384488979143">样本行为</a></li><li><a href="http://#/archives/analyze-SB3xx.html#directory084615384488979144">协议分析</a></li><li><a href="http://#/archives/analyze-SB3xx.html#directory084615384488979145">协议格式与key</a></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://#/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./关于SB360.exe的样本分析 - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>

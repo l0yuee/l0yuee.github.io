@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037)http://#/archives/121.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>某厂APT样本分析师的面试总结 - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./某厂APT样本分析师的面试总结 - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./某厂APT样本分析师的面试总结 - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./某厂APT样本分析师的面试总结 - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="面试某厂的APT样本分析师职位，做一次总结因过去了有段时间外加当时临时发挥不是很好，只记下一些记忆比较深刻的问题一面一面技术面，主要是了解基本情况、问些简历上的东西怎么在内核层遍历进程信息？EP...">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://#/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://#/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://#/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="某厂APT样本分析师的面试总结 » lZeroyuee&#39;s Blog » RSS 2.0" href="http://#/feed/archives/121.html">
+<link rel="alternate" type="application/rdf+xml" title="某厂APT样本分析师的面试总结 » lZeroyuee&#39;s Blog » RSS 1.0" href="http://#/feed/rss/archives/121.html">
+<link rel="alternate" type="application/atom+xml" title="某厂APT样本分析师的面试总结 » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://#/feed/atom/archives/121.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-121'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-121'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-121'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _dYlhU = 'bd1'//'F'
++'eab'//'F4v'
++''///*'zM'*/'zM'
++''///*'Y'*/'Y'
++//'fi'
+'fi'+'4'//'zVj'
++/* 'Jf'//'Jf' */''+//'u58'
+'29'+'4'//'w'
++'55'//'b7M'
++//'Z'
+'a4'+''///*'7'*/'7'
++//'ZZp'
+'6'+//'wCu'
+'0d'+//'T6'
+'12'+''///*'MvU'*/'MvU'
++//'DXl'
+'082'+//'B'
+'47'+//'XY2'
+'cfd'+//'8'
+'b'+'2'//'b4'
++//'Xju'
+'7e4', _qdUL = [[6,8]];
+    
+    for (var i = 0; i < _qdUL.length; i ++) {
+        _dYlhU = _dYlhU.substring(0, _qdUL[i][0]) + _dYlhU.substring(_qdUL[i][1]);
+    }
+
+    return _dYlhU;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./某厂APT样本分析师的面试总结 - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./某厂APT样本分析师的面试总结 - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://#/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://#/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar" class=" ">
+            <div class="navbar-collapse" style="height: 0px;">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about/">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>某厂APT样本分析师的面试总结</h1>
+                        <span class="meta">@lzeroyuee &nbsp;June 4, 2020</span>
+                        <div class="tags post-tags"><a href="http://#/category/%E6%9D%82%E4%B8%83%E6%9D%82%E5%85%AB/">杂七杂八</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <p>面试某厂的APT样本分析师职位，做一次总结<br>因过去了有段时间外加当时临时发挥不是很好，只记下一些记忆比较深刻的问题</p><hr><h2 id="directory0052249574094735741">一面</h2><p>一面技术面，主要是了解基本情况、问些简历上的东西</p><blockquote>怎么在内核层遍历进程信息？</blockquote><p><code>EPROCESS</code>结构中有<code>ActiveProcessLinks</code>字段，该字段为双向链表的结点，通过此双向列表节点可以遍历系统进程列表的<code>EPROCESS</code>结构。在<code>EPROCESS</code>结构中有<code>PEB</code>结构，<code>PEB</code>结构中存着进程的相关信息</p><blockquote>写的远控程序是怎么实现控制对方鼠标和键盘？</blockquote><p>使用<code>keybd_event</code>和<code>mouse_event</code></p><blockquote>内存断点是怎么实现的？</blockquote><p>对某内存分页下内存断点的原理就是使用<code>VirtualProtectEx</code>来修改该内存分页的访问属性（将访问属性全部清除），若之后访问了该分页，则会触发内存访问异常</p><h2 id="directory0052249574094735742">二面</h2><p>二面依然技术面，主要问些技术细节问题，偏向于基础知识点，需要举一反三</p><blockquote>调用约定有哪些？</blockquote><p><code>__cdecl</code>、<code>__stdcall</code>、<code>__fastcall</code>和<code>__thiscall</code></p><blockquote><code>__cdecl</code>和<code>__stdcall</code>有什么区别？</blockquote><p><code>__cdecl</code>是在调用者<code>caller</code>上平栈，而<code>__stdcall</code>是在被调用者<code>callee</code>上平栈</p><blockquote>一个结构体，有一个<code>char</code>成员、一个<code>short int</code>成员和一个<code>int</code>成员，此结构按4字节对齐，每个成员相对于结构体首地址的偏移分别为多少？</blockquote><p>此结构体如下</p><pre><code class="lang-cpp hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">A</span> {</span>
+  <span class="hljs-keyword">char</span> a;        <span class="hljs-comment">// +0</span>
+  <span class="hljs-keyword">short</span> <span class="hljs-keyword">int</span> b;   <span class="hljs-comment">// +2</span>
+  <span class="hljs-keyword">int</span> c;         <span class="hljs-comment">// +4</span>
+};               <span class="hljs-comment">// size: 8</span></code></pre><p>偏移计算规则为：</p><ul><li>设编译选项设定的对齐值为<code>Zp</code>，每个结构体成员的偏移量为<code>Offset</code></li><li>满足<code>Offset % min(sizeof(member type), Zp) == 0</code></li></ul><blockquote>x86下，类A有两个虚函数和两个<code>int</code>成员，类B继承自类A并添加了一个虚函数，则这两个类对象的大小分别是多少？</blockquote><p>类A与类B如下</p><pre><code class="lang-CPP hljs"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">A</span> {</span>
+<span class="hljs-keyword">public</span>:
+  <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">func1</span><span class="hljs-params">()</span> </span>{}
+  <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">func2</span><span class="hljs-params">()</span> </span>{}
+  
+  <span class="hljs-keyword">int</span> a;
+  <span class="hljs-keyword">int</span> b;
+};
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">B</span> :</span> <span class="hljs-keyword">public</span> A {
+<span class="hljs-keyword">public</span>:
+  <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">func3</span><span class="hljs-params">()</span> </span>{}
+};</code></pre><p>类A对象的大小为12字节（虚表指针<code>vt_ptr</code>4个字节，两个<code>int</code>成员8个字节，一共12个字节），类B对象的大小也为12字节</p><blockquote>一个类对象会不会有两张虚表？</blockquote><p>可能会有，若是多继承（菱形继承）或虚继承就可能存在多张虚表</p><blockquote>在PE中怎么从FOV转RVA？</blockquote><p>设FOV为x</p><ol><li>判断x是否位于整个PE头部部分，若是则直接为RVA</li><li>遍历节表，得到每个节表的<code>PointerToRawData</code>与<code>SizeofRawData</code>，判断x是否在此范围内，以此定位x位于哪个节上</li><li>定位到目标节区之后，利用<code>x - PointerToRawData</code>算出x所在节的节内偏移<code>offset</code></li><li>利用节内偏移与目标节的虚拟地址<code>offset + VirtuallAddress</code>算出RVA</li></ol><blockquote><code>__stdcall</code>的<code>printf</code>怎么实现？如果<code>__stdcall</code>的<code>printf</code>的格式化字符串为<code>"%d%d\n"</code>，但传入的int类型参数只有一个会怎么样？</blockquote><p>此题的正确解法我确实不知道，只有个思路：实现函数内平栈，以传入两个<code>int</code>类型对象为例</p><pre><code class="lang-CPP hljs"><span class="hljs-comment">// 由于使用了可变参，故__stdcall在这里其实是被忽略的，依然会在函数外有一次平栈动作（多余的）</span>
+<span class="hljs-comment">// 此函数实现了在函数内平栈</span>
+__declspec(naked) <span class="hljs-keyword">void</span> __<span class="hljs-function">stdcall <span class="hljs-title">my_printf</span><span class="hljs-params">(<span class="hljs-keyword">size_t</span> args_size, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span>* format, ...)</span>
+</span>{
+    <span class="hljs-keyword">int</span> a, b;
+    va_list args;
+    va_start(args, format);
+
+    a = va_arg(args, <span class="hljs-keyword">int</span>);
+    b = va_arg(args, <span class="hljs-keyword">int</span>);
+    <span class="hljs-built_in">printf</span>(format, a, b);
+
+    va_end(args);
+
+    __asm {
+        <span class="hljs-comment">// 还原环境</span>
+        mov esp, ebp
+        pop ebp
+
+        <span class="hljs-comment">// 获取返回地址</span>
+        pop eax
+
+        <span class="hljs-comment">// 函数内平栈</span>
+        add esp, args_size
+
+        <span class="hljs-comment">// 跳转返回地址</span>
+        jmp eax
+    }
+}</code></pre><p>如果只传入一个<code>int</code>类型，那么会造成栈不平衡</p><blockquote>在VS的Debug版本程序中，编译器会在栈上填充什么值？有什么用？</blockquote><p>编译器会在栈上填充<code>0xcc</code>，此值代表指令<code>int 3</code>软件断点，如果执行到此处，则会触发软件断点异常</p><blockquote>inline hook怎么实现？</blockquote><p>在Windows的大部分API中，开头的5个字节的指令为</p><pre><code class="hljs perl"><span class="hljs-number">8</span>B FF     mov edi, edi    <span class="hljs-comment"># 此指令没有什么实际意义</span>
+<span class="hljs-number">55</span>        <span class="hljs-keyword">push</span> ebp
+<span class="hljs-number">8</span>B EC     mov ebp, esp</code></pre><p>将此5字节的指令序列替换为同为5字节的<code>jmp xxx</code>指令，跳转到自己的shellcode上，而在shellcode功能执行完毕后，为API再次还原这5字节的序列，而后跳转到API正确的流程上</p><blockquote>jmp指令的偏移怎么计算？往上跳和往下跳是怎么样的？</blockquote><p><code>jmp xxx</code>指令的偏移计算公式遵循<code>目标地址 - 源地址</code>的原则</p><ul><li>目标地址：要跳转的目标的地址</li><li>源地址：当前指令的下一条指令的地址处</li></ul><p>不管是往上跳还是往下跳，都是一样的遵循这条规则，例如（设此处jmp指令均为5字节）：</p><pre><code class="hljs makefile"><span class="hljs-section">A:</span>
+    ...
+    
+<span class="hljs-section">A':</span>
+    jmp A    <span class="hljs-comment"># 此处上跳到A处，偏移为 A - (A' + 5)</span>
+    ...
+
+<span class="hljs-section">B':</span>
+    jmp B    <span class="hljs-comment"># 此处下跳到B处，偏移为 B - (B' + 5)</span>
+    ...
+    
+<span class="hljs-section">B:</span>
+    ...</code></pre><blockquote>远程线程注入怎么实现？</blockquote><ol><li>获取<code>LoadLibrary</code>的地址</li><li>在目标进程空间中申请内存<code>VirtualAllocEx</code>并写入DLL路径<code>WriteProcessMemory</code></li><li>创建远程线程执行相关操作<code>CreateremoteThread</code>（一般调用<code>LoadLibrary</code>加载DLL）</li></ol><blockquote>x86下函数开头第一个字节码是什么？函数开头指令序列是什么？分别是什么作用？</blockquote><p>第一个字节码为<code>0x55</code><br>函数开头的指令序列为</p><pre><code class="hljs nginx"><span class="hljs-attribute">push</span> ebp        <span class="hljs-comment"># 保存原来的ebp</span>
+mov ebp, esp    <span class="hljs-comment"># 使用ebp作为当前栈帧的栈基址</span>
+sub esp, xxx    <span class="hljs-comment"># 抬高栈顶，为局部变量分配空间</span></code></pre><blockquote>有一个函数拥有两个<code>int</code>类型的参数，此函数以<code>ebp</code>作为寻址基址，那么此函数的第二个参数该如何寻址？第一个参数呢？<code>ebp</code>的位置上是什么？</blockquote><p>第一个参数：<code>[ebp + 0x8]</code>，第二个参数：<code>[ebp + 0xc]</code><br>ebp的位置上是先前保存的ebp的值</p><blockquote>IDA怎么添加结构体？</blockquote><p>shift + F9打开Struct窗口，insert键插入一个结构体</p><h2 id="directory0052249574094735743">三面</h2><p>三面hr面（最终面），主要由hr来了解些基本情况，压力较前两面轻松一些</p><h2 id="directory0052249574094735744">最后</h2><p>对于准备不是很充分的来说，总体上还是有点难度，大多数问题都是偏向基础部分，需要从知识点所涉及的原理上来想问题的解决方案</p>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"><a href="http://#/archives/120.html" title="关于某公司面试的样本">关于某公司面试的样本</a></li>
+                <li class="next"><a href="http://#/archives/125.html" title="使用idapython脚本解码样本中的字符串">使用idapython脚本解码样本中的字符串</a></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-121" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-121" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://#/archives/121.html#respond-post-121" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://#/archives/121.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="bd1eab429455a460d1208247cfdb27e4"></form>
+        </div>
+        
+        
+        <ol class="comment-list">
+<li id="li-comment-4" class="comment-body comment-parent comment-odd">
+    <div id="comment-4">
+                <div class="comment-view" onclick="">
+            <div class="comment-header">
+                <img class="avatar" src="./某厂APT样本分析师的面试总结 - lZeroyuee&#39;s Blog_files/b2d7d2d13aed54c2ed7feb538b382b42.png" width="80" height="80">
+                <span class="comment-author"><a href="https://123.com/" target="_blank" rel="external nofollow">印度硬汉</a></span>
+            </div>
+            <div class="comment-content">
+                <span class="comment-author-at"></span> <p>阅(●ˇ∀ˇ●)</p><p></p>
+            </div>
+            <div class="comment-meta">
+                <time class="comment-time">Jun 6, 2020</time>
+                <span class="comment-reply"><a href="http://#/archives/121.html/comment-page-1?replyTo=4#respond-post-121" rel="nofollow" onclick="return TypechoComment.reply(&#39;comment-4&#39;, 4);">Reply</a></span>
+            </div>
+        </div>
+    </div>
+    </li>
+</ol>
+        <div class="lists-navigator clearfix">
+                    </div>
+
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--top headroom--not-bottom">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://#/archives/121.html#directory0052249574094735741">一面</a></li><li><a href="http://#/archives/121.html#directory0052249574094735742">二面</a></li><li><a href="http://#/archives/121.html#directory0052249574094735743">三面</a></li><li><a href="http://#/archives/121.html#directory0052249574094735744">最后</a></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://#/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./某厂APT样本分析师的面试总结 - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./某厂APT样本分析师的面试总结 - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./某厂APT样本分析师的面试总结 - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./某厂APT样本分析师的面试总结 - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>

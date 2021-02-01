@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<!-- saved from url=(0050)http://#/archives/win-driverloader.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Windows内核驱动的装载 - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./Windows内核驱动的装载 - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./Windows内核驱动的装载 - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./Windows内核驱动的装载 - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="驱动装载和卸载的过程驱动的装载和卸载依靠于服务，安装一个驱动等同于安装一个服务在操作服务的过程中，在不使用服务相关的句柄时要及时释放驱动的装载打开服务管理器创建驱动的服务启动服务驱动的卸载打开服...">
+<meta name="keywords" content="开发">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://#/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://#/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://#/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="Windows内核驱动的装载 » lZeroyuee&#39;s Blog » RSS 2.0" href="http://#/feed/archives/win-driverloader.html">
+<link rel="alternate" type="application/rdf+xml" title="Windows内核驱动的装载 » lZeroyuee&#39;s Blog » RSS 1.0" href="http://#/feed/rss/archives/win-driverloader.html">
+<link rel="alternate" type="application/atom+xml" title="Windows内核驱动的装载 » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://#/feed/atom/archives/win-driverloader.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-22'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-22'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-22'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _JrA1 = ''///*'DD'*/'DD'
++'77c'//'4'
++//'P'
+'P'+/* 'O4m'//'O4m' */''+'0b'//'l'
++'Idw'//'Idw'
++'c6'//'c6'
++'74'//'g'
++'6c4'//'1Mg'
++'947'//'2g2'
++'c'//'V'
++'ef5'//'xG'
++//'twK'
+'twK'+//'Sk'
+'59d'+'5'//'Jl'
++'6'//'B'
++'e'//'mv'
++//'ImV'
+'e'+'0'//'zk'
++//'X'
+'150'+//'j'
+'5b'+'b6'//'7'
+, _b8QLg = [[3,4],[5,8],[5,7],[17,20]];
+    
+    for (var i = 0; i < _b8QLg.length; i ++) {
+        _JrA1 = _JrA1.substring(0, _b8QLg[i][0]) + _JrA1.substring(_b8QLg[i][1]);
+    }
+
+    return _JrA1;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./Windows内核驱动的装载 - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./Windows内核驱动的装载 - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://#/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://#/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about/">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>Windows内核驱动的装载</h1>
+                        <span class="meta">@lzeroyuee &nbsp;May 2, 2020</span>
+                        <div class="tags post-tags"><a href="http://#/category/%E5%86%85%E6%A0%B8%E9%A9%B1%E5%8A%A8/">内核驱动</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <h2 id="directory000135147995427753461">驱动装载和卸载的过程</h2><p>驱动的装载和卸载依靠于服务，安装一个驱动等同于安装一个服务</p><p>在操作服务的过程中，在不使用<strong>服务相关的句柄</strong>时要及时释放</p><h3 id="directory000135147995427753462">驱动的装载</h3><ol><li>打开服务管理器</li><li>创建驱动的服务</li><li>启动服务</li></ol><h3 id="directory000135147995427753463">驱动的卸载</h3><ol><li>打开服务管理器</li><li>打开驱动的服务</li><li>停止服务</li><li>删除服务</li></ol><h2 id="directory000135147995427753464">相关API</h2><ul><li><p>打开服务管理器</p><pre><code class="lang-cpp hljs"><span class="hljs-function">SC_HANDLE <span class="hljs-title">OpenSCManagerA</span><span class="hljs-params">(
+    LPCSTR lpMachineName,     <span class="hljs-comment">// 目标计算机的名称，为NULL则是本地</span>
+    LPCSTR lpDatabaseName,     <span class="hljs-comment">// 数据库的名称，为NULL则默认打开SERVICES_ACTIVE_DATABASE数据库</span>
+    DWORD dwDesiredAccess     <span class="hljs-comment">// 访问控制，为SC_MANAGER_ALL_ACCESS则是所有权限</span>
+)</span></span>;                            <span class="hljs-comment">// 成功返回服务管理器句柄，失败则为NULL</span></code></pre></li><li><p>创建或打开服务</p><pre><code class="lang-cpp hljs"><span class="hljs-function">SC_HANDLE <span class="hljs-title">CreateServiceA</span><span class="hljs-params">(
+    SC_HANDLE hSCManager,         <span class="hljs-comment">// 服务管理器句柄</span>
+    LPCSTR lpServiceName,         <span class="hljs-comment">// 服务名称</span>
+    LPCSTR lpDisplayName,         <span class="hljs-comment">// 显示名称</span>
+    DWORD dwDesiredAccess,         <span class="hljs-comment">// 访问控制，SERVICE_ALL_ACCESS为所有权限</span>
+    DWORD dwServiceType,         <span class="hljs-comment">// 服务类型，SERVICE_KERNEL_DRIVER为内核驱动</span>
+    DWORD dwStartType,             <span class="hljs-comment">// 启动类型，SERVICE_DEMAND_START为后续调用StartService才启动</span>
+    DWORD dwErrorControl,         <span class="hljs-comment">// 如果此服务无法启动，则错误的严重程度和所采取的操作，SERVICE_ERROR_NORMAL为默认</span>
+    LPCSTR lpBinaryPathName,     <span class="hljs-comment">// 驱动路径</span>
+    LPCSTR lpLoadOrderGroup,     <span class="hljs-comment">// 服务所属组名，可为NULL</span>
+    LPDWORD lpdwTagId,             <span class="hljs-comment">// 可为NULL</span>
+    LPCSTR lpDependencies,         <span class="hljs-comment">// 可为NULL</span>
+    LPCSTR lpServiceStartName,     <span class="hljs-comment">// 服务应该在其下运行的帐户的名称，可为NULL</span>
+    LPCSTR lpPassword             <span class="hljs-comment">// 账户密码，，可为NULL</span>
+)</span></span>;                                 <span class="hljs-comment">// CreateService成功返回服务句柄，失败则返回NULL</span>
+
+<span class="hljs-function">SC_HANDLE <span class="hljs-title">OpenServiceA</span><span class="hljs-params">(
+    SC_HANDLE hSCManager,         <span class="hljs-comment">// 服务管理器句柄</span>
+    LPCSTR lpServiceName,         <span class="hljs-comment">// 服务名称</span>
+    DWORD dwDesiredAccess         <span class="hljs-comment">// 访问控制</span>
+)</span></span>;                                 <span class="hljs-comment">// OpenService成功返回服务句柄，失败则返回NULL</span></code></pre></li><li><p>启动服务</p><pre><code class="lang-cpp hljs"><span class="hljs-function">BOOL <span class="hljs-title">StartServiceA</span><span class="hljs-params">(
+    SC_HANDLE hService,             <span class="hljs-comment">// 服务句柄</span>
+    DWORD dwNumServiceArgs,         <span class="hljs-comment">// lpServiceArgVectors数组的个数，可为0</span>
+    LPCSTR *lpServiceArgVectors     <span class="hljs-comment">// 可为NULL</span>
+)</span></span>;</code></pre></li><li><p>停止与卸载服务</p><pre><code class="lang-cpp hljs"><span class="hljs-comment">// 控制服务</span>
+<span class="hljs-function">BOOL <span class="hljs-title">ControlService</span><span class="hljs-params">(
+    SC_HANDLE hService,                 <span class="hljs-comment">// 服务句柄</span>
+    DWORD dwControl,                     <span class="hljs-comment">// SERVICE_CONTROL_STOP为停止</span>
+    LPSERVICE_STATUS lpServiceStatus     <span class="hljs-comment">// SERVICE_STATUS结构的指针</span>
+)</span></span>;
+<span class="hljs-function">BOOL <span class="hljs-title">DeleteService</span><span class="hljs-params">(
+    SC_HANDLE hService     <span class="hljs-comment">// 服务句柄</span>
+)</span></span>;</code></pre></li><li><p>关闭服务句柄</p><pre><code class="lang-cpp hljs"><span class="hljs-function">BOOL <span class="hljs-title">CloseServiceHandle</span><span class="hljs-params">(
+    SC_HANDLE hSCObject <span class="hljs-comment">// 服务句柄</span>
+)</span></span>;</code></pre></li></ul><h2 id="directory000135147995427753465">实现DriverManager类</h2><pre><code class="lang-cpp hljs"><span class="hljs-comment">/**************************DriverManager.h*********************************/</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">ifndef</span> DRIVERMANAGER_H</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> DRIVERMANAGER_H</span>
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;Windows.h&gt;</span></span>
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> SERVICE_NAME TEXT(<span class="hljs-meta-string">"MyHunter"</span>)    <span class="hljs-comment">// 服务名</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> SERVICE_SHOW SERVICE_NAME        <span class="hljs-comment">// 服务显示名</span></span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DriverManager</span>
+{</span>
+<span class="hljs-keyword">public</span>:
+    DriverManager();
+    <span class="hljs-keyword">virtual</span> ~DriverManager();
+
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">install_driver</span><span class="hljs-params">()</span></span>;      <span class="hljs-comment">// 安装驱动</span>
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">start_driver</span><span class="hljs-params">()</span></span>;        <span class="hljs-comment">// 启动驱动</span>
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">stop_driver</span><span class="hljs-params">()</span></span>;         <span class="hljs-comment">// 停止驱动</span>
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">uninstall_driver</span><span class="hljs-params">()</span></span>;    <span class="hljs-comment">// 卸载驱动</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">connect_driver</span><span class="hljs-params">(<span class="hljs-keyword">const</span> TCHAR *symbol_name)</span></span>;      <span class="hljs-comment">// 链接驱动</span>
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">disconnect_driver</span><span class="hljs-params">()</span></span>;
+
+    <span class="hljs-comment">/*
+     * 驱动控制
+     *      control_code: 控制码
+     *      in_buf：输入缓冲区
+     *      in_buf_size：输入缓冲区大小
+     *      out_buf：输出缓冲区
+     *      out_buf_size：输出缓冲区大小
+     *      ret_bytes：返回字节数
+     */</span>
+    <span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">io_control</span><span class="hljs-params">(DWORD control_code, LPVOID in_buf, 
+                    DWORD in_buf_size, LPVOID out_buf, DWORD out_buf_size, LPDWORD ret_bytes)</span></span>;
+
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">set_driver</span><span class="hljs-params">(<span class="hljs-keyword">const</span> TCHAR *path)</span></span>;   <span class="hljs-comment">// 设置驱动路径</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">inline</span> DWORD <span class="hljs-title">get_last_error</span><span class="hljs-params">()</span> <span class="hljs-keyword">const</span> </span>{ <span class="hljs-keyword">return</span> last_error_; } <span class="hljs-comment">// 获取错误码</span>
+
+<span class="hljs-keyword">private</span>:
+    TCHAR *driver_path = <span class="hljs-literal">nullptr</span>;       <span class="hljs-comment">// 驱动路径</span>
+    SC_HANDLE scm_manager_ = <span class="hljs-literal">nullptr</span>;   <span class="hljs-comment">// 服务管理器句柄</span>
+    SC_HANDLE service_ = <span class="hljs-literal">nullptr</span>;       <span class="hljs-comment">// 服务句柄</span>
+    HANDLE driver_ = INVALID_HANDLE_VALUE;  <span class="hljs-comment">// 驱动句柄</span>
+
+    DWORD last_error_ = <span class="hljs-number">0</span>;  <span class="hljs-comment">// 错误码</span>
+};
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">endif</span> <span class="hljs-comment">// DRIVERMANAGER_H</span></span></code></pre><pre><code class="lang-cpp hljs"><span class="hljs-comment">/**************************DriverManager.cpp*********************************/</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">"drivermanager.h"</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;tchar.h&gt;</span></span>
+
+DriverManager::DriverManager()
+{
+
+}
+
+DriverManager::~DriverManager()
+{
+    <span class="hljs-comment">// 清理资源</span>
+    <span class="hljs-keyword">if</span> (driver_path)
+        <span class="hljs-keyword">delete</span>[] driver_path;
+    <span class="hljs-keyword">if</span> (service_)
+        ::CloseServiceHandle(service_);
+    <span class="hljs-keyword">if</span> (scm_manager_)
+        ::CloseServiceHandle(scm_manager_);
+}
+
+<span class="hljs-keyword">bool</span> DriverManager::install_driver()
+{
+    <span class="hljs-comment">// 建立与指定计算机上的服务控制管理器的连接，并打开指定的服务控制管理器数据库</span>
+    scm_manager_ = ::OpenSCManager(<span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>, SC_MANAGER_ALL_ACCESS);
+    <span class="hljs-keyword">if</span>(!scm_manager_) {
+        <span class="hljs-comment">// 获取错误码</span>
+        last_error_ = ::GetLastError();
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    <span class="hljs-comment">// 创建服务</span>
+    service_ = ::CreateService(scm_manager_, SERVICE_NAME, SERVICE_SHOW, SERVICE_ALL_ACCESS,
+        SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL, driver_path,
+        <span class="hljs-literal">nullptr</span>, <span class="hljs-literal">nullptr</span>, <span class="hljs-literal">nullptr</span>, <span class="hljs-literal">nullptr</span>, <span class="hljs-literal">nullptr</span>);
+    <span class="hljs-keyword">if</span>(!service_) {
+        <span class="hljs-comment">// 获取错误码并关闭服务管理器句柄</span>
+        last_error_ = ::GetLastError();
+        ::CloseServiceHandle(scm_manager_);
+        scm_manager_ = <span class="hljs-literal">nullptr</span>;
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    <span class="hljs-comment">// 关闭句柄</span>
+    ::CloseServiceHandle(service_);
+    ::CloseServiceHandle(scm_manager_);
+    service_ = <span class="hljs-literal">nullptr</span>;
+    scm_manager_ = <span class="hljs-literal">nullptr</span>;
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+
+<span class="hljs-keyword">bool</span> DriverManager::start_driver()
+{
+    <span class="hljs-comment">// 建立与指定计算机上的服务控制管理器的连接，并打开指定的服务控制管理器数据库</span>
+    scm_manager_ = ::OpenSCManager(<span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>, SC_MANAGER_ALL_ACCESS);
+    <span class="hljs-keyword">if</span> (!scm_manager_) {
+        <span class="hljs-comment">// 获取错误码</span>
+        last_error_ = ::GetLastError();
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    <span class="hljs-comment">// 打开现有服务</span>
+    service_ = ::OpenService(scm_manager_, SERVICE_NAME, SERVICE_ALL_ACCESS);
+    <span class="hljs-keyword">if</span> (!service_) {
+        <span class="hljs-comment">// 获取错误码并关闭服务管理器句柄</span>
+        last_error_ = ::GetLastError();
+        ::CloseServiceHandle(scm_manager_);
+        scm_manager_ = <span class="hljs-literal">nullptr</span>;
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    <span class="hljs-comment">// 启动服务</span>
+    <span class="hljs-keyword">bool</span> ret = ::StartService(service_, <span class="hljs-number">0</span>, <span class="hljs-literal">nullptr</span>);
+    <span class="hljs-keyword">if</span>(!ret) {
+        <span class="hljs-comment">// 启动失败，获取错误码</span>
+        last_error_ = ::GetLastError();
+    }
+
+    <span class="hljs-comment">// 关闭句柄</span>
+    ::CloseServiceHandle(service_);
+    ::CloseServiceHandle(scm_manager_);
+    service_ = <span class="hljs-literal">nullptr</span>;
+    scm_manager_ = <span class="hljs-literal">nullptr</span>;
+
+    <span class="hljs-keyword">return</span> ret;
+}
+
+<span class="hljs-keyword">bool</span> DriverManager::stop_driver()
+{
+    <span class="hljs-comment">// 建立与指定计算机上的服务控制管理器的连接，并打开指定的服务控制管理器数据库</span>
+    scm_manager_ = ::OpenSCManager(<span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>, SC_MANAGER_ALL_ACCESS);
+    <span class="hljs-keyword">if</span> (!scm_manager_) {
+        <span class="hljs-comment">// 获取错误码</span>
+        last_error_ = ::GetLastError();
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    <span class="hljs-comment">// 打开现有服务</span>
+    service_ = ::OpenService(scm_manager_, SERVICE_NAME, SERVICE_ALL_ACCESS);
+    <span class="hljs-keyword">if</span> (!service_) {
+        <span class="hljs-comment">// 获取错误码并关闭服务管理器句柄</span>
+        last_error_ = ::GetLastError();
+        ::CloseServiceHandle(scm_manager_);
+        scm_manager_ = <span class="hljs-literal">nullptr</span>;
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    <span class="hljs-comment">// 停止服务</span>
+    SERVICE_STATUS status = { <span class="hljs-number">0</span> };
+    <span class="hljs-keyword">bool</span> ret = ::ControlService(service_, SERVICE_CONTROL_STOP, &amp;status);
+    <span class="hljs-keyword">if</span> (!ret) {
+        <span class="hljs-comment">// 启动失败，获取错误码</span>
+        last_error_ = ::GetLastError();
+    }
+
+    <span class="hljs-comment">// 关闭句柄</span>
+    ::CloseServiceHandle(service_);
+    ::CloseServiceHandle(scm_manager_);
+    service_ = <span class="hljs-literal">nullptr</span>;
+    scm_manager_ = <span class="hljs-literal">nullptr</span>;
+
+    <span class="hljs-keyword">return</span> ret;
+}
+
+<span class="hljs-keyword">bool</span> DriverManager::uninstall_driver()
+{
+    <span class="hljs-comment">// 建立与指定计算机上的服务控制管理器的连接，并打开指定的服务控制管理器数据库</span>
+    scm_manager_ = ::OpenSCManager(<span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>, SC_MANAGER_ALL_ACCESS);
+    <span class="hljs-keyword">if</span> (!scm_manager_) {
+        <span class="hljs-comment">// 获取错误码</span>
+        last_error_ = ::GetLastError();
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    <span class="hljs-comment">// 打开现有服务</span>
+    service_ = ::OpenService(scm_manager_, SERVICE_NAME, SERVICE_ALL_ACCESS);
+    <span class="hljs-keyword">if</span> (!service_) {
+        <span class="hljs-comment">// 获取错误码并关闭服务管理器句柄</span>
+        last_error_ = ::GetLastError();
+        ::CloseServiceHandle(scm_manager_);
+        scm_manager_ = <span class="hljs-literal">nullptr</span>;
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+
+    <span class="hljs-keyword">bool</span> ret = ::DeleteService(service_);
+    <span class="hljs-keyword">if</span> (!ret) {
+        <span class="hljs-comment">// 启动失败，获取错误码</span>
+        last_error_ = ::GetLastError();
+    }
+
+    <span class="hljs-comment">// 关闭句柄</span>
+    ::CloseServiceHandle(service_);
+    ::CloseServiceHandle(scm_manager_);
+    service_ = <span class="hljs-literal">nullptr</span>;
+    scm_manager_ = <span class="hljs-literal">nullptr</span>;
+
+    <span class="hljs-keyword">return</span> ret;
+}
+
+<span class="hljs-keyword">bool</span> DriverManager::connect_driver(<span class="hljs-keyword">const</span> TCHAR *symbol_name)
+{
+    <span class="hljs-comment">// 连接驱动</span>
+    driver_ = ::CreateFile(symbol_name, GENERIC_READ | GENERIC_WRITE, <span class="hljs-number">0</span>, <span class="hljs-literal">NULL</span>, OPEN_EXISTING, <span class="hljs-number">0</span>, <span class="hljs-literal">NULL</span>);
+    <span class="hljs-keyword">if</span>(driver_ == INVALID_HANDLE_VALUE) {
+        <span class="hljs-comment">// 连接失败，获取返回值</span>
+        last_error_ = ::GetLastError();
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+
+<span class="hljs-keyword">void</span> DriverManager::disconnect_driver()
+{
+    <span class="hljs-keyword">if</span>(driver_ != INVALID_HANDLE_VALUE)
+        ::CloseHandle(driver_);
+}
+
+<span class="hljs-keyword">bool</span> DriverManager::io_control(DWORD control_code, LPVOID in_buf, DWORD in_buf_size, LPVOID out_buf, DWORD out_buf_size,
+    LPDWORD ret_bytes)
+{
+    <span class="hljs-keyword">if</span>(!::DeviceIoControl(driver_, control_code, in_buf, in_buf_size, out_buf, out_buf_size, ret_bytes, <span class="hljs-literal">NULL</span>)) {
+        last_error_ = ::GetLastError();
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+}
+
+<span class="hljs-keyword">void</span> DriverManager::set_driver(<span class="hljs-keyword">const</span> TCHAR *path)
+{
+    <span class="hljs-comment">// 释放空间</span>
+    <span class="hljs-keyword">if</span> (driver_path)
+        <span class="hljs-keyword">delete</span>[] driver_path;
+
+    <span class="hljs-comment">// 申请空间</span>
+    DWORD length = _tcslen(path);
+    DWORD bytes = (length + <span class="hljs-number">1</span>) * <span class="hljs-keyword">sizeof</span>(TCHAR);
+    driver_path = <span class="hljs-keyword">new</span> TCHAR[bytes];
+    <span class="hljs-comment">// 拷贝字符串</span>
+    _tcsncpy(driver_path, path, length + <span class="hljs-number">1</span>);
+}
+</code></pre>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"><a href="http://#/archives/analyze-SB3xx.html" title="关于SB360.exe的样本分析">关于SB360.exe的样本分析</a></li>
+                <li class="next"><a href="http://#/archives/win-driverfram.html" title="Windows驱动框架">Windows驱动框架</a></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-22" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-22" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://#/archives/win-driverloader.html#respond-post-22" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://#/archives/win-driverloader.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="77c0b746c4947cef559d56ee01505bb6"></form>
+        </div>
+        
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--not-bottom pinned headroom--top">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://#/archives/win-driverloader.html#directory000135147995427753461">驱动装载和卸载的过程</a><ul><li><a href="http://#/archives/win-driverloader.html#directory000135147995427753462">驱动的装载</a></li><li><a href="http://#/archives/win-driverloader.html#directory000135147995427753463">驱动的卸载</a></li></ul></li><li><a href="http://#/archives/win-driverloader.html#directory000135147995427753464">相关API</a></li><li><a href="http://#/archives/win-driverloader.html#directory000135147995427753465">实现DriverManager类</a></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://#/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./Windows内核驱动的装载 - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./Windows内核驱动的装载 - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./Windows内核驱动的装载 - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./Windows内核驱动的装载 - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>

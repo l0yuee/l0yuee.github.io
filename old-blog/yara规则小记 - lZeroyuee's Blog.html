@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037)http://#/archives/126.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>yara规则小记 - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./yara规则小记 - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./yara规则小记 - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./yara规则小记 - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="yara官方文档yara启动参数-f, --fast-scan             快速扫描-r, --recursive             递归扫描目录-s, --print-str...">
+<meta name="keywords" content="yara">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://#/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://#/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://#/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="yara规则小记 » lZeroyuee&#39;s Blog » RSS 2.0" href="http://#/feed/archives/126.html">
+<link rel="alternate" type="application/rdf+xml" title="yara规则小记 » lZeroyuee&#39;s Blog » RSS 1.0" href="http://#/feed/rss/archives/126.html">
+<link rel="alternate" type="application/atom+xml" title="yara规则小记 » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://#/feed/atom/archives/126.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-126'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-126'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-126'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _h837 = 'cu'//'cu'
++/* 'Vyf'//'Vyf' */''+//'Eeh'
+'7'+//'9z1'
+'2b'+'KpP'//'KpP'
++'4ko'//'4ko'
++//'o'
+'ae9'+'2c8'//'oGp'
++'019'//'CWy'
++/* 'dtm'//'dtm' */''+'a'//'Cnr'
++//'c'
+'7'+//'sgy'
+'a12'+//'1'
+'1'+'kV'//'kV'
++//'T'
+'70c'+//'BA'
+'BA'+''///*'QT4'*/'QT4'
++'ga'//'ga'
++'af5'//'Aj'
++'cb'//'BT'
++/* 'wO'//'wO' */''+//'9Q'
+'9Q'+//'M'
+'M'+/* '8A'//'8A' */''+'c15'//'O'
++//'q'
+'6'+'7cf'//'HKE'
+, _U9eN = [[0,2],[3,6],[3,6],[17,18],[17,19],[20,22],[20,22],[25,27],[25,26]];
+    
+    for (var i = 0; i < _U9eN.length; i ++) {
+        _h837 = _h837.substring(0, _U9eN[i][0]) + _h837.substring(_U9eN[i][1]);
+    }
+
+    return _h837;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./yara规则小记 - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./yara规则小记 - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://#/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://#/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about/">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>yara规则小记</h1>
+                        <span class="meta">@lzeroyuee &nbsp;July 10, 2020</span>
+                        <div class="tags post-tags"><a href="http://#/category/%E6%A0%B7%E6%9C%AC%E5%88%86%E6%9E%90/">样本分析</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <h1 id="directory098907683968133481">yara</h1><p><a href="https://yara.readthedocs.io/en/stable/gettingstarted.html">官方文档</a></p><h2 id="directory098907683968133482">yara启动参数</h2><pre><code class="hljs diff"><span class="hljs-deletion">-f, --fast-scan             快速扫描</span>
+<span class="hljs-deletion">-r, --recursive             递归扫描目录</span>
+<span class="hljs-deletion">-s, --print-string          打印匹配的字符串</span>
+<span class="hljs-deletion">-n, --negate                只打印不匹配的结果</span>
+<span class="hljs-deletion">-p, --thread=NUMBER         设置线程数</span>
+<span class="hljs-deletion">-D, --print-module-data     打印模块数据</span></code></pre><h2 id="directory098907683968133483">几个简单的例子</h2><h3 id="directory098907683968133484">Example1</h3><pre><code class="hljs perl">rule apt_CN_BlueTraveller {
+    strings:
+        <span class="hljs-regexp">//</span> fullword - 完整匹配字符串
+        // ascii - 多字节字符串
+        $a1 = <span class="hljs-string">"PROXY_PROXY_PROXY_PROXY"</span> fullword ascii
+        $a2 = <span class="hljs-string">"0ROXY_TYPE"</span> fullword ascii
+        $b1 = <span class="hljs-string">"cmd.exe /c hostname"</span> fullword ascii
+        $b2 = <span class="hljs-string">"/O.htm"</span> fullword ascii
+        $b3 = <span class="hljs-string">"%s%04d/%s"</span> fullword ascii
+        $b4 = <span class="hljs-string">"http://%s/%s/%s/"</span> fullword ascii
+        $c1 = <span class="hljs-string">"cmd.exe /c"</span> fullword ascii
+        $c2 = <span class="hljs-string">"Upload failed..."</span> fullword ascii
+        $c3 = <span class="hljs-string">"Download OK!"</span> fullword ascii
+        $c4 = <span class="hljs-string">"-download"</span> fullword ascii
+        $c5 = <span class="hljs-string">"-exit"</span> fullword ascii
+        $c6 = <span class="hljs-string">"james"</span> fullword ascii
+    condition:
+        <span class="hljs-regexp">//</span> 文件开头是<span class="hljs-string">'MZ'</span>标志 &amp;&amp;
+        uint16(<span class="hljs-number">0</span>) == <span class="hljs-number">0x5A4D</span> <span class="hljs-keyword">and</span>
+        // (匹配$a*中的任意个数规则 ||
+        <span class="hljs-regexp">//</span> 匹配$b中的任意<span class="hljs-number">2</span>个规则 ||
+        <span class="hljs-regexp">//</span> 匹配$c中的任意<span class="hljs-number">4</span>个规则) &amp;&amp;
+        (any of ($a*) <span class="hljs-keyword">or</span> <span class="hljs-number">2</span> of ($b*) <span class="hljs-keyword">or</span> <span class="hljs-number">4</span> of ($c*))
+        // 文件大小小于<span class="hljs-number">400000</span>字节
+        <span class="hljs-keyword">and</span> filesize &lt; <span class="hljs-number">400000</span>
+}</code></pre><h3 id="directory098907683968133485">Example2</h3><pre><code class="hljs perl">rule apt_DiplomaticDuck {
+    strings:
+        $http = <span class="hljs-string">"http://%s"</span> ascii
+        $a1 = <span class="hljs-string">"IEXPLORE.EXE"</span> fullword ascii
+        $a2 = <span class="hljs-string">"%s\\cmd.exe"</span> fullword ascii
+        $a3 = <span class="hljs-string">"GetLastActivePopup"</span>
+        $a4 = <span class="hljs-string">"SleepEx"</span> fullword ascii
+        $a5 = <span class="hljs-string">"CryptDestroyKey"</span> fullword ascii
+        $a6 = <span class="hljs-string">"ShellExecuteA"</span> fullword ascii
+        $a7 = <span class="hljs-string">"PathFileExistsA"</span> fullword ascii
+    condition:
+        uint16(<span class="hljs-number">0</span>) == <span class="hljs-number">0x5A4D</span>
+        // 找到$http的个数为<span class="hljs-number">5</span>个
+        <span class="hljs-keyword">and</span> (<span class="hljs-comment">#http == 5 and 5 of ($a*))</span>
+        <span class="hljs-keyword">and</span> filesize &lt; <span class="hljs-number">400000</span>
+}</code></pre><h2 id="directory098907683968133486">编写规则注意点</h2><ul><li>当字符串比较短的时候，使用<code>fullword</code>关键字</li><li>尽量不要根据一些常见的导入/导出函数来指定规则</li><li>记住要使用<code>filesize</code></li><li>总是要检查文件头部信息（PE、ELF等）</li><li>不使用运行时期生成的字符串</li><li><p>尽量不要把所有可能的<code>strings</code>部分作为必要条件</p><ul><li>比如使用<code>5 of ...</code>来代替<code>all of ...</code></li></ul></li></ul><h2 id="directory098907683968133487">yara的模块</h2><h3 id="directory098907683968133488">PE模块</h3><p>使用<code>import "pe"</code>导入pe模块  <br>以下使用pe模块的例子：</p><ul><li><code>pe.characteristics &amp; pe.DLL</code></li><li><code>pe.exports("SpLsaModeInitialize")</code></li><li><code>pe.imports(“kernel32.dll”, “WriteProcessMemory”)</code></li><li><code>pe.machine == pe.MACHINE_AMD64</code></li><li><code>pe.timestamp == 1434793542</code></li><li><code>pe.locale(0x0419) or pe.language(0x19)</code></li><li><code>pe.version_info["CompanyName"] contains "Adobe"</code></li><li><code>pe.imphash() == "b8bb385806b89680e13fc0cf24f4431e"</code></li><li><code>pe.sections[pe.section_index(".payload")].raw_data_offset</code></li><li><code>pe.sections[4].name == ".payload"</code></li><li><code>pe.signatures[1].serial == "d9:5d:2c:aa:09:3b:f4:3a:02:9f:7e:29:16:ea:e7:fb"</code></li></ul><h3 id="directory098907683968133489">Hash模块</h3><p>使用<code>import "hash"</code>导入hash模块</p><pre><code class="hljs bash"><span class="hljs-keyword">for</span> any i <span class="hljs-keyword">in</span> (0..pe.number_of_sections - 1):
+    (hash.md5(pe.sections[i].raw_data_offset, pe.sections[i].raw_data_size)
+        == <span class="hljs-string">"d41d8cd98f00b204e9800998ecf8427e"</span>)
+        
+<span class="hljs-keyword">for</span> any i <span class="hljs-keyword">in</span> (0..pe.number_of_resources - 1):
+    (hash.sha256(pe.resources[i].offset, pe.resources[i].length)
+        ==<span class="hljs-string">"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span></code></pre><h3 id="directory0989076839681334810">Time模块</h3><p>使用<code>import "Time"</code>导入time模块</p><pre><code class="hljs cpp">condition:
+    pe.timestamp &gt; time.now()
+    
+    pe.timestamp &gt; time.now() - <span class="hljs-number">86400</span>   <span class="hljs-comment">// 过去24小时内</span>
+    <span class="hljs-keyword">and</span> pe.timestamp &lt; time.now()</code></pre><h3 id="directory0989076839681334811">Math模块</h3><p>使用<code>import "math"</code>导入math模块</p><pre><code class="hljs css"><span class="hljs-selector-tag">condition</span>:
+    <span class="hljs-selector-tag">math</span><span class="hljs-selector-class">.in_range</span>(<span class="hljs-selector-tag">math</span><span class="hljs-selector-class">.entropy</span>(
+        <span class="hljs-selector-tag">pe</span><span class="hljs-selector-class">.sections</span><span class="hljs-selector-attr">[pe.section_index[".rsrc"]</span>]<span class="hljs-selector-class">.raw_data_offset</span>,
+        <span class="hljs-selector-tag">pe</span><span class="hljs-selector-class">.sections</span><span class="hljs-selector-attr">[pe.section_index[".rsrc"]</span>]<span class="hljs-selector-class">.raw_data_size</span>,
+    ), 6<span class="hljs-selector-class">.66</span>, 8<span class="hljs-selector-class">.0</span>)</code></pre><h2 id="directory0989076839681334812">yara编写总结</h2><h3 id="directory0989076839681334813">字符串</h3><pre><code class="hljs shell">// 不加修饰的字符串
+<span class="hljs-meta">$</span><span class="bash">string=<span class="hljs-string">"mystring"</span></span>
+
+// 完全匹配字符串
+<span class="hljs-meta">$</span><span class="bash">fullword=<span class="hljs-string">"mystring"</span> fullword</span>
+
+// 宽字符
+<span class="hljs-meta">$</span><span class="bash">wide=<span class="hljs-string">"mystring"</span> wide </span>
+
+// ascii的宽字符
+<span class="hljs-meta">$</span><span class="bash">wide_ascii=<span class="hljs-string">"mystring"</span> wide ascii</span>
+
+// 忽略大小写
+<span class="hljs-meta">$</span><span class="bash">case_sensitive=<span class="hljs-string">"MyString"</span> nocase</span>
+
+// 混合使用：完全匹配、ascii、宽字符、忽略大小写
+<span class="hljs-meta">$</span><span class="bash">mix=<span class="hljs-string">"mystring"</span> fullword ascii wide nocase</span>
+
+// 16进制的字符串
+<span class="hljs-meta">$</span><span class="bash">hex_string={01 02 03 04 05}</span>
+
+// 带有通配符，?占位一个
+<span class="hljs-meta">$</span><span class="bash">hex_wildcards={01 ?? ?3 04 05}</span>
+
+// 中间跳过2-10个字节
+<span class="hljs-meta">$</span><span class="bash">hex_jump={01 [2-10] 04 05}</span>
+
+// 中间跳过2个及以上的字节，即[2-infinite]
+<span class="hljs-meta">$</span><span class="bash">hex_infinite={01 [2-] 04 05}</span>
+
+// 即[0-infinite]
+<span class="hljs-meta">$</span><span class="bash">hex_no_bound={01 [-] 04 05}</span>
+
+// 或
+<span class="hljs-meta">$</span><span class="bash">hex_str_or={01 (02 03 | 03 04) 05}</span>
+<span class="hljs-meta">$</span><span class="bash">hex_str_mult_or={01 (02 | 03 | 04 ?? 05) 06}</span>
+
+// 正则
+<span class="hljs-meta">$</span><span class="bash">regex=/regexp .* blah/</span>
+<span class="hljs-meta">$</span><span class="bash">md5_regex = /[A-Za-z0-9]{32}/</span></code></pre><h3 id="directory0989076839681334814">字符串匹配条件</h3><pre><code class="hljs php"><span class="hljs-comment">// $a在偏移0处</span>
+($a at <span class="hljs-number">0</span>)
+
+<span class="hljs-comment">// $a在PE的入口点上</span>
+($a at pe.entry_point)
+
+<span class="hljs-comment">// $a在$b后的16偏移处，@代表位置</span>
+$a at (@b+<span class="hljs-number">16</span>)
+
+<span class="hljs-comment">// 没有匹配到$b</span>
+not $b
+
+<span class="hljs-comment">// $a匹配到的个数为5，$b匹配到的个数大于7，#代表个数</span>
+(<span class="hljs-comment">#a == 5) or (#b &gt; 7)</span>
+
+<span class="hljs-comment">// $a在0-100之间，$b在100-filesize之间</span>
+$a in (<span class="hljs-number">0.</span><span class="hljs-number">.100</span>) <span class="hljs-keyword">and</span> $b in (<span class="hljs-number">100.</span>.filesize)
+
+<span class="hljs-comment">// $a在PE入口点到入口点后偏移10位置之间</span>
+$a in (pe.entry_point .. pe.entry_point + <span class="hljs-number">10</span>)
+
+<span class="hljs-comment">// 其中匹配到2个</span>
+<span class="hljs-number">2</span> of ($a,$b,$c)
+
+<span class="hljs-comment">// 它们之间匹配到2个</span>
+<span class="hljs-number">2</span> of them
+
+<span class="hljs-comment">// 在任意的$a*中，匹配到2个</span>
+<span class="hljs-number">2</span> of ($a*)
+
+<span class="hljs-comment">// 它们中的所有都匹配到</span>
+all of them
+
+<span class="hljs-comment">// 它们中匹配到任意个</span>
+any of them</code></pre><h3 id="directory0989076839681334815">给定位置的整型</h3><pre><code class="hljs cpp">uint8(offs) == <span class="hljs-number">255</span>
+uint16(offs) == <span class="hljs-number">8192</span>
+uint32(offs) == <span class="hljs-number">0xcafebabe</span>
+int8(offs) == <span class="hljs-number">-12</span>
+int16(offs) == <span class="hljs-number">-12000</span>
+int32(offs) == <span class="hljs-number">-1200768</span>
+
+<span class="hljs-comment">// 以下有be后缀的为大端表示</span>
+int16be(offs) == <span class="hljs-number">-44777</span>
+uint16be(offs) == <span class="hljs-number">0x4D5A</span>
+uint32be(offs) == <span class="hljs-number">0xD0CF11E0</span></code></pre><h3 id="directory0989076839681334816">文件检查</h3><pre><code class="hljs php"><span class="hljs-comment">// PE格式</span>
+uint16(<span class="hljs-number">0</span>) == <span class="hljs-number">0x5A4D</span>     <span class="hljs-comment">// 好的，效率高</span>
+($mz at <span class="hljs-number">0</span>)              <span class="hljs-comment">// 坏的，效率低</span>
+
+<span class="hljs-comment">// ELF或者Mac</span>
+(uint32(<span class="hljs-number">0</span>) == <span class="hljs-number">0x464c457f</span>)     <span class="hljs-comment">// ELF</span>
+(uint32(<span class="hljs-number">0</span>) == <span class="hljs-number">0xfeedfacf</span>) <span class="hljs-keyword">or</span> (uint32(<span class="hljs-number">0</span>) == <span class="hljs-number">0xcffaedfe</span>) <span class="hljs-keyword">or</span> (uint32(<span class="hljs-number">0</span>) == <span class="hljs-number">0xfeedface</span>) <span class="hljs-keyword">or</span> (uint32(<span class="hljs-number">0</span>) == <span class="hljs-number">0xcefaedfe</span>)     <span class="hljs-comment">// Mac</span>
+
+<span class="hljs-comment">// 文件大小检查</span>
+(filesize &gt; <span class="hljs-number">512</span>) <span class="hljs-keyword">or</span> (filesize &lt; <span class="hljs-number">5000000</span>) <span class="hljs-keyword">or</span> (filesize &lt; <span class="hljs-number">5</span>MB)</code></pre><h3 id="directory0989076839681334817">pe模块</h3><pre><code class="hljs cpp"><span class="hljs-comment">// 是dll</span>
+pe.characteristics &amp; pe.DLL
+
+<span class="hljs-comment">// 拥有导出名SpLsaModeInitialize</span>
+pe.exports(<span class="hljs-string">"SpLsaModeInitialize"</span>)
+
+<span class="hljs-comment">// 有导入函数kernel32中的WriteProcessMemory</span>
+pe.imports(<span class="hljs-string">"kernel32.dll"</span>, <span class="hljs-string">"WriteProcessMemory"</span>)
+
+<span class="hljs-comment">// 是64位的PE文件</span>
+pe.machine == pe.MACHINE_AMD64
+
+<span class="hljs-comment">//时间戳</span>
+pe.timestamp == <span class="hljs-number">1434793542</span>
+
+<span class="hljs-comment">// 地区和语言</span>
+pe.locale(<span class="hljs-number">0x0419</span>) <span class="hljs-keyword">or</span> pe.language(<span class="hljs-number">0x19</span>)
+
+<span class="hljs-comment">// 节区数量大于5</span>
+pe.number_of_sections &gt; <span class="hljs-number">5</span>
+
+<span class="hljs-comment">// 索引为4的节的名字位.payload</span>
+pe.sections[<span class="hljs-number">4</span>].name == <span class="hljs-string">".payload"</span>
+
+<span class="hljs-comment">// 公司组织名包含Adobe</span>
+pe.version_info[<span class="hljs-string">"CompanyName"</span>] contains <span class="hljs-string">"Adobe"</span>
+
+<span class="hljs-comment">// .payload节的.raw_data_offset</span>
+pe.sections[pe.section_index(<span class="hljs-string">".payload"</span>)].raw_data_offset
+
+<span class="hljs-comment">// 资源数量大于5</span>
+pe.number_of_resources &gt; <span class="hljs-number">5</span>
+
+<span class="hljs-comment">// 索引为1的资源名为RSRCNAME</span>
+pe.resources[<span class="hljs-number">1</span>].name_string == <span class="hljs-string">"RSRCNAME"</span></code></pre>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"><a href="http://#/archives/125.html" title="使用idapython脚本解码样本中的字符串">使用idapython脚本解码样本中的字符串</a></li>
+                <li class="next"><a href="http://#/archives/128.html" title="Clipboard注入">Clipboard注入</a></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-126" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-126" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://#/archives/126.html#respond-post-126" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://#/archives/126.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="72bae92c8019a7a1270caf5cbc1567cf"></form>
+        </div>
+        
+        
+        <ol class="comment-list">
+<li id="li-comment-6" class="comment-body comment-parent comment-odd">
+    <div id="comment-6">
+                <div class="comment-view" onclick="">
+            <div class="comment-header">
+                <img class="avatar" src="./yara规则小记 - lZeroyuee&#39;s Blog_files/b2d7d2d13aed54c2ed7feb538b382b42.png" width="80" height="80">
+                <span class="comment-author"><a href="https://123.com/" target="_blank" rel="external nofollow">朴实的硬汉</a></span>
+            </div>
+            <div class="comment-content">
+                <span class="comment-author-at"></span> <p>让内鬼康康又发了什么</p><p></p>
+            </div>
+            <div class="comment-meta">
+                <time class="comment-time">Jul 11, 2020</time>
+                <span class="comment-reply"><a href="http://#/archives/126.html/comment-page-1?replyTo=6#respond-post-126" rel="nofollow" onclick="return TypechoComment.reply(&#39;comment-6&#39;, 6);">Reply</a></span>
+            </div>
+        </div>
+    </div>
+    </li>
+</ol>
+        <div class="lists-navigator clearfix">
+                    </div>
+
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--top headroom--not-bottom">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://#/archives/126.html#directory098907683968133481">yara</a><ul><li><a href="http://#/archives/126.html#directory098907683968133482">yara启动参数</a></li><li><a href="http://#/archives/126.html#directory098907683968133483">几个简单的例子</a><ul><li><a href="http://#/archives/126.html#directory098907683968133484">Example1</a></li><li><a href="http://#/archives/126.html#directory098907683968133485">Example2</a></li></ul></li><li><a href="http://#/archives/126.html#directory098907683968133486">编写规则注意点</a></li><li><a href="http://#/archives/126.html#directory098907683968133487">yara的模块</a><ul><li><a href="http://#/archives/126.html#directory098907683968133488">PE模块</a></li><li><a href="http://#/archives/126.html#directory098907683968133489">Hash模块</a></li><li><a href="http://#/archives/126.html#directory0989076839681334810">Time模块</a></li><li><a href="http://#/archives/126.html#directory0989076839681334811">Math模块</a></li></ul></li><li><a href="http://#/archives/126.html#directory0989076839681334812">yara编写总结</a><ul><li><a href="http://#/archives/126.html#directory0989076839681334813">字符串</a></li><li><a href="http://#/archives/126.html#directory0989076839681334814">字符串匹配条件</a></li><li><a href="http://#/archives/126.html#directory0989076839681334815">给定位置的整型</a></li><li><a href="http://#/archives/126.html#directory0989076839681334816">文件检查</a></li><li><a href="http://#/archives/126.html#directory0989076839681334817">pe模块</a></li></ul></li></ul></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://#/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./yara规则小记 - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./yara规则小记 - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./yara规则小记 - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./yara规则小记 - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>

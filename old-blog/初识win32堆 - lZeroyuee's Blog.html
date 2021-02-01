@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037)http://#/archives/180.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>初识win32堆 - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./初识win32堆 - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./初识win32堆 - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./初识win32堆 - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="win32堆管理摘录于《0day安全》、《漏洞战争》堆块：堆区的内存按不同大小组织成块，以堆块位单位进行标识，其包含：块首：堆块自身的信息块身：数据部分堆表：一般位于堆区的起始位置，用于索引堆区...">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://#/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://#/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://#/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="初识win32堆 » lZeroyuee&#39;s Blog » RSS 2.0" href="http://#/feed/archives/180.html">
+<link rel="alternate" type="application/rdf+xml" title="初识win32堆 » lZeroyuee&#39;s Blog » RSS 1.0" href="http://#/feed/rss/archives/180.html">
+<link rel="alternate" type="application/atom+xml" title="初识win32堆 » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://#/feed/atom/archives/180.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-180'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-180'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-180'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _e7rJTsy = '4'//'eXv'
++'Fx'//'Fx'
++//'5'
+'36'+//'YG'
+'fb'+''///*'zaC'*/'zaC'
++/* 's0'//'s0' */''+//'x'
+'9'+//'5dI'
+'e'+/* 'B7'//'B7' */''+'dc'//'Yy'
++'b8a'//'l'
++''///*'YeD'*/'YeD'
++//'LTB'
+'6a3'+'7'//'N'
++//'f'
+'cc'+'b1'//'l9'
++'f'//'FL'
++//'Fs'
+'6b'+//'J8'
+'286'+'85'//'uC'
++//'fCm'
+'b29'+//'iWt'
+'6', _idyE1nm = [[1,3]];
+    
+    for (var i = 0; i < _idyE1nm.length; i ++) {
+        _e7rJTsy = _e7rJTsy.substring(0, _idyE1nm[i][0]) + _e7rJTsy.substring(_idyE1nm[i][1]);
+    }
+
+    return _e7rJTsy;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./初识win32堆 - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./初识win32堆 - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://#/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://#/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about/">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>初识win32堆</h1>
+                        <span class="meta">@lzeroyuee &nbsp;October 24, 2020</span>
+                        <div class="tags post-tags"><a href="http://#/category/Windows/">Windows</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <h1 id="directory076632812005378211">win32堆管理</h1><p>摘录于《0day安全》、《漏洞战争》</p><ul><li><p>堆块：堆区的内存按不同大小组织成块，以堆块位单位进行标识，其包含：</p><ol><li>块首：堆块自身的信息</li><li>块身：数据部分</li></ol></li><li>堆表：一般位于堆区的起始位置，用于索引堆区中的堆块</li></ul><p><img src="./初识win32堆 - lZeroyuee&#39;s Blog_files/2690088773.png" alt="1.png" title="1.png"></p><p>在Windows中，占用态的堆块被使用它的程序索引，而空闲态的堆块才被堆表索引</p><p>其中，最重要的有两种堆表：</p><ol><li>空表 <strong>FreeList</strong></li><li>快表 <strong>Lookaside</strong></li></ol><h2 id="directory076632812005378212">空表 FreeList</h2><p>空闲双向链表，有<code>FreeList[0] ~ FreeList[127]</code>128项，其中：</p><ol><li><code>FreeList[0]</code>为所有<strong>大于等于1024</strong>字节且小于<code>512KB</code>的空闲堆块的链表，按照堆块大小<strong>升序</strong>排列</li><li>当<code>i &gt;= 1 &amp;&amp; i &lt;= 127</code>时，<code>FreeList[i]</code>为所有大小为<code>i * 8</code>字节的空闲堆块的链表</li></ol><p><img src="./初识win32堆 - lZeroyuee&#39;s Blog_files/798602450.png" alt="2.png" title="2.png"></p><h2 id="directory076632812005378213">快表 Lookaside</h2><p>快速单向链表，为了加速堆块分配而设计出来的</p><p>其空闲块块首被设置为<strong>占用态</strong>而防止了堆块合并操作，同样拥有<code>Lookaside[0] ~ Lookaside[127]</code>128项</p><p>组织方式与空表类似，区别如下：</p><ol><li>此表为单向链表</li><li>每项最多只有<strong>4</strong>个堆块节点</li><li>快表总是被初始化为空</li></ol><p><img src="./初识win32堆 - lZeroyuee&#39;s Blog_files/2278364879.png" alt="3.png" title="3.png"></p><h2 id="directory076632812005378214">堆块的分配和释放</h2><p>在Windows中，堆块的分配算法并不固定，根据系统版本不同而分配策略也不经相同，大致如下：</p><table class="am-table"><thead><tr><th align="left"> </th><th align="left">分配</th><th align="left">释放</th></tr></thead><tbody><tr><td align="left">小块<br>Size &lt; 1KB</td><td align="left">首先进行快表分配<br>若快表分配失败，进行普通空表分配<br>若普通空表分配失败，使用堆缓存分配<br>若堆缓存分配失败，尝试从<code>FreeList[0]</code>中分配<br>若<code>FreeList[0]</code>分配失败，进行内存紧缩后在尝试分配<br>若仍无法分配，返回<code>NULL</code></td><td align="left">优先链入快表(只能链入4个)<br>如果快表满，则将其链入相应的空表</td></tr><tr><td align="left">大块<br>1KB &lt; Size &lt; 512KB</td><td align="left">首先使用堆缓存进行分配<br>若堆缓存分配失败，使用<code>FreeList[0]</code>中的大块进行分配</td><td align="left">优先将其放入堆缓存<br>若堆缓存满，将链入<code>FreeList[0]</code></td></tr><tr><td align="left">巨块<br>Size &gt;= 512KB</td><td align="left">一般来说巨块申请非常罕见，要用到虚分配方法（实际上并不是从堆区分配的）<br>这种类型的堆块在堆溢出利用中几乎不会遇到</td><td align="left">直接释放，没有堆表操作</td></tr></tbody></table><p>需要注意的：</p><ol><li>快表中空闲块被设置为<strong>占用态</strong>，因此不会发送堆块合并，且只有<strong>精确匹配</strong>时才会分配</li><li>快表是单向链表，且每项只有<strong>4</strong>个堆块节点，在分配和释放时总是优先使用快表，失败时才用空表</li></ol><h3 id="directory076632812005378215">Windows下堆分配体系概览</h3><p><img src="./初识win32堆 - lZeroyuee&#39;s Blog_files/3224667219.png" alt="4.png" title="4.png"></p><p>以下参考ReactOS的<code>RtlAllocateHeap</code>函数</p><pre><code class="lang-CPP hljs"><span class="hljs-function">PVOID NTAPI
+<span class="hljs-title">RtlAllocateHeap</span><span class="hljs-params">(IN PVOID HeapPtr,
+                IN ULONG Flags,
+                IN SIZE_T Size)</span>
+</span>{
+    PHEAP Heap = (PHEAP)HeapPtr;
+    PULONG FreeListsInUse;
+    ULONG FreeListsInUseUlong;
+    SIZE_T AllocationSize;
+    SIZE_T Index, InUseIndex, i;
+    PLIST_ENTRY FreeListHead;
+    PHEAP_ENTRY InUseEntry;
+    PHEAP_FREE_ENTRY FreeBlock;
+    UCHAR FreeFlags, EntryFlags = HEAP_ENTRY_BUSY;
+    EXCEPTION_RECORD ExceptionRecord;
+    BOOLEAN HeapLocked = FALSE;
+    PHEAP_VIRTUAL_ALLOC_ENTRY VirtualBlock = <span class="hljs-literal">NULL</span>;
+    PHEAP_ENTRY_EXTRA Extra;
+    NTSTATUS Status;
+
+    <span class="hljs-comment">/* Force flags */</span>
+    Flags |= Heap-&gt;ForceFlags;
+
+    <span class="hljs-comment">/* Call special heap */</span>
+    <span class="hljs-keyword">if</span> (RtlpHeapIsSpecial(Flags))    <span class="hljs-comment">// 判断是否是Debug模式，调用Debug分配算法</span>
+        <span class="hljs-keyword">return</span> RtlDebugAllocateHeap(Heap, Flags, Size);
+
+    <span class="hljs-comment">/* Check for the maximum size */</span>
+    <span class="hljs-keyword">if</span> (Size &gt;= <span class="hljs-number">0x80000000</span>)        <span class="hljs-comment">// 检查最大分配大小</span>
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_NO_MEMORY);
+        DPRINT1(<span class="hljs-string">"HEAP: Allocation failed!\n"</span>);
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;
+    }
+
+    <span class="hljs-keyword">if</span> (Flags &amp; (HEAP_CREATE_ENABLE_TRACING))    <span class="hljs-comment">// 跟踪信息</span>
+    {
+        DPRINT1(<span class="hljs-string">"HEAP: RtlAllocateHeap is called with unsupported flags %x, ignoring\n"</span>, Flags);
+    }
+
+    <span class="hljs-comment">//DPRINT("RtlAllocateHeap(%p %x %x)\n", Heap, Flags, Size);</span>
+
+    <span class="hljs-comment">/* Calculate allocation size and index */</span>    <span class="hljs-comment">// -&gt; 计算分配大小</span>
+    <span class="hljs-keyword">if</span> (Size)
+        AllocationSize = Size;
+    <span class="hljs-keyword">else</span>
+        AllocationSize = <span class="hljs-number">1</span>;
+    AllocationSize = (AllocationSize + Heap-&gt;AlignRound) &amp; Heap-&gt;AlignMask;
+
+    <span class="hljs-comment">/* Add extra flags in case of settable user value feature is requested,
+       or there is a tag (small or normal) or there is a request to
+       capture stack backtraces */</span>
+    <span class="hljs-keyword">if</span> ((Flags &amp; HEAP_EXTRA_FLAGS_MASK) ||
+        Heap-&gt;PseudoTagEntries)
+    {
+        <span class="hljs-comment">/* Add flag which means that the entry will have extra stuff attached */</span>
+        EntryFlags |= HEAP_ENTRY_EXTRA_PRESENT;
+
+        <span class="hljs-comment">/* Account for extra stuff size */</span>
+        AllocationSize += <span class="hljs-keyword">sizeof</span>(HEAP_ENTRY_EXTRA);    <span class="hljs-comment">// 检查是否有EXTRA标志，有则大小+sizeof(HEAP_ENTRY_EXTRA)</span>
+    }
+
+    <span class="hljs-comment">/* Add settable user flags, if any */</span>
+    EntryFlags |= (Flags &amp; HEAP_SETTABLE_USER_FLAGS) &gt;&gt; <span class="hljs-number">4</span>;
+
+    Index = AllocationSize &gt;&gt; HEAP_ENTRY_SHIFT;        <span class="hljs-comment">// 获取链表索引</span>
+
+    <span class="hljs-comment">/* Acquire the lock if necessary */</span>
+    <span class="hljs-keyword">if</span> (!(Flags &amp; HEAP_NO_SERIALIZE))    <span class="hljs-comment">// 多线程环境获取锁</span>
+    {
+        RtlEnterHeapLock(Heap-&gt;LockVariable, TRUE);
+        HeapLocked = TRUE;
+    }
+
+    <span class="hljs-comment">/* Depending on the size, the allocation is going to be done from dedicated,
+       non-dedicated lists or a virtual block of memory */</span>
+    <span class="hljs-keyword">if</span> (Index &lt; HEAP_FREELISTS)
+    {
+        FreeListHead = &amp;Heap-&gt;FreeLists[Index];
+
+        <span class="hljs-keyword">if</span> (!IsListEmpty(FreeListHead))        <span class="hljs-comment">// 精确匹配</span>
+        {
+            <span class="hljs-comment">/* There is a free entry in this list */</span>
+            FreeBlock = CONTAINING_RECORD(FreeListHead-&gt;Blink,
+                                          HEAP_FREE_ENTRY,
+                                          FreeList);
+
+            <span class="hljs-comment">/* Save flags and remove the free entry */</span>
+            FreeFlags = FreeBlock-&gt;Flags;
+            RtlpRemoveFreeBlock(Heap, FreeBlock, TRUE, FALSE);
+
+            <span class="hljs-comment">/* Update the total free size of the heap */</span>
+            Heap-&gt;TotalFreeSize -= Index;
+
+            <span class="hljs-comment">/* Initialize this block */</span>
+            InUseEntry = (PHEAP_ENTRY)FreeBlock;
+            InUseEntry-&gt;Flags = EntryFlags | (FreeFlags &amp; HEAP_ENTRY_LAST_ENTRY);
+            InUseEntry-&gt;UnusedBytes = (UCHAR)(AllocationSize - Size);
+            InUseEntry-&gt;SmallTagIndex = <span class="hljs-number">0</span>;
+        }
+        <span class="hljs-keyword">else</span>    <span class="hljs-comment">// 最小满分配</span>
+        {
+            <span class="hljs-comment">/* Find smallest free block which this request could fit in */</span>
+            InUseIndex = Index &gt;&gt; <span class="hljs-number">5</span>;
+            FreeListsInUse = &amp;Heap-&gt;u.FreeListsInUseUlong[InUseIndex];
+
+            <span class="hljs-comment">/* This bit magic disables all sizes which are less than the requested allocation size */</span>
+            FreeListsInUseUlong = *FreeListsInUse++ &amp; ~((<span class="hljs-number">1</span> &lt;&lt; ((ULONG)Index &amp; <span class="hljs-number">0x1f</span>)) - <span class="hljs-number">1</span>);
+
+            <span class="hljs-comment">/* If size is definitily more than our lists - go directly to the non-dedicated one */</span>
+            <span class="hljs-keyword">if</span> (InUseIndex &gt; <span class="hljs-number">3</span>)
+                <span class="hljs-keyword">return</span> RtlpAllocateNonDedicated(Heap, Flags, Size, AllocationSize, Index, HeapLocked);
+
+            <span class="hljs-comment">/* Go through the list */</span>
+            <span class="hljs-keyword">for</span> (i = InUseIndex; i &lt; <span class="hljs-number">4</span>; i++)
+            {
+                <span class="hljs-keyword">if</span> (FreeListsInUseUlong)
+                {
+                    FreeListHead = &amp;Heap-&gt;FreeLists[i * <span class="hljs-number">32</span>];
+                    <span class="hljs-keyword">break</span>;
+                }
+
+                <span class="hljs-keyword">if</span> (i &lt; <span class="hljs-number">3</span>) FreeListsInUseUlong = *FreeListsInUse++;
+            }
+
+            <span class="hljs-comment">/* Nothing found, search in the non-dedicated list */</span>
+            <span class="hljs-keyword">if</span> (i == <span class="hljs-number">4</span>)
+                <span class="hljs-keyword">return</span> RtlpAllocateNonDedicated(Heap, Flags, Size, AllocationSize, Index, HeapLocked);
+
+            <span class="hljs-comment">/* That list is found, now calculate exact block  */</span>
+            FreeListHead += RtlpFindLeastSetBit(FreeListsInUseUlong);
+
+            <span class="hljs-comment">/* Take this entry and remove it from the list of free blocks */</span>
+            FreeBlock = CONTAINING_RECORD(FreeListHead-&gt;Blink,
+                                          HEAP_FREE_ENTRY,
+                                          FreeList);
+            RtlpRemoveFreeBlock(Heap, FreeBlock, TRUE, FALSE);
+
+            <span class="hljs-comment">/* Split it */</span>
+            InUseEntry = RtlpSplitEntry(Heap, Flags, FreeBlock, AllocationSize, Index, Size);
+        }
+
+        <span class="hljs-comment">/* Release the lock */</span>
+        <span class="hljs-keyword">if</span> (HeapLocked) RtlLeaveHeapLock(Heap-&gt;LockVariable);    <span class="hljs-comment">// 多线程环境解锁</span>
+
+        <span class="hljs-comment">/* Zero memory if that was requested */</span>
+        <span class="hljs-keyword">if</span> (Flags &amp; HEAP_ZERO_MEMORY)
+            RtlZeroMemory(InUseEntry + <span class="hljs-number">1</span>, Size);
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Heap-&gt;Flags &amp; HEAP_FREE_CHECKING_ENABLED)
+        {
+            <span class="hljs-comment">/* Fill this block with a special pattern */</span>
+            RtlFillMemoryUlong(InUseEntry + <span class="hljs-number">1</span>, Size &amp; ~<span class="hljs-number">0x3</span>, ARENA_INUSE_FILLER);
+        }
+
+        <span class="hljs-comment">/* Fill tail of the block with a special pattern too if requested */</span>
+        <span class="hljs-keyword">if</span> (Heap-&gt;Flags &amp; HEAP_TAIL_CHECKING_ENABLED)
+        {
+            RtlFillMemory((PCHAR)(InUseEntry + <span class="hljs-number">1</span>) + Size, <span class="hljs-keyword">sizeof</span>(HEAP_ENTRY), HEAP_TAIL_FILL);
+            InUseEntry-&gt;Flags |= HEAP_ENTRY_FILL_PATTERN;
+        }
+
+        <span class="hljs-comment">/* Prepare extra if it's present */</span>
+        <span class="hljs-keyword">if</span> (InUseEntry-&gt;Flags &amp; HEAP_ENTRY_EXTRA_PRESENT)
+        {
+            Extra = RtlpGetExtraStuffPointer(InUseEntry);
+            RtlZeroMemory(Extra, <span class="hljs-keyword">sizeof</span>(HEAP_ENTRY_EXTRA));
+
+            <span class="hljs-comment">// <span class="hljs-doctag">TODO:</span> Tagging</span>
+        }
+
+        <span class="hljs-comment">/* User data starts right after the entry's header */</span>
+        <span class="hljs-keyword">return</span> InUseEntry + <span class="hljs-number">1</span>;
+    }
+    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Index &lt;= Heap-&gt;VirtualMemoryThreshold)        <span class="hljs-comment">// FreeList[0]分配</span>
+    {
+        <span class="hljs-comment">/* The block is too large for dedicated lists, but fine for a non-dedicated one */</span>
+        <span class="hljs-keyword">return</span> RtlpAllocateNonDedicated(Heap, Flags, Size, AllocationSize, Index, HeapLocked);
+    }
+    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Heap-&gt;Flags &amp; HEAP_GROWABLE)    <span class="hljs-comment">// 虚分配</span>
+    {
+        <span class="hljs-comment">/* We've got a very big allocation request, satisfy it by directly allocating virtual memory */</span>
+        AllocationSize += <span class="hljs-keyword">sizeof</span>(HEAP_VIRTUAL_ALLOC_ENTRY) - <span class="hljs-keyword">sizeof</span>(HEAP_ENTRY);
+
+        Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                         (PVOID *)&amp;VirtualBlock,
+                                         <span class="hljs-number">0</span>,
+                                         &amp;AllocationSize,
+                                         MEM_COMMIT,
+                                         PAGE_READWRITE);
+
+        <span class="hljs-keyword">if</span> (!NT_SUCCESS(Status))
+        {
+            <span class="hljs-comment">// Set STATUS!</span>
+            <span class="hljs-comment">/* Release the lock */</span>
+            <span class="hljs-keyword">if</span> (HeapLocked) RtlLeaveHeapLock(Heap-&gt;LockVariable);
+            DPRINT1(<span class="hljs-string">"HEAP: Allocation failed!\n"</span>);
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;
+        }
+
+        <span class="hljs-comment">/* Initialize the newly allocated block */</span>
+        VirtualBlock-&gt;BusyBlock.Size = (USHORT)(AllocationSize - Size);
+        ASSERT(VirtualBlock-&gt;BusyBlock.Size &gt;= <span class="hljs-keyword">sizeof</span>(HEAP_VIRTUAL_ALLOC_ENTRY));
+        VirtualBlock-&gt;BusyBlock.Flags = EntryFlags | HEAP_ENTRY_VIRTUAL_ALLOC | HEAP_ENTRY_EXTRA_PRESENT;
+        VirtualBlock-&gt;CommitSize = AllocationSize;
+        VirtualBlock-&gt;ReserveSize = AllocationSize;
+
+        <span class="hljs-comment">/* Insert it into the list of virtual allocations */</span>
+        InsertTailList(&amp;Heap-&gt;VirtualAllocdBlocks, &amp;VirtualBlock-&gt;Entry);
+
+        <span class="hljs-comment">/* Release the lock */</span>
+        <span class="hljs-keyword">if</span> (HeapLocked) RtlLeaveHeapLock(Heap-&gt;LockVariable);
+
+        <span class="hljs-comment">/* Return pointer to user data */</span>
+        <span class="hljs-keyword">return</span> VirtualBlock + <span class="hljs-number">1</span>;
+    }
+
+    <span class="hljs-comment">/* Generate an exception */</span>
+    <span class="hljs-keyword">if</span> (Flags &amp; HEAP_GENERATE_EXCEPTIONS)
+    {
+        ExceptionRecord.ExceptionCode = STATUS_NO_MEMORY;
+        ExceptionRecord.ExceptionRecord = <span class="hljs-literal">NULL</span>;
+        ExceptionRecord.NumberParameters = <span class="hljs-number">1</span>;
+        ExceptionRecord.ExceptionFlags = <span class="hljs-number">0</span>;
+        ExceptionRecord.ExceptionInformation[<span class="hljs-number">0</span>] = AllocationSize;
+
+        RtlRaiseException(&amp;ExceptionRecord);
+    }
+
+    RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_BUFFER_TOO_SMALL);
+
+    <span class="hljs-comment">/* Release the lock */</span>
+    <span class="hljs-keyword">if</span> (HeapLocked) RtlLeaveHeapLock(Heap-&gt;LockVariable);
+    DPRINT1(<span class="hljs-string">"HEAP: Allocation failed!\n"</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;
+}</code></pre><h1 id="directory076632812005378216">堆结构</h1><h2 id="directory076632812005378217">堆块结构</h2><p>堆块由块首与块身组成，块首记录着堆块本身的信息，而块身则是数据部分，故堆块的总大小总是比申请时所指定的大小多出一部分</p><p>由API申请到的堆内存所返回的地址则是指向块身的</p><ul><li>在32位下，块首为8字节，且块首+块身总大小8字节对齐</li><li>在64位下，块首为16字节，且块首+块身总大小16字节对齐</li></ul><p><img src="./初识win32堆 - lZeroyuee&#39;s Blog_files/3398089214.png" alt="5.png" title="5.png"></p><p>在空闲态块中，块首后的Data区域前是一对双向链表的指针，在变为占用块后此空间将交还给Data</p><p>在占用态块中，块首是<code>_HEAP_ENTRY</code>结构</p><p><strong>注</strong>：以下结由Win10 2004版的PDB文件转换而来</p><h3 id="directory076632812005378218">_HEAP_ENTRY</h3><pre><code class="lang-CPP hljs">          <span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_ENTRY</span>                          // 26 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x10</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>) 
+          {</span>                                                                                       
+              <span class="hljs-keyword">union</span>                                           <span class="hljs-comment">// 5 elements, 0x10 bytes (sizeof)  </span>
+              {                                                                                   
+<span class="hljs-comment">/*0x000*/</span>         <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_UNPACKED_ENTRY</span> <span class="hljs-title">UnpackedEntry</span>;</span>  <span class="hljs-comment">// 10 elements, 0x10 bytes (sizeof) </span>
+                  <span class="hljs-class"><span class="hljs-keyword">struct</span>                                      // 2 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x10</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>)  
+                  {</span>                                                                               
+<span class="hljs-comment">/*0x000*/</span>             VOID*        PreviousBlockPrivateData;                                      
+                      <span class="hljs-keyword">union</span>                                   <span class="hljs-comment">// 3 elements, 0x8 bytes (sizeof)   </span>
+                      {                                                                           
+                          <span class="hljs-class"><span class="hljs-keyword">struct</span>                              // 3 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x8</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>)   
+                          {</span>                                                                       
+<span class="hljs-comment">/*0x008*/</span>                     UINT16       Size;                                                  
+<span class="hljs-comment">/*0x00A*/</span>                     UINT8        Flags;                                                 
+<span class="hljs-comment">/*0x00B*/</span>                     UINT8        SmallTagIndex;                                         
+<span class="hljs-comment">/*0x00C*/</span>                     UINT8        _PADDING0_[<span class="hljs-number">0x4</span>];                                       
+                          };                                                                      
+                          <span class="hljs-class"><span class="hljs-keyword">struct</span>                              // 4 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x8</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>)   
+                          {</span>                                                                       
+<span class="hljs-comment">/*0x008*/</span>                     ULONG32      SubSegmentCode;                                        
+<span class="hljs-comment">/*0x00C*/</span>                     UINT16       PreviousSize;                                          
+                              <span class="hljs-keyword">union</span>                           <span class="hljs-comment">// 2 elements, 0x1 bytes (sizeof)   </span>
+                              {                                                                   
+<span class="hljs-comment">/*0x00E*/</span>                         UINT8        SegmentOffset;                                     
+<span class="hljs-comment">/*0x00E*/</span>                         UINT8        LFHFlags;                                          
+                              };                                                                  
+<span class="hljs-comment">/*0x00F*/</span>                     UINT8        UnusedBytes;                                           
+                          };                                                                      
+<span class="hljs-comment">/*0x008*/</span>                 UINT64       CompactHeader;                                             
+                      };                                                                          
+                  };                                                                              
+<span class="hljs-comment">/*0x000*/</span>         <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_EXTENDED_ENTRY</span> <span class="hljs-title">ExtendedEntry</span>;</span>  <span class="hljs-comment">// 7 elements, 0x10 bytes (sizeof)  </span>
+                  <span class="hljs-class"><span class="hljs-keyword">struct</span>                                      // 5 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x10</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>)  
+                  {</span>                                                                               
+<span class="hljs-comment">/*0x000*/</span>             VOID*        Reserved;                                                      
+                      <span class="hljs-keyword">union</span>                                   <span class="hljs-comment">// 2 elements, 0x4 bytes (sizeof)   </span>
+                      {                                                                           
+                          <span class="hljs-class"><span class="hljs-keyword">struct</span>                              // 2 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x4</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>)   
+                          {</span>                                                                       
+<span class="hljs-comment">/*0x008*/</span>                     UINT16       FunctionIndex;                                         
+<span class="hljs-comment">/*0x00A*/</span>                     UINT16       ContextValue;                                          
+                          };                                                                      
+<span class="hljs-comment">/*0x008*/</span>                 ULONG32      InterceptorValue;                                          
+                      };                                                                          
+<span class="hljs-comment">/*0x00C*/</span>             UINT16       UnusedBytesLength;                                             
+<span class="hljs-comment">/*0x00E*/</span>             UINT8        EntryOffset;                                                   
+<span class="hljs-comment">/*0x00F*/</span>             UINT8        ExtendedBlockSignature;                                        
+                  };                                                                              
+                  <span class="hljs-class"><span class="hljs-keyword">struct</span>                                      // 2 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x10</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>)  
+                  {</span>                                                                               
+<span class="hljs-comment">/*0x000*/</span>             VOID*        ReservedForAlignment;                                          
+                      <span class="hljs-keyword">union</span>                                   <span class="hljs-comment">// 2 elements, 0x8 bytes (sizeof)   </span>
+                      {                                                                           
+                          <span class="hljs-class"><span class="hljs-keyword">struct</span>                              // 2 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x8</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>)   
+                          {</span>                                                                       
+<span class="hljs-comment">/*0x008*/</span>                     ULONG32      Code1;                                                 
+                              <span class="hljs-keyword">union</span>                           <span class="hljs-comment">// 2 elements, 0x4 bytes (sizeof)   </span>
+                              {                                                                   
+                                  <span class="hljs-class"><span class="hljs-keyword">struct</span>                      // 3 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x4</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>)   
+                                  {</span>                                                               
+<span class="hljs-comment">/*0x00C*/</span>                             UINT16       Code2;                                         
+<span class="hljs-comment">/*0x00E*/</span>                             UINT8        Code3;                                         
+<span class="hljs-comment">/*0x00F*/</span>                             UINT8        Code4;                                         
+                                  };                                                              
+<span class="hljs-comment">/*0x00C*/</span>                         ULONG32      Code234;                                           
+                              };                                                                  
+                          };                                                                      
+<span class="hljs-comment">/*0x008*/</span>                 UINT64       AgregateCode;                                              
+                      };                                                                          
+                  };                                                                              
+              };                                                                                  
+          }HEAP_ENTRY, *PHEAP_ENTRY;    </code></pre><h3 id="directory076632812005378219">_HEAP_SEGMENT</h3><pre><code class="lang-CPP hljs">          <span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_SEGMENT</span>                     // 14 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x70</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>) 
+          {</span>                                                                                    
+<span class="hljs-comment">/*0x000*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_ENTRY</span> <span class="hljs-title">Entry</span>;</span>                    <span class="hljs-comment">// 26 elements, 0x10 bytes (sizeof) </span>
+<span class="hljs-comment">/*0x010*/</span>     ULONG32      SegmentSignature;                                                   
+<span class="hljs-comment">/*0x014*/</span>     ULONG32      SegmentFlags;                                                       
+<span class="hljs-comment">/*0x018*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">LIST_ENTRY</span> <span class="hljs-title">SegmentListEntry</span>;</span>         <span class="hljs-comment">// 2 elements, 0x10 bytes (sizeof)  </span>
+<span class="hljs-comment">/*0x028*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP</span>* <span class="hljs-title">Heap</span>;</span>                                                              
+<span class="hljs-comment">/*0x030*/</span>     VOID*        BaseAddress;                                                        
+<span class="hljs-comment">/*0x038*/</span>     ULONG32      NumberOfPages;                                                      
+<span class="hljs-comment">/*0x03C*/</span>     UINT8        _PADDING0_[<span class="hljs-number">0x4</span>];                                                    
+<span class="hljs-comment">/*0x040*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_ENTRY</span>* <span class="hljs-title">FirstEntry</span>;</span>                                                  
+<span class="hljs-comment">/*0x048*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_ENTRY</span>* <span class="hljs-title">LastValidEntry</span>;</span>                                              
+<span class="hljs-comment">/*0x050*/</span>     ULONG32      NumberOfUnCommittedPages;                                           
+<span class="hljs-comment">/*0x054*/</span>     ULONG32      NumberOfUnCommittedRanges;                                          
+<span class="hljs-comment">/*0x058*/</span>     UINT16       SegmentAllocatorBackTraceIndex;                                     
+<span class="hljs-comment">/*0x05A*/</span>     UINT16       Reserved;                                                           
+<span class="hljs-comment">/*0x05C*/</span>     UINT8        _PADDING1_[<span class="hljs-number">0x4</span>];                                                    
+<span class="hljs-comment">/*0x060*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">LIST_ENTRY</span> <span class="hljs-title">UCRSegmentList</span>;</span>           <span class="hljs-comment">// 2 elements, 0x10 bytes (sizeof)  </span>
+          }HEAP_SEGMENT, *PHEAP_SEGMENT;  </code></pre><h3 id="directory0766328120053782110">_HEAP</h3><pre><code class="lang-CPP hljs">          <span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP</span>                                     // 59 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x2C0</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>) 
+          {</span>                                                                                             
+              <span class="hljs-keyword">union</span>                                                <span class="hljs-comment">// 2 elements, 0x70 bytes (sizeof)   </span>
+              {                                                                                         
+<span class="hljs-comment">/*0x000*/</span>         <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_SEGMENT</span> <span class="hljs-title">Segment</span>;</span>                    <span class="hljs-comment">// 14 elements, 0x70 bytes (sizeof)  </span>
+                  <span class="hljs-class"><span class="hljs-keyword">struct</span>                                           // 14 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x70</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>)  
+                  {</span>                                                                                     
+<span class="hljs-comment">/*0x000*/</span>             <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_ENTRY</span> <span class="hljs-title">Entry</span>;</span>                    <span class="hljs-comment">// 26 elements, 0x10 bytes (sizeof)  </span>
+<span class="hljs-comment">/*0x010*/</span>             ULONG32      SegmentSignature;                                                    
+<span class="hljs-comment">/*0x014*/</span>             ULONG32      SegmentFlags;                                                        
+<span class="hljs-comment">/*0x018*/</span>             <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">LIST_ENTRY</span> <span class="hljs-title">SegmentListEntry</span>;</span>         <span class="hljs-comment">// 2 elements, 0x10 bytes (sizeof)   </span>
+<span class="hljs-comment">/*0x028*/</span>             <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP</span>* <span class="hljs-title">Heap</span>;</span>                                                               
+<span class="hljs-comment">/*0x030*/</span>             VOID*        BaseAddress;                                                         
+<span class="hljs-comment">/*0x038*/</span>             ULONG32      NumberOfPages;                                                       
+<span class="hljs-comment">/*0x03C*/</span>             UINT8        _PADDING0_[<span class="hljs-number">0x4</span>];                                                     
+<span class="hljs-comment">/*0x040*/</span>             <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_ENTRY</span>* <span class="hljs-title">FirstEntry</span>;</span>                                                   
+<span class="hljs-comment">/*0x048*/</span>             <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_ENTRY</span>* <span class="hljs-title">LastValidEntry</span>;</span>                                               
+<span class="hljs-comment">/*0x050*/</span>             ULONG32      NumberOfUnCommittedPages;                                            
+<span class="hljs-comment">/*0x054*/</span>             ULONG32      NumberOfUnCommittedRanges;                                           
+<span class="hljs-comment">/*0x058*/</span>             UINT16       SegmentAllocatorBackTraceIndex;                                      
+<span class="hljs-comment">/*0x05A*/</span>             UINT16       Reserved;                                                            
+<span class="hljs-comment">/*0x05C*/</span>             UINT8        _PADDING1_[<span class="hljs-number">0x4</span>];                                                     
+<span class="hljs-comment">/*0x060*/</span>             <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">LIST_ENTRY</span> <span class="hljs-title">UCRSegmentList</span>;</span>           <span class="hljs-comment">// 2 elements, 0x10 bytes (sizeof)   </span>
+                  };                                                                                    
+              };                                                                                        
+<span class="hljs-comment">/*0x070*/</span>     ULONG32      Flags;    <span class="hljs-comment">// 堆标志    </span>
+<span class="hljs-comment">/*0x074*/</span>     ULONG32      ForceFlags;                                                                  
+<span class="hljs-comment">/*0x078*/</span>     ULONG32      CompatibilityFlags;                                                          
+<span class="hljs-comment">/*0x07C*/</span>     ULONG32      EncodeFlagMask;                                                              
+<span class="hljs-comment">/*0x080*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_ENTRY</span> <span class="hljs-title">Encoding</span>;</span>                         <span class="hljs-comment">// 26 elements, 0x10 bytes (sizeof)  </span>
+<span class="hljs-comment">/*0x090*/</span>     ULONG32      Interceptor;                                                                 
+<span class="hljs-comment">/*0x094*/</span>     ULONG32      VirtualMemoryThreshold;                                                      
+<span class="hljs-comment">/*0x098*/</span>     ULONG32      Signature;                                                                   
+<span class="hljs-comment">/*0x09C*/</span>     UINT8        _PADDING2_[<span class="hljs-number">0x4</span>];                                                             
+<span class="hljs-comment">/*0x0A0*/</span>     UINT64       SegmentReserve;                                                              
+<span class="hljs-comment">/*0x0A8*/</span>     UINT64       SegmentCommit;                                                               
+<span class="hljs-comment">/*0x0B0*/</span>     UINT64       DeCommitFreeBlockThreshold;                                                  
+<span class="hljs-comment">/*0x0B8*/</span>     UINT64       DeCommitTotalFreeThreshold;                                                  
+<span class="hljs-comment">/*0x0C0*/</span>     UINT64       TotalFreeSize;                                                               
+<span class="hljs-comment">/*0x0C8*/</span>     UINT64       MaximumAllocationSize;                                                       
+<span class="hljs-comment">/*0x0D0*/</span>     UINT16       ProcessHeapsListIndex;                                                       
+<span class="hljs-comment">/*0x0D2*/</span>     UINT16       HeaderValidateLength;                                                        
+<span class="hljs-comment">/*0x0D4*/</span>     UINT8        _PADDING3_[<span class="hljs-number">0x4</span>];                                                             
+<span class="hljs-comment">/*0x0D8*/</span>     VOID*        HeaderValidateCopy;                                                          
+<span class="hljs-comment">/*0x0E0*/</span>     UINT16       NextAvailableTagIndex;                                                       
+<span class="hljs-comment">/*0x0E2*/</span>     UINT16       MaximumTagIndex;                                                             
+<span class="hljs-comment">/*0x0E4*/</span>     UINT8        _PADDING4_[<span class="hljs-number">0x4</span>];                                                             
+<span class="hljs-comment">/*0x0E8*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_TAG_ENTRY</span>* <span class="hljs-title">TagEntries</span>;</span>                                                       
+<span class="hljs-comment">/*0x0F0*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">LIST_ENTRY</span> <span class="hljs-title">UCRList</span>;</span>                          <span class="hljs-comment">// 2 elements, 0x10 bytes (sizeof)   </span>
+<span class="hljs-comment">/*0x100*/</span>     UINT64       AlignRound;                                                                  
+<span class="hljs-comment">/*0x108*/</span>     UINT64       AlignMask;                                                                   
+<span class="hljs-comment">/*0x110*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">LIST_ENTRY</span> <span class="hljs-title">VirtualAllocdBlocks</span>;</span>              <span class="hljs-comment">// 2 elements, 0x10 bytes (sizeof)   </span>
+<span class="hljs-comment">/*0x120*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">LIST_ENTRY</span> <span class="hljs-title">SegmentList</span>;</span>                      <span class="hljs-comment">// 2 elements, 0x10 bytes (sizeof)   </span>
+<span class="hljs-comment">/*0x130*/</span>     UINT16       AllocatorBackTraceIndex;                                                     
+<span class="hljs-comment">/*0x132*/</span>     UINT8        _PADDING5_[<span class="hljs-number">0x2</span>];                                                             
+<span class="hljs-comment">/*0x134*/</span>     ULONG32      NonDedicatedListLength;                                                      
+<span class="hljs-comment">/*0x138*/</span>     VOID*        BlocksIndex;                                                                 
+<span class="hljs-comment">/*0x140*/</span>     VOID*        UCRIndex;                                                                    
+<span class="hljs-comment">/*0x148*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_PSEUDO_TAG_ENTRY</span>* <span class="hljs-title">PseudoTagEntries</span>;</span>                                          
+<span class="hljs-comment">/*0x150*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">LIST_ENTRY</span> <span class="hljs-title">FreeLists</span>;</span>                        <span class="hljs-comment">// 2 elements, 0x10 bytes (sizeof)   </span>
+<span class="hljs-comment">/*0x160*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_LOCK</span>* <span class="hljs-title">LockVariable</span>;</span>                                                          
+<span class="hljs-comment">/*0x168*/</span>     FUNCT_00A3_1B3D_CommitRoutine* CommitRoutine;                                             
+<span class="hljs-comment">/*0x170*/</span>     <span class="hljs-keyword">union</span> _RTL_RUN_ONCE StackTraceInitVar;               <span class="hljs-comment">// 3 elements, 0x8 bytes (sizeof)    </span>
+<span class="hljs-comment">/*0x178*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">RTL_HEAP_MEMORY_LIMIT_DATA</span> <span class="hljs-title">CommitLimitData</span>;</span>  <span class="hljs-comment">// 4 elements, 0x20 bytes (sizeof)   </span>
+<span class="hljs-comment">/*0x198*/</span>     VOID*        FrontEndHeap;                                                                
+<span class="hljs-comment">/*0x1A0*/</span>     UINT16       FrontHeapLockCount;                                                          
+<span class="hljs-comment">/*0x1A2*/</span>     UINT8        FrontEndHeapType;                                                            
+<span class="hljs-comment">/*0x1A3*/</span>     UINT8        RequestedFrontEndHeapType;                                                   
+<span class="hljs-comment">/*0x1A4*/</span>     UINT8        _PADDING6_[<span class="hljs-number">0x4</span>];                                                             
+<span class="hljs-comment">/*0x1A8*/</span>     WCHAR*       FrontEndHeapUsageData;                                                       
+<span class="hljs-comment">/*0x1B0*/</span>     UINT16       FrontEndHeapMaximumIndex;                                                    
+<span class="hljs-comment">/*0x1B2*/</span>     UINT8        FrontEndHeapStatusBitmap[<span class="hljs-number">129</span>];                                               
+<span class="hljs-comment">/*0x233*/</span>     UINT8        _PADDING7_[<span class="hljs-number">0x5</span>];                                                             
+<span class="hljs-comment">/*0x238*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_COUNTERS</span> <span class="hljs-title">Counters</span>;</span>                      <span class="hljs-comment">// 23 elements, 0x78 bytes (sizeof)  </span>
+<span class="hljs-comment">/*0x2B0*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_TUNING_PARAMETERS</span> <span class="hljs-title">TuningParameters</span>;</span>     <span class="hljs-comment">// 2 elements, 0x10 bytes (sizeof)   </span>
+          }HEAP, *PHEAP;</code></pre><h2 id="directory0766328120053782111">示例</h2><p>示例代码：</p><pre><code class="lang-CPP hljs"><span class="hljs-comment">/************** GetPEB.asm **************/</span>
+GetPEB proc
+    mov rax, gs:[<span class="hljs-number">60</span>h]
+    ret
+GetPEB endp
+
+<span class="hljs-comment">/************** main.cpp **************/</span>
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span>
+</span>{
+    <span class="hljs-comment">// 获取PEB</span>
+    ULONG64 peb = GetPEB();
+    <span class="hljs-built_in">printf</span>(OK_PRINT_FLAG(<span class="hljs-string">"PEB: 0x%p\n"</span>), peb);
+
+
+    <span class="hljs-keyword">char</span> hello[] = <span class="hljs-string">"Hello World!"</span>;
+    <span class="hljs-keyword">char</span> str[] = <span class="hljs-string">"ABCDEFGHIJKLMNOPQRSTUVWXYZ"</span>;
+    
+    HANDLE h_default = GetProcessHeap();
+    HANDLE h_heap = HeapCreate(HEAP_GENERATE_EXCEPTIONS, <span class="hljs-number">0x1000</span>, <span class="hljs-number">0xffff</span>);
+
+    <span class="hljs-keyword">char</span> *buf1 = (<span class="hljs-keyword">char</span> *)HeapAlloc(h_default, <span class="hljs-number">0</span>, <span class="hljs-built_in">strlen</span>(hello) + <span class="hljs-number">1</span>);
+    <span class="hljs-keyword">char</span> *buf2 = (<span class="hljs-keyword">char</span>*)HeapAlloc(h_heap, <span class="hljs-number">0</span>, <span class="hljs-built_in">strlen</span>(str) + <span class="hljs-number">1</span>);
+
+    <span class="hljs-comment">// 拷贝数据到堆内存上</span>
+    <span class="hljs-built_in">strcpy</span>(buf1, hello);
+    <span class="hljs-built_in">strcpy</span>(buf2, str);
+
+    <span class="hljs-built_in">printf</span>(OK_PRINT_FLAG(<span class="hljs-string">"Default Heap is %p\n    Heap buf address: 0x%p\n    Buffer: %s\n"</span>),
+        h_default, buf1, buf1);
+    <span class="hljs-built_in">printf</span>(OK_PRINT_FLAG(<span class="hljs-string">"My Heap is %p\n    Heap buf address: 0x%p\n    Buffer: %s\n"</span>),
+        h_heap, buf2, buf2);
+    
+    <span class="hljs-built_in">printf</span>(OK_PRINT_FLAG(<span class="hljs-string">"等待调试附加，按任意键释放堆内存\n"</span>));
+    getchar();  <span class="hljs-comment">// 暂停，让调试器附加</span>
+
+    <span class="hljs-comment">// 释放资源</span>
+    HeapFree(h_default, <span class="hljs-number">0</span>, buf1);
+    HeapFree(h_heap, <span class="hljs-number">0</span>, buf2);
+    
+    HeapDestroy(h_heap);
+
+    system(<span class="hljs-string">"pause"</span>);
+    
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}</code></pre><h3 id="directory0766328120053782112">常规</h3><p><img src="./初识win32堆 - lZeroyuee&#39;s Blog_files/1948720725.png" alt="6.png" title="6.png"></p><p>在PEB中，跟堆有关的成员如下：</p><pre><code class="hljs coffeescript">kd&gt; dt _PEB <span class="hljs-number">277000</span>
+nt!_PEB
+   ...
+   +<span class="hljs-number">0x030</span> ProcessHeap      : <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">00480000</span> Void        <span class="hljs-comment">// 当前进程的默认堆 _HEAP</span>
+   ...
+   +<span class="hljs-number">0x0c8</span> HeapSegmentReserve : <span class="hljs-number">0x100000</span>        <span class="hljs-comment">// 堆段保留大小</span>
+   +<span class="hljs-number">0x0d0</span> HeapSegmentCommit : <span class="hljs-number">0x2000</span>        <span class="hljs-comment">// 堆段提交大小</span>
+   +<span class="hljs-number">0x0d8</span> HeapDeCommitTotalFreeThreshold : <span class="hljs-number">0x10000</span>    <span class="hljs-comment">// 释放总空闲大小的阈值</span>
+   +<span class="hljs-number">0x0e0</span> HeapDeCommitFreeBlockThreshold : <span class="hljs-number">0x1000</span>    <span class="hljs-comment">// 释放块大小的阈值</span>
+   +<span class="hljs-number">0x0e8</span> NumberOfHeaps    : <span class="hljs-number">4</span>            <span class="hljs-comment">// 当前堆个数</span>
+   +<span class="hljs-number">0x0ec</span> MaximumNumberOfHeaps : <span class="hljs-number">0x10</span>    <span class="hljs-comment">// 最大堆个数</span>
+   +<span class="hljs-number">0x0f0</span> ProcessHeaps     : <span class="hljs-number">0x00007ff8</span></span>`<span class="hljs-number">502</span>b8d40  -&gt; <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">00480000</span> Void    <span class="hljs-comment">// 当前进程的堆数组</span>
+   ...
+   +<span class="hljs-number">0x378</span> HeapTracingEnabled : <span class="hljs-number">0</span>y0        <span class="hljs-comment">// 堆追踪启用标志</span></span></code></pre><p>查看当前进程所拥有的堆</p><pre><code class="hljs javascript">kd&gt; !heap -h
+HEAPEXT: Unable to get address <span class="hljs-keyword">of</span> ntdll!RtlpHeapInvalidBadAddress.
+Index   Address  Name      Debugging options enabled
+  <span class="hljs-number">1</span>:   <span class="hljs-number">00480000</span> 
+    Segment at <span class="hljs-number">0000000000480000</span> to <span class="hljs-number">000000000057</span>f000 (<span class="hljs-number">0001</span>b000 bytes committed)        <span class="hljs-comment">// 进程默认堆</span>
+  <span class="hljs-number">2</span>:   <span class="hljs-number">00010000</span> 
+    Segment at <span class="hljs-number">0000000000010000</span> to <span class="hljs-number">0000000000020000</span> (<span class="hljs-number">00001000</span> bytes committed)
+  <span class="hljs-number">3</span>:   <span class="hljs-number">00810000</span> 
+    Segment at <span class="hljs-number">0000000000810000</span> to <span class="hljs-number">0000000000850000</span> (<span class="hljs-number">00002000</span> bytes committed)
+  <span class="hljs-number">4</span>:   <span class="hljs-number">00</span>a00000 
+    Segment at <span class="hljs-number">0000000000</span>a00000 to <span class="hljs-number">0000000000</span>a10000 (<span class="hljs-number">00002000</span> bytes committed)        <span class="hljs-comment">// 创建的堆</span>
+
+<span class="hljs-comment">// 查看PEB.ProcessHeaps数组，刚好是四个</span>
+kd&gt; dq <span class="hljs-number">0x00007ff8</span><span class="hljs-string">`502b8d40
+00007ff8`</span><span class="hljs-number">502</span>b8d40  <span class="hljs-number">00000000</span><span class="hljs-string">`00480000 00000000`</span><span class="hljs-number">00010000</span>
+<span class="hljs-number">00007</span>ff8<span class="hljs-string">`502b8d50  00000000`</span><span class="hljs-number">00810000</span> <span class="hljs-number">00000000</span><span class="hljs-string">`00a00000
+00007ff8`</span><span class="hljs-number">502</span>b8d60  <span class="hljs-number">00000000</span><span class="hljs-string">`00000000 00000000`</span><span class="hljs-number">00000000</span>
+<span class="hljs-number">00007</span>ff8<span class="hljs-string">`502b8d70  00000000`</span><span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span><span class="hljs-string">`00000000
+00007ff8`</span><span class="hljs-number">502</span>b8d80  <span class="hljs-number">00000000</span><span class="hljs-string">`00000000 00000000`</span><span class="hljs-number">00000000</span>
+<span class="hljs-number">00007</span>ff8<span class="hljs-string">`502b8d90  00000000`</span><span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span><span class="hljs-string">`00000000
+00007ff8`</span><span class="hljs-number">502</span>b8da0  <span class="hljs-number">00000000</span><span class="hljs-string">`00000000 00000000`</span><span class="hljs-number">00000000</span>
+<span class="hljs-number">00007</span>ff8<span class="hljs-string">`502b8db0  00000000`</span><span class="hljs-number">00000000</span> <span class="hljs-number">00000000</span><span class="hljs-string">`00000000</span></code></pre><p><code>PEB.ProcessHeaps</code>成员保存了当前进程所拥有的堆，每个元素即是相应的<strong>堆句柄</strong>，为<code>_HEAP</code>结构</p><p>在win10 2004中，<code>_HEAP</code>的前<code>0x70</code>个字节为一个<strong><em>“特殊”</em></strong>的<code>union</code>结构，此结构也就是<code>_HEAP_SEGMENT</code>结构，也即0号堆段</p><p>在<code>_HEAP_SEGMENT</code>结构之后的成员保存了这个堆的相关信息</p><pre><code class="hljs coffeescript">kd&gt; dt _HEAP <span class="hljs-number">00000000</span>`<span class="javascript"><span class="hljs-number">00480000</span>
+ntdll!_HEAP
+   +<span class="hljs-number">0x000</span> Segment          : _HEAP_SEGMENT
+   +<span class="hljs-number">0x000</span> Entry            : _HEAP_ENTRY    <span class="hljs-comment">// 由于_HEAP_SEGMENT结构是在堆中，其本身也是个堆块，故第一个成员是一个_HEAP_ENTRY</span>
+   +<span class="hljs-number">0x010</span> SegmentSignature : <span class="hljs-number">0xffeeffee</span>        <span class="hljs-comment">// 堆段签名0xffeeffee</span>
+   +<span class="hljs-number">0x014</span> SegmentFlags     : <span class="hljs-number">2</span>                <span class="hljs-comment">// 堆段标志</span>
+   +<span class="hljs-number">0x018</span> SegmentListEntry : _LIST_ENTRY [ <span class="hljs-number">0x00000000</span></span>`<span class="hljs-number">00480120</span> - <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">00480120</span> ]    <span class="hljs-comment">// 堆段链表</span>
+   +<span class="hljs-number">0x028</span> Heap             : <span class="hljs-number">0x00000000</span></span>`<span class="hljs-number">00480000</span> _HEAP    <span class="hljs-regexp">//</span> 该堆段所隶属的堆
+   +<span class="hljs-number">0x030</span> BaseAddress      : <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">00480000</span> Void    <span class="hljs-comment">// 堆段基址</span>
+   +<span class="hljs-number">0x038</span> NumberOfPages    : <span class="hljs-number">0xff</span>    <span class="hljs-comment">// 堆段内存页数，当分配的空间大小 &gt; NumberOfPages * page_size时，会有一个新堆段链入链表中</span>
+   +<span class="hljs-number">0x040</span> FirstEntry       : <span class="hljs-number">0x00000000</span></span>`<span class="hljs-number">00480740</span> _HEAP_ENTRY    <span class="hljs-regexp">//</span> 第一个堆块的指针
+   +<span class="hljs-number">0x048</span> LastValidEntry   : <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">0057</span>f000 _HEAP_ENTRY    <span class="hljs-comment">// 最后一个有效堆块的指针（边界值）</span>
+   +<span class="hljs-number">0x050</span> NumberOfUnCommittedPages : <span class="hljs-number">0xe4</span>    <span class="hljs-comment">// 未提交的内存页数</span>
+   +<span class="hljs-number">0x054</span> NumberOfUnCommittedRanges : <span class="hljs-number">1</span>        <span class="hljs-comment">// UCRSegmentList节点个数</span>
+   +<span class="hljs-number">0x058</span> SegmentAllocatorBackTraceIndex : <span class="hljs-number">0</span>
+   +<span class="hljs-number">0x05a</span> Reserved         : <span class="hljs-number">0</span>
+   +<span class="hljs-number">0x060</span> UCRSegmentList   : _LIST_ENTRY [ <span class="hljs-number">0x00000000</span></span>`<span class="hljs-number">0049</span>afe0 - <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">0049</span>afe0 ]
+   +<span class="hljs-number">0x070</span> Flags            : <span class="hljs-number">2</span>        <span class="hljs-comment">// 堆标志 HEAP_GROWABLE(0x2)为默认属性，私有堆(0x1000)</span>
+   +<span class="hljs-number">0x074</span> ForceFlags       : <span class="hljs-number">0</span>
+   +<span class="hljs-number">0x078</span> CompatibilityFlags : <span class="hljs-number">0</span>
+   +<span class="hljs-number">0x07c</span> EncodeFlagMask   : <span class="hljs-number">0x100000</span>        <span class="hljs-comment">// 编码标志掩码，检测后续是否对_HEAP_ENTRY进行编码</span>
+   +<span class="hljs-number">0x080</span> Encoding         : _HEAP_ENTRY    <span class="hljs-comment">// 为后续解码_HEAP_ENTRY结构的key</span>
+   +<span class="hljs-number">0x090</span> Interceptor      : <span class="hljs-number">0</span>
+   +<span class="hljs-number">0x094</span> VirtualMemoryThreshold : <span class="hljs-number">0xff00</span>    <span class="hljs-comment">// 堆块阈值</span>
+   +<span class="hljs-number">0x098</span> Signature        : <span class="hljs-number">0xeeffeeff</span>        <span class="hljs-comment">// 堆的签名0xeeffeeff</span>
+   +<span class="hljs-number">0x0a0</span> SegmentReserve   : <span class="hljs-number">0x100000</span>        <span class="hljs-comment">// 堆保留</span>
+   +<span class="hljs-number">0x0a8</span> SegmentCommit    : <span class="hljs-number">0x2000</span>            <span class="hljs-comment">// 堆提交</span>
+   +<span class="hljs-number">0x0b0</span> DeCommitFreeBlockThreshold : <span class="hljs-number">0x400</span>    <span class="hljs-comment">// 释放总空闲大小的阈值</span>
+   +<span class="hljs-number">0x0b8</span> DeCommitTotalFreeThreshold : <span class="hljs-number">0x1000</span>    <span class="hljs-comment">// 释放块大小的阈值</span>
+   +<span class="hljs-number">0x0c0</span> TotalFreeSize    : <span class="hljs-number">0x183</span>            <span class="hljs-comment">// 空闲块总大小</span>
+   +<span class="hljs-number">0x0c8</span> MaximumAllocationSize : <span class="hljs-number">0x00007fff</span></span>`fffdefff    <span class="hljs-regexp">//</span> 允许分配的最大空间
+   +<span class="hljs-number">0x0d0</span> ProcessHeapsListIndex : <span class="hljs-number">1</span>            // 该堆在进程堆列表中的索引（从<span class="hljs-number">1</span>开始）
+   +<span class="hljs-number">0x0d2</span> HeaderValidateLength : <span class="hljs-number">0x2c0</span>        // _HEAP结构大小
+   +<span class="hljs-number">0x0d8</span> HeaderValidateCopy : (<span class="hljs-literal">null</span>) 
+   +<span class="hljs-number">0x0e0</span> NextAvailableTagIndex : <span class="hljs-number">0</span>            // 下一个可用堆块标记索引
+   +<span class="hljs-number">0x0e2</span> MaximumTagIndex  : <span class="hljs-number">0</span>                // 最大堆块标记索引
+   +<span class="hljs-number">0x0e8</span> TagEntries       : (<span class="hljs-literal">null</span>)         <span class="hljs-regexp">//</span> 指向堆块标记结构的指针
+   +<span class="hljs-number">0x0f0</span> UCRList          : _LIST_ENTRY [ <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">0049</span>afd0 - <span class="hljs-number">0x00000000</span></span>`<span class="hljs-number">0049</span>afd0 ]
+   +<span class="hljs-number">0x100</span> AlignRound       : <span class="hljs-number">0x1f</span>
+   +<span class="hljs-number">0x108</span> AlignMask        : <span class="hljs-number">0xffffffff</span>`<span class="javascript">fffffff0    <span class="hljs-comment">// 对齐掩码</span>
+   +<span class="hljs-number">0x110</span> VirtualAllocdBlocks : _LIST_ENTRY [ <span class="hljs-number">0x00000000</span></span>`<span class="hljs-number">00480110</span> - <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">00480110</span> ]
+   +<span class="hljs-number">0x120</span> SegmentList      : _LIST_ENTRY [ <span class="hljs-number">0x00000000</span></span>`<span class="hljs-number">00480018</span> - <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">00480018</span> ]    <span class="hljs-comment">// 分别指向0号堆段和最后一个堆段</span>
+   +<span class="hljs-number">0x130</span> AllocatorBackTraceIndex : <span class="hljs-number">0</span>
+   +<span class="hljs-number">0x134</span> NonDedicatedListLength : <span class="hljs-number">0</span>
+   +<span class="hljs-number">0x138</span> BlocksIndex      : <span class="hljs-number">0x00000000</span></span>`<span class="hljs-number">004802e8</span> Void
+   +<span class="hljs-number">0x140</span> UCRIndex         : (<span class="hljs-literal">null</span>) 
+   +<span class="hljs-number">0x148</span> PseudoTagEntries : (<span class="hljs-literal">null</span>) 
+   +<span class="hljs-number">0x150</span> FreeLists        : _LIST_ENTRY [ <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">00493</span>ce0 - <span class="hljs-number">0x00000000</span></span>`<span class="hljs-number">0049</span>a3b0 ]    <span class="hljs-regexp">//</span> 空表
+   +<span class="hljs-number">0x160</span> LockVariable     : <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">004802</span>c0 _HEAP_LOCK
+   +<span class="hljs-number">0x168</span> CommitRoutine    : <span class="hljs-number">0x535a1b5a</span></span>`ba712500     long  +<span class="hljs-number">535</span>a1b5aba712500
+   +<span class="hljs-number">0x170</span> StackTraceInitVar : _RTL_RUN_ONCE
+   +<span class="hljs-number">0x178</span> CommitLimitData  : _RTL_HEAP_MEMORY_LIMIT_DATA
+   +<span class="hljs-number">0x198</span> FrontEndHeap     : <span class="hljs-number">0x00000000</span>`<span class="javascript"><span class="hljs-number">00020000</span> Void        <span class="hljs-comment">// 前端堆</span>
+   +<span class="hljs-number">0x1a0</span> FrontHeapLockCount : <span class="hljs-number">0</span>                            <span class="hljs-comment">// 前端堆锁定计数</span>
+   +<span class="hljs-number">0x1a2</span> FrontEndHeapType : <span class="hljs-number">0x2</span> <span class="hljs-string">''</span>                            <span class="hljs-comment">// 前端堆类型</span>
+   +<span class="hljs-number">0x1a3</span> RequestedFrontEndHeapType : <span class="hljs-number">0x2</span> <span class="hljs-string">''</span>
+   +<span class="hljs-number">0x1a8</span> FrontEndHeapUsageData : <span class="hljs-number">0x00000000</span></span>`<span class="hljs-number">004891</span>a0  <span class="hljs-string">""</span>
+   +<span class="hljs-number">0x1b0</span> FrontEndHeapMaximumIndex : <span class="hljs-number">0x402</span>                    // 前端堆最大索引
+   +<span class="hljs-number">0x1b2</span> FrontEndHeapStatusBitmap : [<span class="hljs-number">129</span>]  <span class="hljs-string">"&lt;"</span>
+   +<span class="hljs-number">0x238</span> Counters         : _HEAP_COUNTERS
+   +<span class="hljs-number">0x2b0</span> TuningParameters : _HEAP_TUNING_PARAMETERS</code></pre><p><img src="./初识win32堆 - lZeroyuee&#39;s Blog_files/3340080467.png" alt="7.png" title="7.png"></p><p>然后寻找一下本例中的堆块，默认堆中<code>0x48C930 - 0x10 = 0x48C920</code>，私有堆中<code>0xA00750 - 0x10 = 0xA00740</code>，其中<code>0x10</code>是<code>_HEAP_ENTRY</code>的大小，利用<code>!heap xxx -a</code>命令在堆中查找，会发现一个有意思的地方</p><p>在默认堆中，我们的堆数据落在被标记为<strong>Internal</strong>的地址内，而私有堆中却正好落在地址上</p><pre><code class="hljs cs">kd&gt; !heap <span class="hljs-number">00480000</span> -a
+Index   Address  Name      Debugging options enabled
+  <span class="hljs-number">1</span>:   <span class="hljs-number">00480000</span> 
+    Segment at <span class="hljs-number">0000000000480000</span> to <span class="hljs-number">000000000057</span>f000 (<span class="hljs-number">0001</span>b000 bytes committed)
+    ...
+    Granularity:          <span class="hljs-number">16</span> bytes    <span class="hljs-comment">// 内存对齐粒度</span>
+    ...
+    ...
+
+    Heap entries <span class="hljs-keyword">for</span> Segment00 <span class="hljs-keyword">in</span> Heap <span class="hljs-number">0000000000480000</span>
+                 address: psize . <span class="hljs-function">size  flags   <span class="hljs-title">state</span> (<span class="hljs-params">requested size</span>)
+        0000000000480000: 00000 . 00740 [101] - <span class="hljs-title">busy</span> (<span class="hljs-params"><span class="hljs-number">73</span>f</span>)
+        0000000000480740: 00740 . 00030 [101] - <span class="hljs-title">busy</span> (<span class="hljs-params"><span class="hljs-number">1</span>a</span>)
+        ...
+        000000000048c840: 00040 . 00090 [101] - <span class="hljs-title">busy</span> (<span class="hljs-params"><span class="hljs-number">80</span></span>)
+        000000000048c8d0: 00090 . 00810 [101] - <span class="hljs-title">busy</span> (<span class="hljs-params"><span class="hljs-number">800</span></span>) Internal     &lt;--- 0x48C920刚好落在这个区间内
+        000000000048d0e0: 00810 . 00070 [101] - <span class="hljs-title">busy</span> (<span class="hljs-params"><span class="hljs-number">68</span></span>)
+        ...
+        ...
+        000000000049b000:      000e4000      - uncommitted bytes.
+        
+kd&gt; !heap a00000 -a
+Index   Address  Name      Debugging options enabled
+  4:   00a00000 
+    Segment at 0000000000a00000 to 0000000000<span class="hljs-title">a10000</span> (<span class="hljs-params"><span class="hljs-number">00002000</span> bytes committed</span>)
+    ...
+    Granularity:          16 bytes
+    ...
+    ...
+
+    Heap entries <span class="hljs-keyword">for</span> Segment00 <span class="hljs-keyword">in</span> Heap 0000000000a00000
+                 address: psize . size  flags   <span class="hljs-title">state</span> (<span class="hljs-params">requested size</span>)
+        0000000000a00000: 00000 . 00740 [101] - <span class="hljs-title">busy</span> (<span class="hljs-params"><span class="hljs-number">73</span>f</span>)
+        0000000000a00740: 00740 . 00030 [101] - <span class="hljs-title">busy</span> (<span class="hljs-params"><span class="hljs-number">1</span>b</span>)                &lt;--- 0xA00740恰好在这
+        0000000000a00770: 00030 . 01850 [100]
+        0000000000a01fc0: 01850 . 00040 [111] - <span class="hljs-title">busy</span> (<span class="hljs-params"><span class="hljs-number">3</span>d</span>)
+        0000000000a02000:      0000e000      - uncommitted bytes.</span></code></pre><p>那么就先从简单的私有对开始，获取到私有堆的<code>_HEAP.Encoding</code>成员，以及目标堆块，由于<code>_HEAP.EncodeFlagMask = 0x100000</code>，故这里是启用了编码的，如下：</p><pre><code class="hljs cs">kd&gt; dx -id <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,ffffc5876c855080 -r1 (*((ntdll!_HEAP_ENTRY *)<span class="hljs-number">0xa00080</span>))
+(*((ntdll!_HEAP_ENTRY *)<span class="hljs-number">0xa00080</span>))                 [Type: _HEAP_ENTRY]
+    [<span class="hljs-meta">+0x000</span>] UnpackedEntry    [Type: _HEAP_UNPACKED_ENTRY]
+    [<span class="hljs-meta">+0x000</span>] PreviousBlockPrivateData : <span class="hljs-number">0x0</span> [Type: <span class="hljs-keyword">void</span> *]
+    [<span class="hljs-meta">+0x008</span>] Size             : <span class="hljs-number">0xee</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x00a</span>] Flags            : <span class="hljs-number">0xf2</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00b</span>] SmallTagIndex    : <span class="hljs-number">0xb1</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x008</span>] SubSegmentCode   : <span class="hljs-number">0xb1f200ee</span> [Type: unsigned <span class="hljs-keyword">long</span>]
+    [<span class="hljs-meta">+0x00c</span>] PreviousSize     : <span class="hljs-number">0x4661</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x00e</span>] SegmentOffset    : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00e</span>] LFHFlags         : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00f</span>] UnusedBytes      : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x008</span>] CompactHeader    : <span class="hljs-number">0x4661b1f200ee</span> [Type: unsigned __int64]
+    [<span class="hljs-meta">+0x000</span>] ExtendedEntry    [Type: _HEAP_EXTENDED_ENTRY]
+    [<span class="hljs-meta">+0x000</span>] Reserved         : <span class="hljs-number">0x0</span> [Type: <span class="hljs-keyword">void</span> *]
+    [<span class="hljs-meta">+0x008</span>] FunctionIndex    : <span class="hljs-number">0xee</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x00a</span>] ContextValue     : <span class="hljs-number">0xb1f2</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x008</span>] InterceptorValue : <span class="hljs-number">0xb1f200ee</span> [Type: unsigned <span class="hljs-keyword">long</span>]
+    [<span class="hljs-meta">+0x00c</span>] UnusedBytesLength : <span class="hljs-number">0x4661</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x00e</span>] EntryOffset      : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00f</span>] ExtendedBlockSignature : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x000</span>] ReservedForAlignment : <span class="hljs-number">0x0</span> [Type: <span class="hljs-keyword">void</span> *]
+    [<span class="hljs-meta">+0x008</span>] Code1            : <span class="hljs-number">0xb1f200ee</span> [Type: unsigned <span class="hljs-keyword">long</span>]
+    [<span class="hljs-meta">+0x00c</span>] Code2            : <span class="hljs-number">0x4661</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x00e</span>] Code3            : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00f</span>] Code4            : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00c</span>] Code234          : <span class="hljs-number">0x4661</span> [Type: unsigned <span class="hljs-keyword">long</span>]
+    [<span class="hljs-meta">+0x008</span>] AgregateCode     : <span class="hljs-number">0x4661b1f200ee</span> [Type: unsigned __int64]
+    
+kd&gt; dt _HEAP_ENTRY <span class="hljs-number">0</span>a00740
+ntdll!_HEAP_ENTRY
+   +<span class="hljs-number">0x000</span> UnpackedEntry    : _HEAP_UNPACKED_ENTRY        <span class="hljs-comment">// 0x0</span>
+   +<span class="hljs-number">0x000</span> PreviousBlockPrivateData : (<span class="hljs-literal">null</span>)             <span class="hljs-comment">// 0x0</span>
+   +<span class="hljs-number">0x008</span> Size             : <span class="hljs-number">0xed</span>                        <span class="hljs-comment">// 0x3</span>
+   +<span class="hljs-number">0x00a</span> Flags            : <span class="hljs-number">0xf3</span> <span class="hljs-string">''</span>                    <span class="hljs-comment">// 0x1</span>
+   +<span class="hljs-number">0x00b</span> SmallTagIndex    : <span class="hljs-number">0xb3</span> <span class="hljs-string">''</span>                    <span class="hljs-comment">// 0x2</span>
+   +<span class="hljs-number">0x008</span> SubSegmentCode   : <span class="hljs-number">0xb3f300ed</span>                    <span class="hljs-comment">// 0x2010003</span>
+   +<span class="hljs-number">0x00c</span> PreviousSize     : <span class="hljs-number">0x4615</span>                        <span class="hljs-comment">// 0x74</span>
+   +<span class="hljs-number">0x00e</span> SegmentOffset    : <span class="hljs-number">0</span> <span class="hljs-string">''</span>                        <span class="hljs-comment">// 0x0</span>
+   +<span class="hljs-number">0x00e</span> LFHFlags         : <span class="hljs-number">0</span> <span class="hljs-string">''</span>                        <span class="hljs-comment">// 0x0</span>
+   +<span class="hljs-number">0x00f</span> UnusedBytes      : <span class="hljs-number">0x15</span> <span class="hljs-string">''</span>                    <span class="hljs-comment">// 0x15</span>
+   +<span class="hljs-number">0x008</span> CompactHeader    : <span class="hljs-number">0x15004615</span>`b3f300ed        <span class="hljs-comment">// 0x1500007402010003</span>
+   +<span class="hljs-number">0x000</span> ExtendedEntry    : _HEAP_EXTENDED_ENTRY        <span class="hljs-comment">// 0x0</span>
+   +<span class="hljs-number">0x000</span> Reserved         : (<span class="hljs-literal">null</span>)                     <span class="hljs-comment">// 0x0</span>
+   +<span class="hljs-number">0x008</span> FunctionIndex    : <span class="hljs-number">0xed</span>                        <span class="hljs-comment">// 0x3</span>
+   +<span class="hljs-number">0x00a</span> ContextValue     : <span class="hljs-number">0xb3f3</span>                        <span class="hljs-comment">// 0x201</span>
+   +<span class="hljs-number">0x008</span> InterceptorValue : <span class="hljs-number">0xb3f300ed</span>                    <span class="hljs-comment">// 0x2010003</span>
+   +<span class="hljs-number">0x00c</span> UnusedBytesLength : <span class="hljs-number">0x4615</span>                    <span class="hljs-comment">// 0x74</span>
+   +<span class="hljs-number">0x00e</span> EntryOffset      : <span class="hljs-number">0</span> <span class="hljs-string">''</span>                        <span class="hljs-comment">// 0x0</span>
+   +<span class="hljs-number">0x00f</span> ExtendedBlockSignature : <span class="hljs-number">0x15</span> <span class="hljs-string">''</span>                <span class="hljs-comment">// 0x15</span>
+   +<span class="hljs-number">0x000</span> ReservedForAlignment : (<span class="hljs-literal">null</span>)                 <span class="hljs-comment">// 0x0</span>
+   +<span class="hljs-number">0x008</span> Code1            : <span class="hljs-number">0xb3f300ed</span>                    <span class="hljs-comment">// 0x2010003</span>
+   +<span class="hljs-number">0x00c</span> Code2            : <span class="hljs-number">0x4615</span>                        <span class="hljs-comment">// 0x74</span>
+   +<span class="hljs-number">0x00e</span> Code3            : <span class="hljs-number">0</span> <span class="hljs-string">''</span>                        <span class="hljs-comment">// 0x0</span>
+   +<span class="hljs-number">0x00f</span> Code4            : <span class="hljs-number">0x15</span> <span class="hljs-string">''</span>                    <span class="hljs-comment">// 0x15</span>
+   +<span class="hljs-number">0x00c</span> Code234          : <span class="hljs-number">0x15004615</span>                    <span class="hljs-comment">// 0x15000074</span>
+   +<span class="hljs-number">0x008</span> AgregateCode     : <span class="hljs-number">0x15004615</span>`b3f300ed        <span class="hljs-comment">// 0x1500007402010003</span></code></pre><p>对这两个结构进行异或，例如对于<code>_HEAP_ENTRY.Size = 0xed ^ 0xee = 0x3 </code>，由于对齐粒度为<code>0x10</code>，故大小为<code>0x3 * 0x10 = 0x30</code></p><p>那么在来看一下默认堆</p><pre><code class="hljs cs">kd&gt; dx -id <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,ffffc5876c855080 -r1 (*((ntdll!_HEAP_ENTRY *)<span class="hljs-number">0x480080</span>))
+(*((ntdll!_HEAP_ENTRY *)<span class="hljs-number">0x480080</span>))                 [Type: _HEAP_ENTRY]
+    [<span class="hljs-meta">+0x000</span>] UnpackedEntry    [Type: _HEAP_UNPACKED_ENTRY]
+    [<span class="hljs-meta">+0x000</span>] PreviousBlockPrivateData : <span class="hljs-number">0x0</span> [Type: <span class="hljs-keyword">void</span> *]
+    [<span class="hljs-meta">+0x008</span>] Size             : <span class="hljs-number">0xf815</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x00a</span>] Flags            : <span class="hljs-number">0xf1</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00b</span>] SmallTagIndex    : <span class="hljs-number">0xae</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x008</span>] SubSegmentCode   : <span class="hljs-number">0xaef1f815</span> [Type: unsigned <span class="hljs-keyword">long</span>]
+    [<span class="hljs-meta">+0x00c</span>] PreviousSize     : <span class="hljs-number">0x4de3</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x00e</span>] SegmentOffset    : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00e</span>] LFHFlags         : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00f</span>] UnusedBytes      : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x008</span>] CompactHeader    : <span class="hljs-number">0x4de3aef1f815</span> [Type: unsigned __int64]
+    [<span class="hljs-meta">+0x000</span>] ExtendedEntry    [Type: _HEAP_EXTENDED_ENTRY]
+    [<span class="hljs-meta">+0x000</span>] Reserved         : <span class="hljs-number">0x0</span> [Type: <span class="hljs-keyword">void</span> *]
+    [<span class="hljs-meta">+0x008</span>] FunctionIndex    : <span class="hljs-number">0xf815</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x00a</span>] ContextValue     : <span class="hljs-number">0xaef1</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x008</span>] InterceptorValue : <span class="hljs-number">0xaef1f815</span> [Type: unsigned <span class="hljs-keyword">long</span>]
+    [<span class="hljs-meta">+0x00c</span>] UnusedBytesLength : <span class="hljs-number">0x4de3</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x00e</span>] EntryOffset      : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00f</span>] ExtendedBlockSignature : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x000</span>] ReservedForAlignment : <span class="hljs-number">0x0</span> [Type: <span class="hljs-keyword">void</span> *]
+    [<span class="hljs-meta">+0x008</span>] Code1            : <span class="hljs-number">0xaef1f815</span> [Type: unsigned <span class="hljs-keyword">long</span>]
+    [<span class="hljs-meta">+0x00c</span>] Code2            : <span class="hljs-number">0x4de3</span> [Type: unsigned <span class="hljs-keyword">short</span>]
+    [<span class="hljs-meta">+0x00e</span>] Code3            : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00f</span>] Code4            : <span class="hljs-number">0x0</span> [Type: unsigned <span class="hljs-keyword">char</span>]
+    [<span class="hljs-meta">+0x00c</span>] Code234          : <span class="hljs-number">0x4de3</span> [Type: unsigned <span class="hljs-keyword">long</span>]
+    [<span class="hljs-meta">+0x008</span>] AgregateCode     : <span class="hljs-number">0x4de3aef1f815</span> [Type: unsigned __int64]
+
+kd&gt; dt _HEAP_ENTRY <span class="hljs-number">48</span>c8d0
+ntdll!_HEAP_ENTRY
+   +<span class="hljs-number">0x000</span> UnpackedEntry    : _HEAP_UNPACKED_ENTRY
+   +<span class="hljs-number">0x000</span> PreviousBlockPrivateData : (<span class="hljs-literal">null</span>) 
+   +<span class="hljs-number">0x008</span> Size             : <span class="hljs-number">0xf894</span>                <span class="hljs-comment">// (0xf894 ^ 0xf815) * 0x10 = 0x810，大小刚好对上</span>
+   +<span class="hljs-number">0x00a</span> Flags            : <span class="hljs-number">0xf8</span> <span class="hljs-string">''</span>            <span class="hljs-comment">// 0x9</span>
+   +<span class="hljs-number">0x00b</span> SmallTagIndex    : <span class="hljs-number">0x26</span> <span class="hljs-string">'&amp;'</span>
+   +<span class="hljs-number">0x008</span> SubSegmentCode   : <span class="hljs-number">0x26f8f894</span>
+   +<span class="hljs-number">0x00c</span> PreviousSize     : <span class="hljs-number">0x4dea</span>
+   +<span class="hljs-number">0x00e</span> SegmentOffset    : <span class="hljs-number">0</span> <span class="hljs-string">''</span>
+   +<span class="hljs-number">0x00e</span> LFHFlags         : <span class="hljs-number">0</span> <span class="hljs-string">''</span>
+   +<span class="hljs-number">0x00f</span> UnusedBytes      : <span class="hljs-number">0x10</span> <span class="hljs-string">''</span>
+   +<span class="hljs-number">0x008</span> CompactHeader    : <span class="hljs-number">0x10004dea</span>`<span class="hljs-number">26</span>f8f894
+   +<span class="hljs-number">0x000</span> ExtendedEntry    : _HEAP_EXTENDED_ENTRY
+   +<span class="hljs-number">0x000</span> Reserved         : (<span class="hljs-literal">null</span>) 
+   +<span class="hljs-number">0x008</span> FunctionIndex    : <span class="hljs-number">0xf894</span>
+   +<span class="hljs-number">0x00a</span> ContextValue     : <span class="hljs-number">0x26f8</span>
+   +<span class="hljs-number">0x008</span> InterceptorValue : <span class="hljs-number">0x26f8f894</span>
+   +<span class="hljs-number">0x00c</span> UnusedBytesLength : <span class="hljs-number">0x4dea</span>
+   +<span class="hljs-number">0x00e</span> EntryOffset      : <span class="hljs-number">0</span> <span class="hljs-string">''</span>
+   +<span class="hljs-number">0x00f</span> ExtendedBlockSignature : <span class="hljs-number">0x10</span> <span class="hljs-string">''</span>
+   +<span class="hljs-number">0x000</span> ReservedForAlignment : (<span class="hljs-literal">null</span>) 
+   +<span class="hljs-number">0x008</span> Code1            : <span class="hljs-number">0x26f8f894</span>
+   +<span class="hljs-number">0x00c</span> Code2            : <span class="hljs-number">0x4dea</span>
+   +<span class="hljs-number">0x00e</span> Code3            : <span class="hljs-number">0</span> <span class="hljs-string">''</span>
+   +<span class="hljs-number">0x00f</span> Code4            : <span class="hljs-number">0x10</span> <span class="hljs-string">''</span>
+   +<span class="hljs-number">0x00c</span> Code234          : <span class="hljs-number">0x10004dea</span>
+   +<span class="hljs-number">0x008</span> AgregateCode     : <span class="hljs-number">0x10004dea</span>`<span class="hljs-number">26</span>f8f894</code></pre><p>计算发现，对于地址<code>0x48C8D0</code>这个堆块中<code>0x48C8D0 ~ 0x48C8E0</code>为<code>_HEAP_ENTRY</code>结构），那么在<code>_HEAP_ENTRY</code>结构到堆内存<code>0x48C930</code>之间的是什么？</p><p>关于<strong>Internal</strong>标记，stackoverflow上的回答如下：</p><p><a href="https://stackoverflow.com/questions/13059157/whats-the-meaning-of-internal-in-heap-h-output-in-windbg">whats the meaning of internal in heap-h output in windbg</a></p><p>有关堆标志，发现<code>0xf8 ^ 0xf1 = 0x9</code>，包含<code>HEAP_ENTRY_VIRTUAL_ALLOC</code>，推测可能和虚分配有关</p><blockquote>0x01 - HEAP_ENTRY_BUSY<br>0x02 - HEAP_ENTRY_EXTRA_PRESENT<br>0x04 - HEAP_ENTRY_FILL_PATTERN<br>0x08 - HEAP_ENTRY_VIRTUAL_ALLOC<br>0x10 - HEAP_ENTRY_LAST_ENTRY</blockquote><h3 id="directory0766328120053782113">有关虚分配的推测</h3><p><strong>注：以下仅是推测</strong></p><p>那么再参考下RecatOS和有关泄露出的源码，有关虚分配的结构为<code>_HEAP_VIRTUAL_ALLOC_ENTRY</code></p><pre><code class="lang-CPP hljs">          <span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_VIRTUAL_ALLOC_ENTRY</span> // 5 <span class="hljs-title">elements</span>, 0<span class="hljs-title">x40</span> <span class="hljs-title">bytes</span> (<span class="hljs-title">sizeof</span>)  
+          {</span>                                                                            
+<span class="hljs-comment">/*0x000*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">LIST_ENTRY</span> <span class="hljs-title">Entry</span>;</span>            <span class="hljs-comment">// 2 elements, 0x10 bytes (sizeof)  </span>
+<span class="hljs-comment">/*0x010*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_ENTRY_EXTRA</span> <span class="hljs-title">ExtraStuff</span>;</span> <span class="hljs-comment">// 5 elements, 0x10 bytes (sizeof)  </span>
+<span class="hljs-comment">/*0x020*/</span>     UINT64       CommitSize;                                                 
+<span class="hljs-comment">/*0x028*/</span>     UINT64       ReserveSize;                                                
+<span class="hljs-comment">/*0x030*/</span>     <span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">HEAP_ENTRY</span> <span class="hljs-title">BusyBlock</span>;</span>        <span class="hljs-comment">// 26 elements, 0x10 bytes (sizeof) </span>
+          }HEAP_VIRTUAL_ALLOC_ENTRY, *PHEAP_VIRTUAL_ALLOC_ENTRY;</code></pre><p>在泄露出的源码中发现<code>ReturnValue = (PHEAP_ENTRY)(VirtualAllocBlock + 1);</code>，推测这种内存布局应该是<code>_HEAP_VIRTUAL_ALLOC_ENTRY + _HEAP_ENTR </code>大小一共<code>0x50</code>，<code>0x48C8E0 + 0x50 = 0x48C930</code>刚好是缓冲区的首地址</p><p>但是，在调试中，发现又不太符合这两个结构，可能存在加密？这一部分还待进一步的学习</p><pre><code class="lang-CPP hljs"> <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (Heap-&gt;Flags &amp; HEAP_GROWABLE) {
+     PHEAP_VIRTUAL_ALLOC_ENTRY VirtualAllocBlock;
+
+     VirtualAllocBlock = <span class="hljs-literal">NULL</span>;
+
+     <span class="hljs-comment">//</span>
+     <span class="hljs-comment">//  Compute how much memory we will need for this allocation which</span>
+     <span class="hljs-comment">//  will include the allocation size plus a header, and then go</span>
+     <span class="hljs-comment">//  get the committed memory</span>
+     <span class="hljs-comment">//</span>
+
+     AllocationSize += FIELD_OFFSET( HEAP_VIRTUAL_ALLOC_ENTRY, BusyBlock );
+
+     Status = ZwAllocateVirtualMemory( NtCurrentProcess(),
+                                      (PVOID *)&amp;VirtualAllocBlock,
+                                      <span class="hljs-number">0</span>,
+                                      &amp;AllocationSize,
+                                      MEM_COMMIT,
+                                      HEAP_PROTECTION );
+
+     <span class="hljs-keyword">if</span> (NT_SUCCESS(Status)) {
+
+         <span class="hljs-comment">//</span>
+         <span class="hljs-comment">//  Just committed, already zero.  Fill in the new block</span>
+         <span class="hljs-comment">//  and insert it in the list of big allocation</span>
+         <span class="hljs-comment">//</span>
+
+         VirtualAllocBlock-&gt;BusyBlock.Size = (USHORT)(AllocationSize - Size);
+         VirtualAllocBlock-&gt;BusyBlock.Flags = HEAP_ENTRY_VIRTUAL_ALLOC | HEAP_ENTRY_EXTRA_PRESENT | HEAP_ENTRY_BUSY;
+         VirtualAllocBlock-&gt;CommitSize = AllocationSize;
+         VirtualAllocBlock-&gt;ReserveSize = AllocationSize;
+
+         InsertTailList( &amp;Heap-&gt;VirtualAllocdBlocks, (PLIST_ENTRY)VirtualAllocBlock );
+
+         <span class="hljs-comment">//</span>
+         <span class="hljs-comment">//  Return the address of the user portion of the allocated block.</span>
+         <span class="hljs-comment">//  This is the byte following the header.</span>
+         <span class="hljs-comment">//</span>
+
+         ReturnValue = (PHEAP_ENTRY)(VirtualAllocBlock + <span class="hljs-number">1</span>);
+         BlockSize = AllocationSize;
+
+         leave;
+     }
+ }</code></pre>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"><a href="http://#/archives/171.html" title="内核页表隔离与CFG防御机制">内核页表隔离与CFG防御机制</a></li>
+                <li class="next"><a href="http://#/archives/184.html" title="TLS回调">TLS回调</a></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-180" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-180" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://#/archives/180.html#respond-post-180" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://#/archives/180.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="436fb9edcb8a6a37ccb1f6b28685b296"></form>
+        </div>
+        
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--top headroom--not-bottom">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://#/archives/180.html#directory076632812005378211">win32堆管理</a><ul><li><a href="http://#/archives/180.html#directory076632812005378212">空表 FreeList</a></li><li><a href="http://#/archives/180.html#directory076632812005378213">快表 Lookaside</a></li><li><a href="http://#/archives/180.html#directory076632812005378214">堆块的分配和释放</a><ul><li><a href="http://#/archives/180.html#directory076632812005378215">Windows下堆分配体系概览</a></li></ul></li></ul></li><li><a href="http://#/archives/180.html#directory076632812005378216">堆结构</a><ul><li><a href="http://#/archives/180.html#directory076632812005378217">堆块结构</a><ul><li><a href="http://#/archives/180.html#directory076632812005378218">_HEAP_ENTRY</a></li><li><a href="http://#/archives/180.html#directory076632812005378219">_HEAP_SEGMENT</a></li><li><a href="http://#/archives/180.html#directory0766328120053782110">_HEAP</a></li></ul></li><li><a href="http://#/archives/180.html#directory0766328120053782111">示例</a><ul><li><a href="http://#/archives/180.html#directory0766328120053782112">常规</a></li><li><a href="http://#/archives/180.html#directory0766328120053782113">有关虚分配的推测</a></li></ul></li></ul></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://#/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./初识win32堆 - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./初识win32堆 - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./初识win32堆 - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./初识win32堆 - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>

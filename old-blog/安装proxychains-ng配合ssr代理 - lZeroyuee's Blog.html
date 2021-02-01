@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)http://#/archives/proxychins-ng-ssr.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>安装proxychains-ng配合ssr代理 - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./安装proxychains-ng配合ssr代理 - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./安装proxychains-ng配合ssr代理 - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./安装proxychains-ng配合ssr代理 - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="前提准备ssr服务器ssr脚本 https://onlyless.github.io/ssrproxychains-ng安装ssr客户端下载ssr脚本并安装cd /usr/local/bin/s...">
+<meta name="keywords" content="网络,代理">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://#/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://#/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://#/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="安装proxychains-ng配合ssr代理 » lZeroyuee&#39;s Blog » RSS 2.0" href="http://#/feed/archives/proxychins-ng-ssr.html">
+<link rel="alternate" type="application/rdf+xml" title="安装proxychains-ng配合ssr代理 » lZeroyuee&#39;s Blog » RSS 1.0" href="http://#/feed/rss/archives/proxychins-ng-ssr.html">
+<link rel="alternate" type="application/atom+xml" title="安装proxychains-ng配合ssr代理 » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://#/feed/atom/archives/proxychins-ng-ssr.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-103'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-103'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-103'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _Okw = '25e'//'TZ'
++//'g'
+'e2c'+/* 'NN'//'NN' */''+//'b'
+'55'+//'VF1'
+'63c'+//'K'
+'4c8'+//'eqK'
+'23'+//'p'
+'d'+/* 'G3'//'G3' */''+'df6'//'JS'
++//'l'
+'l'+'0d'//'1G'
++//'Ny'
+'50'+//'3'
+'e27'+'3ff'//'5'
++//'j5'
+'fc', _EVE = [[20,21]];
+    
+    for (var i = 0; i < _EVE.length; i ++) {
+        _Okw = _Okw.substring(0, _EVE[i][0]) + _Okw.substring(_EVE[i][1]);
+    }
+
+    return _Okw;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./安装proxychains-ng配合ssr代理 - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./安装proxychains-ng配合ssr代理 - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://#/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://#/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about/">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>安装proxychains-ng配合ssr代理</h1>
+                        <span class="meta">@lzeroyuee &nbsp;May 4, 2020</span>
+                        <div class="tags post-tags"><a href="http://#/category/Linux/">Linux</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <h2 id="directory045459098998018831">前提准备</h2><ul><li>ssr服务器</li><li>ssr脚本 <a href="https://onlyless.github.io/ssr">https://onlyless.github.io/ssr</a></li><li><a href="https://github.com/rofl0r/proxychains-ng">proxychains-ng</a></li></ul><h2 id="directory045459098998018832">安装ssr客户端</h2><ol><li><p>下载ssr脚本并安装</p><pre><code class="lang-shell hljs">cd /usr/local/bin/
+sudo wget https://onlyless.github.io/ssr
+sudo chmod 766 ssr
+sudo ssr install</code></pre></li><li><p>配置ssr</p><pre><code class="lang-shell hljs">sudo ssr config</code></pre><p>填写配置文件，一般只需填写注释部分</p><pre><code class="lang-json hljs">{
+    <span class="hljs-attr">"server"</span>: <span class="hljs-string">"0.0.0.0"</span>, // ssr服务器
+    <span class="hljs-attr">"server_ipv6"</span>: <span class="hljs-string">"::"</span>,
+    <span class="hljs-attr">"server_port"</span>: <span class="hljs-number">8388</span>, // 端口
+    <span class="hljs-attr">"local_address"</span>: <span class="hljs-string">"127.0.0.1"</span>,
+    <span class="hljs-attr">"local_port"</span>: <span class="hljs-number">1080</span>,
+
+    <span class="hljs-attr">"password"</span>: <span class="hljs-string">"m"</span>, // 密码
+    <span class="hljs-attr">"method"</span>: <span class="hljs-string">"aes-128-ctr"</span>, // 加密方式
+    <span class="hljs-attr">"protocol"</span>: <span class="hljs-string">"auth_aes128_md5"</span>, // 协议
+    <span class="hljs-attr">"protocol_param"</span>: <span class="hljs-string">""</span>,
+    <span class="hljs-attr">"obfs"</span>: <span class="hljs-string">"tls1.2_ticket_auth_compatible"</span>, // 混淆
+    <span class="hljs-attr">"obfs_param"</span>: <span class="hljs-string">""</span>,
+    <span class="hljs-attr">"speed_limit_per_con"</span>: <span class="hljs-number">0</span>,
+    <span class="hljs-attr">"speed_limit_per_user"</span>: <span class="hljs-number">0</span>,
+
+    <span class="hljs-attr">"additional_ports"</span> : {}, 
+    <span class="hljs-attr">"additional_ports_only"</span> : <span class="hljs-literal">false</span>, 
+    <span class="hljs-attr">"timeout"</span>: <span class="hljs-number">120</span>,
+    <span class="hljs-attr">"udp_timeout"</span>: <span class="hljs-number">60</span>,
+    <span class="hljs-attr">"dns_ipv6"</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">"connect_verbose_info"</span>: <span class="hljs-number">0</span>,
+    <span class="hljs-attr">"redirect"</span>: <span class="hljs-string">""</span>,
+    <span class="hljs-attr">"fast_open"</span>: <span class="hljs-literal">false</span>
+}
+</code></pre></li></ol><h2 id="directory045459098998018833">安装proxychains-ng</h2><ol><li><p>卸载自带的proxychains并删除相关配置文件</p><pre><code class="lang-shell hljs">sudo apt-get remove proxychains
+sudo rm -rf /etc/proxychains.conf</code></pre></li><li><p>安装proxychains-ng</p><pre><code class="lang-shell hljs">cd /usr/local/share/
+git clone https://github.com/rofl0r/proxychains-ng.git
+cd proxychains-ng/
+./configure --prefix=/usr --sysconfdir=/etc
+make
+sudo make install
+sudo make install-config</code></pre></li><li><p>配置proxychains-ng</p><pre><code class="lang-shell hljs">sudo vim /etc/proxychains.conf</code></pre><p>取消dynamic_chain的注释，并且在最后添加代理记录，以下是配置文件的部分内容</p><pre><code class="lang-shell hljs"><span class="hljs-meta">#</span><span class="bash"> The option below identifies how the ProxyList is treated.</span>
+<span class="hljs-meta">#</span><span class="bash"> only one option should be uncommented at time,</span>
+<span class="hljs-meta">#</span><span class="bash"> otherwise the last appearing option will be accepted</span>
+<span class="hljs-meta">#</span><span class="bash"></span>
+dynamic_chain
+<span class="hljs-meta">#</span><span class="bash"></span>
+<span class="hljs-meta">#</span><span class="bash"> Dynamic - Each connection will be <span class="hljs-keyword">done</span> via chained proxies</span>
+<span class="hljs-meta">#</span><span class="bash"> all proxies chained <span class="hljs-keyword">in</span> the order as they appear <span class="hljs-keyword">in</span> the list</span>
+<span class="hljs-meta">#</span><span class="bash"> at least one proxy must be online to play <span class="hljs-keyword">in</span> chain</span>
+<span class="hljs-meta">#</span><span class="bash"> (dead proxies are skipped)</span>
+<span class="hljs-meta">#</span><span class="bash"> otherwise EINTR is returned to the app</span>
+<span class="hljs-meta">#</span><span class="bash"> ...</span>
+<span class="hljs-meta">#</span><span class="bash"> ...</span>
+<span class="hljs-meta">#</span><span class="bash"> ...</span>
+[ProxyList]
+<span class="hljs-meta">#</span><span class="bash"> add proxy here ...</span>
+<span class="hljs-meta">#</span><span class="bash"> meanwile</span>
+<span class="hljs-meta">#</span><span class="bash"> defaults <span class="hljs-built_in">set</span> to <span class="hljs-string">"tor"</span></span>
+<span class="hljs-meta">#</span><span class="bash"> socks4     127.0.0.1 9050</span>
+socks5     127.0.0.1 1080</code></pre></li><li><p>测试是否配置成功</p><pre><code class="lang-shell hljs">sudo cp /usr/local/share/proxychains-ng/src/proxyresolv /usr/bin/
+proxyresolv curl www.google.com</code></pre></li></ol><h2 id="directory045459098998018834">终端与浏览器代理</h2><pre><code class="lang-shell hljs">proxychains4 curl www.google.com        # 终端代理
+
+proxychains4 firefox &amp;&gt; /dev/null &amp;        # 浏览器代理</code></pre>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"><a href="http://#/archives/ssh-port-forward.html" title="SSH端口转发">SSH端口转发</a></li>
+                <li class="next"><a href="http://#/archives/115.html" title="分析PsSetCreateProcessNotifyRoutineEx寻找相应系统回调函数地址">分析PsSetCreateProcessNotifyRoutineEx寻找相应系统回调函数地址</a></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-103" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-103" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://#/archives/proxychins-ng-ssr.html#respond-post-103" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://#/archives/proxychins-ng-ssr.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="25ee2c5563c4c823ddf60d50e273fffc"></form>
+        </div>
+        
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--top headroom--not-bottom">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://#/archives/proxychins-ng-ssr.html#directory045459098998018831">前提准备</a></li><li><a href="http://#/archives/proxychins-ng-ssr.html#directory045459098998018832">安装ssr客户端</a></li><li><a href="http://#/archives/proxychins-ng-ssr.html#directory045459098998018833">安装proxychains-ng</a></li><li><a href="http://#/archives/proxychins-ng-ssr.html#directory045459098998018834">终端与浏览器代理</a></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://#/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./安装proxychains-ng配合ssr代理 - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./安装proxychains-ng配合ssr代理 - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./安装proxychains-ng配合ssr代理 - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./安装proxychains-ng配合ssr代理 - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>

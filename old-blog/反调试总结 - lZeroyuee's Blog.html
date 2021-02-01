@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037)http://#/archives/118.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>反调试总结 - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./反调试总结 - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./反调试总结 - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./反调试总结 - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="反调试主要利用程序在调试状态下和非调试状态下的区别PS：以下内容均来源于各大安全论坛与博客检查调试器PEB1: kd&amp;gt; dt _PEBnt!_PEB   ...   +0x002 Bein...">
+<meta name="keywords" content="开发,调试">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://#/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://#/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://#/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="反调试总结 » lZeroyuee&#39;s Blog » RSS 2.0" href="http://#/feed/archives/118.html">
+<link rel="alternate" type="application/rdf+xml" title="反调试总结 » lZeroyuee&#39;s Blog » RSS 1.0" href="http://#/feed/rss/archives/118.html">
+<link rel="alternate" type="application/atom+xml" title="反调试总结 » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://#/feed/atom/archives/118.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-118'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-118'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-118'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _xbiPbm = '847'//'h9'
++''///*'IUV'*/'IUV'
++'9c'//'8'
++//'Q'
+'Q'+'RWz'//'RWz'
++'69'//'ehG'
++/* 'G'//'G' */''+//'E'
+'203'+'0'//'e'
++/* 'd'//'d' */''+//'WT'
+'84'+//'n'
+'e'+//'p'
+'518'+//'FxF'
+'08'+//'t7a'
+'567'+'cc'//'HAd'
++'40'//'Yrd'
++'db'//'N4J'
++'d1'//'QXE'
++'eb'//'UWu'
+, _9Nm8 = [[5,6],[5,8]];
+    
+    for (var i = 0; i < _9Nm8.length; i ++) {
+        _xbiPbm = _xbiPbm.substring(0, _9Nm8[i][0]) + _xbiPbm.substring(_9Nm8[i][1]);
+    }
+
+    return _xbiPbm;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./反调试总结 - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./反调试总结 - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://#/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://#/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about/">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>反调试总结</h1>
+                        <span class="meta">@lzeroyuee &nbsp;May 19, 2020</span>
+                        <div class="tags post-tags"><a href="http://#/category/Windows/">Windows</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <p>反调试主要利用程序在调试状态下和非调试状态下的区别</p><blockquote>PS：以下内容均来源于各大安全论坛与博客</blockquote><h2 id="directory069143078363188031">检查调试器</h2><h3 id="directory069143078363188032">PEB</h3><pre><code class="lang-shell hljs">1: kd&gt; dt _PEB
+nt!_PEB
+   ...
+   +0x002 BeingDebugged    : UChar
+   ...
+   +0x030 ProcessHeap      : Ptr64 Void
+   ...
+   +0x0bc NtGlobalFlag     : Uint4B
+   ...</code></pre><ol><li><p><code>BeingDebugged</code>：表示是否在调试状态</p><ul><li>相关API：<code>IsDebuggerPresent</code></li></ul></li><li><code>NtGlobalFlag</code>：如果在调试状态下，此值为<code>0x70</code></li></ol><h3 id="directory069143078363188033">NtQueryInformationProcess</h3><p>利用<code>NtQueryInformationProcess</code>获取进程相关调试信息</p><pre><code class="lang-CPP hljs">__<span class="hljs-function">kernel_entry NTSTATUS <span class="hljs-title">NtQueryInformationProcess</span><span class="hljs-params">(
+  IN HANDLE           ProcessHandle,                <span class="hljs-comment">// 进程句柄</span>
+  IN PROCESSINFOCLASS ProcessInformationClass,        <span class="hljs-comment">// 进程信息类型</span>
+  OUT PVOID           ProcessInformation,            <span class="hljs-comment">// 进程信息，与类型相关</span>
+  IN ULONG            ProcessInformationLength,        <span class="hljs-comment">// 进程信息块长度</span>
+  OUT PULONG          ReturnLength                    <span class="hljs-comment">// 返回长度</span>
+)</span></span>;</code></pre><p>进程信息类型填写为：<code>ProcessDebugPort (0x7)</code>或<code>ProcessDebugObjectHandle (0x1e)</code></p><ul><li>当传入<code>ProcessDebugPort</code>时，返回一个调试端口值，在调试状态下此值为<code>0xffffffff</code>，非调试状态下为0，等价API：<code>CheckRemoteDebuggerPresent</code></li><li>当传入<code>ProcessDebugObjectHandle</code>时，返回一个调试对象句柄，在调试状态下为非0，非调试状态下为0</li></ul><h3 id="directory069143078363188034">STARTUPINFO</h3><p>程序正常启动时，<code>CreateProcess</code>的STARTUPINFO结构中的成员一般会被填为0，而调试启动时不会</p><p>故反调试检测可以检查STARTUPINFO结构中的成员是否为0，可以多检查几个成员，<code>GetStartupInfo</code>可以获取STARTUPINFO结构</p><h3 id="directory069143078363188035">SedebugPrivilege</h3><p>一般在未提权情况下，程序正常启动不会有调试权限，但调试器启动程序时，应用程序会继承调试器的调试权限，因此可以检查调试权限来进行反调试</p><p>在管理员启动+调试权限下，可以通过<code>OpenProcess</code>来打开csrss.exe进程句柄，可以通过检查是否能拿到此句柄来判断是否有调试器存在</p><h2 id="directory069143078363188036">检查调试环境</h2><h3 id="directory069143078363188037">注册表Just-in-time调试器</h3><pre><code class="lang-shell hljs">HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug
+HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\AeDebug</code></pre><p>中的Debugger键值对，可以检查此键值对</p><h3 id="directory069143078363188038">窗口检查</h3><p>通过查找窗口来检查是否开启了调试器，常用API有：<code>FindWindow</code>、<code>EnumWindows</code>等</p><p>扩展：</p><ul><li>也可以检查进程的父进程是否是调试器</li><li>也可以枚举遍历进程查找调试器</li></ul><h3 id="directory069143078363188039">查找调试内核对象</h3><p><code>NtQueryObject</code>查询内核对象，当调试器调试进程时，会创建一个DebugObject对象，可以遍历内核对象列表查找有没有相应的调试对象</p><pre><code class="lang-cpp hljs"><span class="hljs-function">NTSTATUS <span class="hljs-title">NtQueryObject</span><span class="hljs-params">(
+    _In_opt_  HANDLE  Handle,
+    _In_        OBJECT_INFORMATION_CLASS objectInformationClass,        <span class="hljs-comment">// 此值要传入0x3</span>
+    _Out_opt_ PVOID   ObjectInformation,                                <span class="hljs-comment">// 传出参数，通过其可遍历内核对象</span>
+    _In_ ULONG ObjectInformationLength,
+    _Out_opt_ PULONG ReturnLength
+)</span></span>;</code></pre><h3 id="directory0691430783631880310">NtQuerySystemInformation</h3><p>同<code>NtQueryInformationProcess</code>，当传入类型为<code>systemKernelDebuggerInfromation (0x32)</code>时，若在调试状态下返回的<code>system_kernel_Debug_Information</code>的结构中的<code>Debugedable</code>为1</p><h3 id="directory0691430783631880311">ZwSetInformationThread</h3><p>传入参数<code>ThreadHideFromDebugger (0x11)</code></p><p>当程序正常运行，该函数相当于空函数，当程序处于在调试状态下，则该函数可以使当前线程脱离调试器，即调试器无法获得此线程的调试事件</p><h2 id="directory0691430783631880312">动态反调试</h2><h3 id="directory0691430783631880313">时钟检测</h3><p>在调试状态下，跟踪代码比正常运行代码的时间要长。可以通过比较运行代码之间的时间间隔来判断是否被调试了</p><ul><li>TSC寄存器保存着CPU的时钟周期计数，<code>RDTSC</code>指令将TSC寄存器的值装入<code>EDX:EAX</code>中</li><li>也可利用相关API：<code>QueryPerformanceCounter</code>、<code>GetTickCount</code>、<code>GetSystemTime</code>、<code>GetLocalTime</code>等</li></ul><h3 id="directory0691430783631880314">异常处理</h3><ul><li>SEH<p></p><p>在程序中主动触发异常<code>RaiseException</code>，如果此时存在调试器，那么异常会被调试器接收（没有调试器时，此异常会给注册的SEH，一般会在SEH中执行敏感操作），调试器接收了异常后无法按程序原定的流程继续执行，起到了反调试的作用</p></li><li>SetUnhandledExceptionFilter<p></p><p>当SEH不存在时，则会调用<code>UnhandledExceptionFilter</code>，该函数检查是否存在调试器，存在就给调试器，不存在就调用默认的异常处理：弹出错误对话框结束进程</p><p><code>SetUnhandledExceptionFilter</code>可以设置异常处理函数来替换默认的异常处理，可以在此异常处理中做敏感操作，如果有调试器存在，此敏感操作不会被执行也可导致无法按程序原定流程执行</p></li><li>int 2d<p></p><p><code>int 2d</code>是一个特殊的指令，原为内核模式中用来触发断点异常的，也可以在用户模式下正常运行时触发异常，调试器不会触发此异常，只是忽略，如果遇到<code>Int 2d</code>指令，调试器无法执行单步指令，直到遇到断点</p></li></ul><h3 id="directory0691430783631880315">0xCC探测</h3><p>0xCC即<code>int 3</code>指令，若在关键代码位置检测到有0xCC，即可判断进程处于调试状态（0xCC也可以为其他指令的值）</p><ul><li>API断点：检查API首地址处是否存在断点</li><li>校验和：对敏感区域进行校验和比较，如果存在调试器且正在调试当前敏感位置，校验和会不一样</li><li>硬件断点检测：Dr0~Dr3保存硬件断点的地址，检查这几个寄存器的值是否为0就知道有没有硬件断点（可利用<code>GetThreadContext</code>或者主动触发异常来检查）</li></ul><h3 id="directory0691430783631880316">自调试</h3><p>同一个进程不允许同时被两个调试器调试，可以自己调试自己防止被其他调试器调试</p><p>程序第一次打开创建同步对象，并且在以调试方式创建自己，使得第一次打开的程序成为第二次打开的程序的调试器</p><p>相关API：<code>CreateProcess</code>或<code>DebugActiveProcess</code></p><h2 id="directory0691430783631880317">检查VMware</h2><p>检测VMware也是检测一些特征. 根据检测的结果进行判断.</p><h3 id="directory0691430783631880318">__indword(0x5658)</h3><p>使用<code>in</code>指令通过<code>0x5658</code>端口读取数据，如果程序在 VMware内运行，则<code>ebx</code>寄存器的值就会变为<code>0x564D5868</code></p><pre><code class="lang-CPP hljs"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;iostream&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;string&gt;</span></span>
+
+<span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">check_vmware</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-keyword">bool</span> is_in_vmware = <span class="hljs-literal">false</span>;
+    __try {
+        __asm {
+            <span class="hljs-comment">// 保存寄存器环境</span>
+            push ebx
+            push edx
+            push ecx
+            
+            xor ebx, ebx
+            mov ecx, <span class="hljs-number">0xa</span>
+            mov edx, <span class="hljs-number">0x5658</span>     <span class="hljs-comment">// dx = "VX"</span>
+            mov eax, <span class="hljs-number">0x564D5868</span>
+            in eax, dx      <span class="hljs-comment">// 若不在VMware内，此处会抛出异常</span>
+            
+            <span class="hljs-comment">// 比较ebx是否是0x564D5868，即"VMXh"</span>
+            cmp ebx, <span class="hljs-number">0x564D5868</span>
+            sete is_in_vmware
+            
+            <span class="hljs-comment">// 恢复环境</span>
+            pop ecx
+            pop edx
+            pop ebx
+        }
+    } __except (<span class="hljs-number">1</span>)
+    {
+    }
+    
+    <span class="hljs-keyword">return</span> is_in_vmware;
+}
+
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span>
+</span>{
+    <span class="hljs-keyword">if</span> (check_vmware()) {
+        <span class="hljs-built_in">std</span>::<span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">"Is in VMware."</span> &lt;&lt; <span class="hljs-built_in">std</span>::<span class="hljs-built_in">endl</span>;
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-built_in">std</span>::<span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">"Is not in VMware."</span> &lt;&lt; <span class="hljs-built_in">std</span>::<span class="hljs-built_in">endl</span>;
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}</code></pre>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"><a href="http://#/archives/117.html" title="x64内核：过滤驱动">x64内核：过滤驱动</a></li>
+                <li class="next"><a href="http://#/archives/120.html" title="关于某公司面试的样本">关于某公司面试的样本</a></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-118" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-118" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://#/archives/118.html#respond-post-118" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://#/archives/118.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="8479c69203084e51808567cc40dbd1eb"></form>
+        </div>
+        
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--top headroom--not-bottom">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://#/archives/118.html#directory069143078363188031">检查调试器</a><ul><li><a href="http://#/archives/118.html#directory069143078363188032">PEB</a></li><li><a href="http://#/archives/118.html#directory069143078363188033">NtQueryInformationProcess</a></li><li><a href="http://#/archives/118.html#directory069143078363188034">STARTUPINFO</a></li><li><a href="http://#/archives/118.html#directory069143078363188035">SedebugPrivilege</a></li></ul></li><li><a href="http://#/archives/118.html#directory069143078363188036">检查调试环境</a><ul><li><a href="http://#/archives/118.html#directory069143078363188037">注册表Just-in-time调试器</a></li><li><a href="http://#/archives/118.html#directory069143078363188038">窗口检查</a></li><li><a href="http://#/archives/118.html#directory069143078363188039">查找调试内核对象</a></li><li><a href="http://#/archives/118.html#directory0691430783631880310">NtQuerySystemInformation</a></li><li><a href="http://#/archives/118.html#directory0691430783631880311">ZwSetInformationThread</a></li></ul></li><li><a href="http://#/archives/118.html#directory0691430783631880312">动态反调试</a><ul><li><a href="http://#/archives/118.html#directory0691430783631880313">时钟检测</a></li><li><a href="http://#/archives/118.html#directory0691430783631880314">异常处理</a></li><li><a href="http://#/archives/118.html#directory0691430783631880315">0xCC探测</a></li><li><a href="http://#/archives/118.html#directory0691430783631880316">自调试</a></li></ul></li><li><a href="http://#/archives/118.html#directory0691430783631880317">检查VMware</a><ul><li><a href="http://#/archives/118.html#directory0691430783631880318">__indword(0x5658)</a></li></ul></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://#/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./反调试总结 - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./反调试总结 - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./反调试总结 - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./反调试总结 - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>

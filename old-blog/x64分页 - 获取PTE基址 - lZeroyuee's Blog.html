@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<!-- saved from url=(0037)http://#/archives/169.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="x-dns-prefetch-control" content="on">
+    <link rel="dns-prefetch" href="https://lib.baomitu.com/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>x64分页 - 获取PTE基址 - lZeroyuee's Blog</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="http://lzeroyuee.cn/usr/uploads/2020/05/1330681747.png">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <!-- AmazeUI 3.0 -->
+    <link rel="stylesheet" href="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/amazeui.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/customui.min.css">
+    <!-- CodeHighlight -->
+    <style>
+    .hljs{display:block;overflow-x:auto;padding:0.5em;color:#383a42;background:#fafafa}.hljs-comment,.hljs-quote{color:#a0a1a7;}.hljs-doctag,.hljs-keyword,.hljs-formula{color:#a626a4}.hljs-section,.hljs-name,.hljs-selector-tag,.hljs-deletion,.hljs-subst{color:#e45649}.hljs-literal{color:#0184bb}.hljs-string,.hljs-regexp,.hljs-addition,.hljs-attribute,.hljs-meta-string{color:#50a14f}.hljs-built_in,.hljs-class .hljs-title{color:#c18401}.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-type,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-number{color:#986801}.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-selector-id,.hljs-title{color:#4078f2}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}.hljs-link{text-decoration:underline}
+    </style>
+    <!-- FontAwesome -->
+    <link href="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/font-awesome.min.css" rel="stylesheet">
+    <!-- 通过自有函数输出HTML头部信息 -->
+    <meta name="description" content="分页x64下分页相对于x86做了扩展，采用了4级页表，Intel与微软的定义上对于前两个页表的命名上有所区别在Intel手册中，对于这四级页表的命名为：PML4E、PDPTE、PDE、PTE在微...">
+<meta name="generator" content="Typecho 1.2/19.05.09">
+<meta name="template" content="amaze">
+<link rel="pingback" href="http://#/action/xmlrpc">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://#/action/xmlrpc?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://#/action/xmlrpc?wlw">
+<link rel="alternate" type="application/rss+xml" title="x64分页 - 获取PTE基址 » lZeroyuee&#39;s Blog » RSS 2.0" href="http://#/feed/archives/169.html">
+<link rel="alternate" type="application/rdf+xml" title="x64分页 - 获取PTE基址 » lZeroyuee&#39;s Blog » RSS 1.0" href="http://#/feed/rss/archives/169.html">
+<link rel="alternate" type="application/atom+xml" title="x64分页 - 获取PTE基址 » lZeroyuee&#39;s Blog » ATOM 1.0" href="http://#/feed/atom/archives/169.html">
+<script type="text/javascript">
+(function () {
+    window.TypechoComment = {
+        dom : function (id) {
+            return document.getElementById(id);
+        },
+    
+        create : function (tag, attr) {
+            var el = document.createElement(tag);
+        
+            for (var key in attr) {
+                el.setAttribute(key, attr[key]);
+            }
+        
+            return el;
+        },
+
+        reply : function (cid, coid) {
+            var comment = this.dom(cid), parent = comment.parentNode,
+                response = this.dom('respond-post-169'), input = this.dom('comment-parent'),
+                form = 'form' == response.tagName ? response : response.getElementsByTagName('form')[0],
+                textarea = response.getElementsByTagName('textarea')[0];
+
+            if (null == input) {
+                input = this.create('input', {
+                    'type' : 'hidden',
+                    'name' : 'parent',
+                    'id'   : 'comment-parent'
+                });
+
+                form.appendChild(input);
+            }
+
+            input.setAttribute('value', coid);
+
+            if (null == this.dom('comment-form-place-holder')) {
+                var holder = this.create('div', {
+                    'id' : 'comment-form-place-holder'
+                });
+
+                response.parentNode.insertBefore(holder, response);
+            }
+
+            comment.appendChild(response);
+            this.dom('cancel-comment-reply-link').style.display = '';
+
+            if (null != textarea && 'text' == textarea.name) {
+                textarea.focus();
+            }
+
+            return false;
+        },
+
+        cancelReply : function () {
+            var response = this.dom('respond-post-169'),
+            holder = this.dom('comment-form-place-holder'), input = this.dom('comment-parent');
+
+            if (null != input) {
+                input.parentNode.removeChild(input);
+            }
+
+            if (null == holder) {
+                return true;
+            }
+
+            this.dom('cancel-comment-reply-link').style.display = 'none';
+            holder.parentNode.insertBefore(response, holder);
+            return false;
+        }
+    };
+})();
+</script>
+<script type="text/javascript">
+(function () {
+    var event = document.addEventListener ? {
+        add: 'addEventListener',
+        triggers: ['scroll', 'mousemove', 'keyup', 'touchstart'],
+        load: 'DOMContentLoaded'
+    } : {
+        add: 'attachEvent',
+        triggers: ['onfocus', 'onmousemove', 'onkeyup', 'ontouchstart'],
+        load: 'onload'
+    }, added = false;
+
+    document[event.add](event.load, function () {
+        var r = document.getElementById('respond-post-169'),
+            input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_';
+        input.value = (function () {
+    var _UBWgR5P = 'f6'//'M'
++/* 'Ed'//'Ed' */''+//'q'
+'c8f'+'c77'//'lLm'
++'2'//'m'
++'2d'//'XL'
++/* 'T'//'T' */''+''///*'Q'*/'Q'
++'610'//'hs'
++//'Req'
+'0'+''///*'E2E'*/'E2E'
++'c'//'Z'
++//'QR'
+'c01'+//'zd'
+'2a9'+//'UA'
+'34'+//'z'
+'9e'+'y'//'y'
++//'E0E'
+'805'+/* 'a'//'a' */''+'6'//'Hb'
++'80'//'L0'
+, _AOO7vk = [[26,27]];
+    
+    for (var i = 0; i < _AOO7vk.length; i ++) {
+        _UBWgR5P = _UBWgR5P.substring(0, _AOO7vk[i][0]) + _UBWgR5P.substring(_AOO7vk[i][1]);
+    }
+
+    return _UBWgR5P;
+})();
+
+        if (null != r) {
+            var forms = r.getElementsByTagName('form');
+            if (forms.length > 0) {
+                function append() {
+                    if (!added) {
+                        forms[0].appendChild(input);
+                        added = true;
+                    }
+                }
+            
+                for (var i = 0; i < event.triggers.length; i ++) {
+                    var trigger = event.triggers[i];
+                    document[event.add](trigger, append);
+                    window[event.add](trigger, append);
+                }
+            }
+        }
+    });
+})();
+</script><link rel="stylesheet" href="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/APlayer.min.css">
+<script type="text/javascript" src="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/APlayer.min.js.下载"></script>
+<script>var meting_api="http://#/action/metingapi?server=:server&type=:type&id=:id&auth=:auth&r=:r";</script></head>
+
+<body id="blog">
+<nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+            <button type="button" class="navbar-toggle">
+                <span class="sr-only"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="http://#/">lZeroyuee's Blog</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div id="huxblog_navbar">
+            <div class="navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="http://lzeroyuee.cn/">Home</a>
+                    </li>
+                                                            <li>
+                        <a href="http://lzeroyuee.cn/archives">归档</a>
+                    </li>
+                                        <li>
+                        <a href="http://lzeroyuee.cn/about/">关于我</a>
+                    </li>
+                                                        </ul>
+            </div>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container -->
+</nav>
+
+    <header class="intro-header" style="background-image: url(&#39;&#39;)">
+    <div class="container">
+        <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>x64分页 - 获取PTE基址</h1>
+                        <span class="meta">@lzeroyuee &nbsp;October 4, 2020</span>
+                        <div class="tags post-tags"><a href="http://#/category/Windows/">Windows</a>&nbsp;</div>
+                    </div>
+                </div>
+        </div>
+    </div>
+    </header>
+
+    <!-- content start -->
+    <div class="container">
+    <div class="am-g am-g-fixed blog-fixed">
+        <div class="am-u-lg-12 am-u-sm-12">
+            <article class="am-article blog-article-p article-trigger">
+                <div id="post-content" class="am-article-bd">
+                    <h2 id="directory054084082351793631">分页</h2><p>x64下分页相对于x86做了扩展，采用了4级页表，Intel与微软的定义上对于前两个页表的命名上有所区别</p><p>在Intel手册中，对于这四级页表的命名为：PML4E、PDPTE、PDE、PTE</p><p><img src="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/3963714549.png" alt="1.png" title="1.png"></p><p>在微软的定义上，这四级页表分别命名为：PXE、PPE、PDE、PTE，例如：</p><p><img src="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/3738443664.png" alt="2.png" title="2.png"></p><p>对于一个虚拟地址，其有效位有48位，其剩余的高16位为高位的符号扩展，对这48位分解成四个9位（四级页表索引），剩余12位表示物理页面的页内偏移，每个页表项占8字节</p><p>以4k页面为例，如图：</p><p><img src="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/2836333723.png" alt="3.png" title="3.png"></p><p>且，在虚拟内存空间中</p><ul><li>指向PTE所在物理页面的<em>PTE</em>是其<strong>PDE</strong></li><li>指向PDE所在物理页面的<em>PTE</em>是其<strong>PPE</strong></li><li>指向PPE所在物理页面的<em>PTE</em>是其<strong>PXE</strong></li></ul><h2 id="directory054084082351793632">手动转换虚拟地址到物理地址</h2><p>以IDT表所在虚拟地址为例</p><pre><code class="hljs coffeescript">kd&gt; dq idtr
+fffff803`<span class="javascript"><span class="hljs-number">42672000</span>  <span class="hljs-number">3</span>c228e00</span>`<span class="hljs-number">00102100</span> <span class="hljs-number">00000000</span>`<span class="javascript">fffff803
+fffff803</span>`<span class="hljs-number">42672010</span>  <span class="hljs-number">3</span>c228e04`<span class="javascript"><span class="hljs-number">00102180</span> <span class="hljs-number">00000000</span></span>`fffff803
+fffff803`<span class="javascript"><span class="hljs-number">42672020</span>  <span class="hljs-number">3</span>c228e03</span>`<span class="hljs-number">00102240</span> <span class="hljs-number">00000000</span>`<span class="javascript">fffff803
+fffff803</span>`<span class="hljs-number">42672030</span>  <span class="hljs-number">3</span>c22ee00`<span class="javascript"><span class="hljs-number">001022</span>c0 <span class="hljs-number">00000000</span></span>`fffff803
+fffff803`<span class="javascript"><span class="hljs-number">42672040</span>  <span class="hljs-number">3</span>c22ee00</span>`<span class="hljs-number">00102340</span> <span class="hljs-number">00000000</span>`<span class="javascript">fffff803
+fffff803</span>`<span class="hljs-number">42672050</span>  <span class="hljs-number">3</span>c228e00`<span class="javascript"><span class="hljs-number">001023</span>c0 <span class="hljs-number">00000000</span></span>`fffff803
+fffff803`<span class="javascript"><span class="hljs-number">42672060</span>  <span class="hljs-number">3</span>c228e00</span>`<span class="hljs-number">00102440</span> <span class="hljs-number">00000000</span>`<span class="javascript">fffff803
+fffff803</span>`<span class="hljs-number">42672070</span>  <span class="hljs-number">3</span>c228e00`<span class="javascript"><span class="hljs-number">001024</span>c0 <span class="hljs-number">00000000</span></span>`fffff803
+
+kd&gt; .formats fffff803`<span class="javascript"><span class="hljs-number">42672000</span>
+Evaluate expression:
+  Hex:     fffff803</span>`<span class="hljs-number">42672000</span>
+  Decimal: <span class="hljs-number">-8782094065664</span>
+  Octal:   <span class="hljs-number">1777777600150231620000</span>
+  Binary:  <span class="hljs-number">11111111</span> <span class="hljs-number">11111111</span> <span class="hljs-number">11111000</span> <span class="hljs-number">00000011</span> <span class="hljs-number">01000010</span> <span class="hljs-number">01100111</span> <span class="hljs-number">00100000</span> <span class="hljs-number">00000000</span>
+  Chars:   ....Bg .
+  Time:    ***** Invalid FILETIME
+  Float:   low <span class="hljs-number">57.7812</span> high <span class="hljs-number">-1.</span><span class="hljs-comment">#QNAN</span>
+  Double:  <span class="hljs-number">-1.</span><span class="hljs-comment">#QNAN</span>
+  
+kd&gt; r cr3
+cr3=<span class="hljs-number">00000000001</span>ad002</code></pre><p>拆分虚拟地址：</p><pre><code class="hljs cpp"><span class="hljs-number">11111111</span> <span class="hljs-number">11111111</span> <span class="hljs-comment">// 符号扩展</span>
+<span class="hljs-number">1</span> <span class="hljs-number">1111</span> <span class="hljs-number">0000</span>        <span class="hljs-comment">// 1f0 -&gt; PXE</span>
+<span class="hljs-number">0</span> <span class="hljs-number">0000</span> <span class="hljs-number">1101</span>        <span class="hljs-comment">// d -&gt; PPE</span>
+<span class="hljs-number">0</span> <span class="hljs-number">0001</span> <span class="hljs-number">0011</span>        <span class="hljs-comment">// 13 -&gt; PDE</span>
+<span class="hljs-number">0</span> <span class="hljs-number">0111</span> <span class="hljs-number">0010</span>        <span class="hljs-comment">// 72 -&gt; PTE</span>
+<span class="hljs-number">000000000000</span>    <span class="hljs-comment">// 0 -&gt; offset</span></code></pre><p>获取PXE</p><pre><code class="hljs shell"><span class="hljs-meta">kd&gt;</span><span class="bash"> !dq 00000000001ad002 + 1f0 * 8</span>
+<span class="hljs-meta">#</span><span class="bash">  1adf80 00000000`02c09063 00000000`00000000    // 其中63是页面的属性，紧接着4位保留</span>
+<span class="hljs-meta">#</span><span class="bash">  1adf90 00000000`00000000 0a000001`3ffff863</span>
+<span class="hljs-meta">#</span><span class="bash">  1adfa0 8a000000`00003863 8a000000`00003863</span>
+<span class="hljs-meta">#</span><span class="bash">  1adfb0 8a000000`00003863 8a000000`00003863</span>
+<span class="hljs-meta">#</span><span class="bash">  1adfc0 0a000001`3fffd863 0a000001`3fffb863</span>
+<span class="hljs-meta">#</span><span class="bash">  1adfd0 00000000`00000000 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash">  1adfe0 00000000`00000000 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash">  1adff0 00000000`00000000 00000000`02c2a063</span></code></pre><p>需要注意的是，CR3寄存器的低12位上存在保留字段和两个标志位，而从第12位开始才是页目录基址，需要清除低12位，这里windbg自动完成了转换</p><p><img src="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/1320549953.png" alt="4.png" title="4.png"></p><p>获取PPE</p><pre><code class="hljs shell"><span class="hljs-meta">kd&gt;</span><span class="bash"> !dq 00000000`02c09000 + d * 8</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c09068 00000000`02c19063 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c09078 00000000`00000000 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c09088 00000000`00000000 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c09098 00000000`00000000 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c090a8 00000000`00000000 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c090b8 00000000`00000000 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c090c8 00000000`00000000 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c090d8 00000000`00000000 00000000`00000000</span></code></pre><p>获取PDE</p><pre><code class="hljs shell"><span class="hljs-meta">kd&gt;</span><span class="bash"> !dq 00000000`02c19000 + 13 * 8</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c19098 00000000`02c29063 0a000000`82084863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c190a8 0a000000`82085863 0a000000`82086863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c190b8 0a000000`82087863 0a000000`82088863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c190c8 0a000000`8ec3f863 0a000000`8ec40863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c190d8 0a000000`8ec41863 0a000000`8ec42863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c190e8 0a000000`8ec43863 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c190f8 00000000`00000000 00000000`00000000</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c19108 00000000`00000000 00000000`00000000</span></code></pre><p>获取PTE</p><pre><code class="hljs shell"><span class="hljs-meta">kd&gt;</span><span class="bash"> !dq 00000000`02c29000 + 72 * 8</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c29390 89000000`07872021 89000000`07873863    // 最高位89，8是不可执行属性，9是protect key和SMAP有关</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c293a0 89000000`07874863 89000000`07875863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c293b0 89000000`07876863 89000000`07877863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c293c0 00000000`00000000 89000000`07879863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c293d0 89000000`0787a863 89000000`0787b863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c293e0 89000000`0787c863 89000000`0787d863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c293f0 89000000`0787e863 89000000`0787f863</span>
+<span class="hljs-meta">#</span><span class="bash"> 2c29400 00000000`00000000 89000000`07881863</span></code></pre><p>最后加上物理页面偏移，得到物理地址</p><pre><code class="hljs coffeescript">kd&gt; !dq <span class="hljs-number">07872000</span> + <span class="hljs-number">0</span>
+<span class="hljs-comment"># 7872000 3c228e00`00102100 00000000`fffff803</span>
+<span class="hljs-comment"># 7872010 3c228e04`00102180 00000000`fffff803</span>
+<span class="hljs-comment"># 7872020 3c228e03`00102240 00000000`fffff803</span>
+<span class="hljs-comment"># 7872030 3c22ee00`001022c0 00000000`fffff803</span>
+<span class="hljs-comment"># 7872040 3c22ee00`00102340 00000000`fffff803</span>
+<span class="hljs-comment"># 7872050 3c228e00`001023c0 00000000`fffff803</span>
+<span class="hljs-comment"># 7872060 3c228e00`00102440 00000000`fffff803</span>
+<span class="hljs-comment"># 7872070 3c228e00`001024c0 00000000`fffff803</span>
+
+<span class="hljs-regexp">//</span> 对比之前的一致
+kd&gt; dq idtr
+fffff803`<span class="javascript"><span class="hljs-number">42672000</span>  <span class="hljs-number">3</span>c228e00</span>`<span class="hljs-number">00102100</span> <span class="hljs-number">00000000</span>`<span class="javascript">fffff803
+fffff803</span>`<span class="hljs-number">42672010</span>  <span class="hljs-number">3</span>c228e04`<span class="javascript"><span class="hljs-number">00102180</span> <span class="hljs-number">00000000</span></span>`fffff803
+fffff803`<span class="javascript"><span class="hljs-number">42672020</span>  <span class="hljs-number">3</span>c228e03</span>`<span class="hljs-number">00102240</span> <span class="hljs-number">00000000</span>`<span class="javascript">fffff803
+fffff803</span>`<span class="hljs-number">42672030</span>  <span class="hljs-number">3</span>c22ee00`<span class="javascript"><span class="hljs-number">001022</span>c0 <span class="hljs-number">00000000</span></span>`fffff803
+fffff803`<span class="javascript"><span class="hljs-number">42672040</span>  <span class="hljs-number">3</span>c22ee00</span>`<span class="hljs-number">00102340</span> <span class="hljs-number">00000000</span>`<span class="javascript">fffff803
+fffff803</span>`<span class="hljs-number">42672050</span>  <span class="hljs-number">3</span>c228e00`<span class="javascript"><span class="hljs-number">001023</span>c0 <span class="hljs-number">00000000</span></span>`fffff803
+fffff803`<span class="javascript"><span class="hljs-number">42672060</span>  <span class="hljs-number">3</span>c228e00</span>`<span class="hljs-number">00102440</span> <span class="hljs-number">00000000</span>`<span class="javascript">fffff803
+fffff803</span>`<span class="hljs-number">42672070</span>  <span class="hljs-number">3</span>c228e00`<span class="javascript"><span class="hljs-number">001024</span>c0 <span class="hljs-number">00000000</span></span>`fffff803</code></pre><h2 id="directory054084082351793633">获取PTE基址</h2><p>在现代操作系统中，PTE基址随机，不妨命名为<code>PTE_BASE</code>，以此类推就有<code>PDE_BASE</code>、<code>PPE_BASE</code>、<code>PXE_BASE</code></p><p>那么计算某一虚拟地址的PTE、PDE、PPE、PXE如下：</p><pre><code class="lang-cpp hljs"><span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> GET_PTE(x) ((((x) &amp; 0xffffffffffff) &gt;&gt; 12) &lt;&lt; 3) + PTE_BASE</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> GET_PDE(x) ((((x) &amp; 0xffffffffffff) &gt;&gt; 21) &lt;&lt; 3) + PDE_BASE</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> GET_PPE(x) ((((x) &amp; 0xffffffffffff) &gt;&gt; 30) &lt;&lt; 3) + PPE_BASE</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> GET_PXE(x) ((((x) &amp; 0xffffffffffff) &gt;&gt; 39) &lt;&lt; 3) + PXE_BASE</span></code></pre><p>根据</p><blockquote>指向PTE所在物理页面的<strong><em>PTE</em></strong>是其<strong>PDE</strong><p></p><p>指向PDE所在物理页面的<strong><em>PTE</em></strong>是其<strong>PPE</strong></p><p>指向PPE所在物理页面的<strong><em>PTE</em></strong>是其<strong>PXE</strong></p></blockquote><p>可得</p><pre><code class="lang-cpp hljs">PDE_BASE = GET_PTE(PTE_BASE);
+PPE_BASE = GET_PTE(PDE_BASE);
+PXE_BASE = GET_PTE(PPE_BASE);</code></pre><p>那么最关键的文件是如何获得<code>PTE_BASE</code>，有好几种方法，推荐<a href="https://bbs.pediy.com/thread-254276.htm">鹅厂是如何定位随机化的PTE_BASE</a>一文</p><pre><code class="lang-CPP hljs"><span class="hljs-function">ULONG64 <span class="hljs-title">get_pte_base</span><span class="hljs-params">()</span>
+</span>{
+    PHYSICAL_ADDRESS physical_address;
+    ULONG64 pte_base = <span class="hljs-number">0</span>;
+    physical_address.QuadPart = __readcr3() &amp; <span class="hljs-number">0xfffffffffffff000</span>;   <span class="hljs-comment">// 获取CR3寄存器，清除低12位</span>
+    PULONG64 pxe_ptr = MmGetVirtualForPhysical(physical_address);   <span class="hljs-comment">// 获取其所在的虚拟地址 - 页表自映射</span>
+    ULONG64 index = <span class="hljs-number">0</span>;
+    <span class="hljs-comment">// 遍历比较</span>
+    <span class="hljs-keyword">while</span>((pxe_ptr[index] &amp; <span class="hljs-number">0xfffffffff000</span>) != physical_address.QuadPart) {
+        index++;
+        <span class="hljs-keyword">if</span>(index &gt;= <span class="hljs-number">512</span>) {
+            <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+        }
+    }
+    <span class="hljs-comment">// 计算pte基址</span>
+    pte_base = ((index + <span class="hljs-number">0x1fffe00</span>) &lt;&lt; <span class="hljs-number">39</span>);
+
+    <span class="hljs-keyword">return</span> pte_base;
+}</code></pre><p><img src="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/1745529082.png" alt="5.png" title="5.png"></p><p><code>MmGetVirtualForPhysical</code>函数实现可以从内核中找到，如下：</p><pre><code class="lang-CPP hljs"><span class="hljs-function">ULONG64 <span class="hljs-title">MmGetVirtualForPhysical</span><span class="hljs-params">(<span class="hljs-keyword">unsigned</span> __int64 a1)</span>
+</span>{
+    <span class="hljs-keyword">return</span> (a1 &amp; <span class="hljs-number">0xFFF</span>) + (*(ULONG64 *)(<span class="hljs-number">48</span> * (a1 &gt;&gt; <span class="hljs-number">12</span>) - <span class="hljs-number">0x57FFFFFFFF8</span>i64) &lt;&lt; <span class="hljs-number">25</span> &gt;&gt; <span class="hljs-number">16</span>);
+}</code></pre>                </div>
+            </article>
+            <!-- <hr>
+            <ul class="pager">
+                <li class="previous"><a href="http://#/archives/163.html" title="SMEP和SMAP">SMEP和SMAP</a></li>
+                <li class="next"><a href="http://#/archives/171.html" title="内核页表隔离与CFG防御机制">内核页表隔离与CFG防御机制</a></li>
+            </ul> -->
+            <hr>
+        </div>
+
+    </div>
+    </div>
+    
+
+<div id="respond-post-169" class="comment-container">
+    <div id="comments" class="clearfix">
+                        <div id="respond-post-169" class="respond">
+            <div class="cancel-comment-reply">
+            <a id="cancel-comment-reply-link" href="http://#/archives/169.html#respond-post-169" rel="nofollow" style="display:none" onclick="return TypechoComment.cancelReply();">取消回复</a>            </div>
+        
+            <h3 id="response">添加新评论</h3>
+            <form method="post" action="http://#/archives/169.html/comment" id="comment-form" role="form">
+                                <div class="am-g">
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="author" class="required">称呼</label>
+                        <input type="text" name="author" id="author" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4">
+                        <label for="mail" class="required">Email</label>
+                        <input type="email" name="mail" id="mail" class="text" value="" required="">
+                    </span>
+                    <span class="am-u-lg-4 comment-input">
+                        <label for="url">网站</label>
+                        <input type="url" name="url" id="url" class="text" value="">
+                    </span>
+                </div>
+                                <p>
+                    <label for="textarea" class="required">内容</label>
+                    <textarea rows="8" cols="32" name="text" id="textarea" class="textarea" required=""></textarea>
+                </p>
+                <p>
+                    <button type="submit" class="submit am-btn am-btn-primary">提交评论</button>
+                </p>
+            <input type="hidden" name="_" value="f6c8fc7722d6100cc012a9349e805680"></form>
+        </div>
+        
+            </div>
+</div>    <div id="directory-content" class="directory-content initial headroom--not-bottom headroom--not-top unpinned">
+        <div id="directory"><ul><span style="color: rgb(243, 129, 129); font-weight: 600;">目录</span><li><a href="http://#/archives/169.html#directory054084082351793631">分页</a></li><li><a href="http://#/archives/169.html#directory054084082351793632">手动转换虚拟地址到物理地址</a></li><li><a href="http://#/archives/169.html#directory054084082351793633">获取PTE基址</a></li></ul></div>
+    </div>
+    <!-- content end -->
+
+<footer class="blog-footer">
+    <ul class="list-inline text-center">
+	    <li>
+            <a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+            <span class="am-icon-btn am-icon-md am-icon-github footer-icon"></span>
+        </a></li><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a></ul><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">
+    </a><div class="blog-text-center"><a href="https://github.com/spiritree/typecho-theme-amaze" target="_blank">© 2021 </a><a href="http://#/">lZeroyuee's Blog</a> 由 <a href="http://www.typecho.org/" target="_blank">Typecho</a> 强力驱动 Theme is <a href="https://spiritree.me/" target="_blank">Amaze made by Spiritree</a>
+    </div>
+</footer>
+<script src="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/jquery.slim.min.js.下载"></script>
+<script src="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/highlight.min.js.下载"></script>
+<script>
+    var $body=document.body;var $toggle=document.querySelector(".navbar-toggle");var $navbar=document.querySelector("#huxblog_navbar");var $collapse=document.querySelector(".navbar-collapse");var __HuxNav__={close:function(){$navbar.className=" ";setTimeout(function(){if($navbar.className.indexOf("in")<0){$collapse.style.height="0px"}},400)},open:function(){$collapse.style.height="auto";$navbar.className+=" in"}};$toggle.addEventListener("click",function(a){if($navbar.className.indexOf("in")>0){__HuxNav__.close()}else{__HuxNav__.open()}});document.addEventListener("click",function(a){if(a.target==$toggle){return}if(a.target.className=="icon-bar"){return}__HuxNav__.close()});jQuery(document).ready(function(c){var d=1170;if(c(window).width()>d){var b=c(".navbar-custom").height(),a=c(".intro-header .container").height();c(window).on("scroll",{previousTop:0},function(){var e=c(window).scrollTop(),f=c(".side-catalog");if(e<this.previousTop){if(e>0&&c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-visible")}else{c(".navbar-custom").removeClass("is-visible is-fixed")}}else{c(".navbar-custom").removeClass("is-visible");if(e>b&&!c(".navbar-custom").hasClass("is-fixed")){c(".navbar-custom").addClass("is-fixed")}}this.previousTop=e;f.show();if(e>(a+41)){f.addClass("fixed")}else{f.removeClass("fixed")}})}});
+</script>
+<script>
+    $(document).ready(function() {
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block)
+        })
+        $('table').addClass('am-table')
+    })
+</script>
+<script type="text/javascript" src="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/Meting.min.js.下载"></script>
+
+<script src="./x64分页 - 获取PTE基址 - lZeroyuee&#39;s Blog_files/headroom.min.js.下载"></script>
+<script>
+var postDirectoryBuild=function(){var b=function a(l,h){var k=[],e=typeof h==="object",g=typeof h==="string",j,f,d;for(f=0,d=l.length;f<d;f++){j=l[f];if((j.nodeType===1||j.nodeType===9)&&(!h||e&&h.test(j.tagName.toLowerCase())||g&&j.tagName.toLowerCase()===h)){k.push(j)}}return k},c=function(e,f,r){var n=[],m=[],h,p,d,j,l,s,o,g,k,q;h=(function(i,C,A){var w=b(i.childNodes,/^h\d$/),x=[],v=1,B=1,z=0,D=1,t="directory"+(Math.random()+"").replace(/\D/,""),B,y,u;while(w.length){u=w.shift();C.push(u.innerHTML);y=+u.tagName.match(/\d/)[0];if(y>v){x.push(1);B+=1}else{if(y===B||y>B&&y<=v){x.push(0);B=B}else{if(y<B){x.push(y-B);B=y}}}z+=x[x.length-1];v=y;u.id=u.id||(t+D++);A.push(u.id)}if(z!==0&&x[0]===1){x[0]=0}return x})(e,n,m);j=p=document.createElement("ul");q=document.createElement("span");q.style="color:#F38181;font-weight:600;";q.innerHTML="目录";p.appendChild(q);dirNum=[];for(g=0,k=h.length;g<k;g++){d=h[g];if(d===1){l=document.createElement("ul");if(!j.lastElementChild){j.appendChild(document.createElement("li"))}j.lastElementChild.appendChild(l);j=l;dirNum.push(0)}else{if(d<0){d*=2;while(d++){if(d%2){dirNum.pop()}j=j.parentNode}}}dirNum[dirNum.length-1]++;s=document.createElement("li");o=document.createElement("a");o.href="#"+m[g];o.innerHTML=!r?n[g]:dirNum.join(".")+" "+n[g];s.appendChild(o);j.appendChild(s)}f.appendChild(p)};c(document.getElementById("post-content"),document.getElementById("directory"),false)};postDirectoryBuild();
+</script>
+<script>
+    var postDirectory = new Headroom(document.getElementById("directory-content"), {
+    tolerance: 5,
+    offset: 240,
+    classes: {
+        initial: "initial",
+        pinned: "pinned",
+        unpinned: "unpinned"
+    }
+});
+postDirectory.init();
+</script></body></html>
