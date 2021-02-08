@@ -13,7 +13,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    即插即用设备检测虚拟机 |  lzeroyuee&#39;s blog
+    frida爆破小试 |  lzeroyuee&#39;s blog
   </title>
   <meta name="generator" content="hexo-theme-ayer">
   
@@ -48,7 +48,7 @@
     <main class="content on">
       <section class="outer">
   <article
-  id="post-即插即用设备检测虚拟机"
+  id="post-frida爆破小试"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -59,15 +59,15 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  即插即用设备检测虚拟机
+  frida爆破小试
 </h1>
  
 
     </header>
      
     <div class="article-meta">
-      <a href="/2021/02/07/%E5%8D%B3%E6%8F%92%E5%8D%B3%E7%94%A8%E8%AE%BE%E5%A4%87%E6%A3%80%E6%B5%8B%E8%99%9A%E6%8B%9F%E6%9C%BA/" class="article-date">
-  <time datetime="2021-02-07T12:20:27.000Z" itemprop="datePublished">2021-02-07</time>
+      <a href="/2021/02/08/frida%E7%88%86%E7%A0%B4%E5%B0%8F%E8%AF%95/" class="article-date">
+  <time datetime="2021-02-08T08:50:17.000Z" itemprop="datePublished">2021-02-08</time>
 </a> 
   <div class="article-category">
     <a class="article-category-link" href="/categories/%E6%94%BB%E9%98%B2%E7%9B%B8%E5%85%B3/">攻防相关</a>
@@ -78,7 +78,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">180</span>
+            <span class="post-count">662</span>
         </span>
     </span>
 
@@ -87,7 +87,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">1 分钟</span>
+            <span class="post-count">3 分钟</span>
         </span>
     </span>
 </div>
@@ -102,17 +102,38 @@
   
     <div class="article-entry" itemprop="articleBody">
        
-  <p>又学到一个骚操作</p>
+  <p>frida爆破小试：一道非常简单的CTF题</p>
 <a id="more"></a>
 
-<p>参考：<a target="_blank" rel="noopener" href="https://twitter.com/NinjaParanoid/status/1358098804122083334">https://twitter.com/NinjaParanoid/status/1358098804122083334</a></p>
-<p>也是一个骚思路，在真机上监视器会显示<em>即插即用设备</em>，而虚拟机上不是</p>
-<p><img src="/2021/02/07/%E5%8D%B3%E6%8F%92%E5%8D%B3%E7%94%A8%E8%AE%BE%E5%A4%87%E6%A3%80%E6%B5%8B%E8%99%9A%E6%8B%9F%E6%9C%BA/1.png"></p>
-<h2 id="检测"><a href="#检测" class="headerlink" title="检测"></a>检测</h2><h3 id="powershell"><a href="#powershell" class="headerlink" title="powershell"></a>powershell</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Get-WmiObject</span> Win32_PnPSignedDriver | <span class="built_in">select</span> DeviceName|<span class="built_in">where</span> &#123;<span class="variable">$_</span>.DeviceName <span class="operator">-like</span> <span class="string">&quot;*PnP*&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
-<p>在真机上，会输出<code>*PnP*</code>，而虚拟机上则会输出<code>*Non-PnP*</code></p>
-<p><img src="/2021/02/07/%E5%8D%B3%E6%8F%92%E5%8D%B3%E7%94%A8%E8%AE%BE%E5%A4%87%E6%A3%80%E6%B5%8B%E8%99%9A%E6%8B%9F%E6%9C%BA/2.png"></p>
-<h3 id="API"><a href="#API" class="headerlink" title="API"></a>API</h3><p>利用<code>EnumDisplayDevices</code>即可遍历获取监视器相关信息</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">in_vm</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    DISPLAY_DEVICE dd;</span><br><span class="line">    dd.cb = <span class="keyword">sizeof</span>(dd);</span><br><span class="line">    DWORD dev_index = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">wchar_t</span> dev_name[<span class="number">32</span>];</span><br><span class="line">    <span class="comment">// 遍历显示设备</span></span><br><span class="line">    <span class="keyword">while</span> (EnumDisplayDevicesW(<span class="literal">NULL</span>, dev_index, &amp;dd, DISPLAY_DEVICE_ATTACHED_TO_DESKTOP)) &#123;</span><br><span class="line">        wcsncpy(dev_name, dd.DeviceName, <span class="number">32</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 遍历监视器</span></span><br><span class="line">        DWORD monitor_index = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">while</span> (EnumDisplayDevicesW(dev_name, monitor_index, &amp;dd, <span class="number">0</span>)) &#123;</span><br><span class="line">            <span class="comment">// 查找特征&quot;-PnP&quot;</span></span><br><span class="line">            <span class="built_in">std</span>::<span class="built_in">wstring</span> name = dd.DeviceString;</span><br><span class="line">            <span class="keyword">if</span> (name.find(<span class="string">L&quot;-PnP&quot;</span>) != <span class="built_in">std</span>::<span class="built_in">wstring</span>::npos) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            monitor_index++;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        dev_index++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><p>参考：<a target="_blank" rel="noopener" href="https://bbs.pediy.com/thread-259069.htm">https://bbs.pediy.com/thread-259069.htm</a></p>
+<p>输入6位密码，正确则获得flag</p>
+<p><img src="/2021/02/08/frida%E7%88%86%E7%A0%B4%E5%B0%8F%E8%AF%95/1.png"></p>
+<h2 id="frida爆破"><a href="#frida爆破" class="headerlink" title="frida爆破"></a>frida爆破</h2><h3 id="寻找相关函数"><a href="#寻找相关函数" class="headerlink" title="寻找相关函数"></a>寻找相关函数</h3><p>逆向分析部不是重点，仅给出结论</p>
+<ul>
+<li>确认按钮响应函数地址：<code>0x40173A</code></li>
+<li>获得文本框内容函数地址：<code>0x41B3F0</code>，返回值eax存储着字符串首地址</li>
+<li>弹窗函数地址：<code>0x004017D4</code>与<code>0x00401C03</code></li>
+</ul>
+<h3 id="模拟点击确认按钮"><a href="#模拟点击确认按钮" class="headerlink" title="模拟点击确认按钮"></a>模拟点击确认按钮</h3><ol>
+<li>使用<code>NativeFunction(address, returnType, argTypes[, abi])</code>来创建一个<strong>Native</strong>函数</li>
+<li>使用<code>rpc</code>调用，调用创建的<code>NativeFunction</code>函数</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 模拟点击</span></span><br><span class="line"><span class="keyword">var</span> OnClick_40173A = ptr(<span class="string">&#x27;0x40173A&#x27;</span>);</span><br><span class="line"><span class="keyword">var</span> OnClick_Func = <span class="keyword">new</span> NativeFunction(OnClick_40173A, <span class="string">&#x27;void&#x27;</span>, []);</span><br><span class="line">rpc.exports = &#123;</span><br><span class="line">    click : <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        OnClick_Func();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>当hook上目标之后，在Py代码部分使用<code>script.exports.click()</code>模拟点击按钮的动作</p>
+<h3 id="获取并设置文本框内容"><a href="#获取并设置文本框内容" class="headerlink" title="获取并设置文本框内容"></a>获取并设置文本框内容</h3><p>需要说明的是，调用链上会有先后两次进入<code>GetInput_41B3F0</code>函数（第一次获取文本判空，第二次才是处理内容），这里做个简单处理即可</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Hook获取并设置文本框内容</span></span><br><span class="line"><span class="keyword">var</span> key_num = <span class="number">100000</span>;</span><br><span class="line"><span class="keyword">var</span> need_update = <span class="literal">false</span>;</span><br><span class="line"><span class="keyword">var</span> GetInput_41B3F0 = ptr(<span class="string">&#x27;0x41B3F0&#x27;</span>);</span><br><span class="line">Interceptor.attach(GetInput_41B3F0, &#123;</span><br><span class="line">    onLeave : <span class="function"><span class="keyword">function</span>(<span class="params">retval</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(key_num &lt; <span class="number">1000000</span>) &#123;</span><br><span class="line">            <span class="comment">// console.log(Memory.readAnsiString(ptr(retval.toInt32())));</span></span><br><span class="line">            Memory.writeAnsiString(ptr(retval.toInt32()), key_num.toString());</span><br><span class="line">            <span class="comment">// console.log(Memory.readAnsiString(ptr(retval.toInt32())));</span></span><br><span class="line">            <span class="keyword">if</span>(need_update) &#123;</span><br><span class="line">                <span class="comment">// 第二次离开该函数时，更新key_num</span></span><br><span class="line">                key_num++;</span><br><span class="line">            &#125;</span><br><span class="line">            need_update = !need_update;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="nop掉错误弹窗"><a href="#nop掉错误弹窗" class="headerlink" title="nop掉错误弹窗"></a>nop掉错误弹窗</h3><p>错误弹窗有两个，<code>0x00401C03</code>是密码错误的弹窗，另一个是未输入密码的弹窗，nop掉密码错误的就行，需要注意的地方也就是要设置下代码段属性</p>
+<p><img src="/2021/02/08/frida%E7%88%86%E7%A0%B4%E5%B0%8F%E8%AF%95/2.png"></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> msg_func2 = ptr(<span class="string">&#x27;0x00401C03&#x27;</span>);</span><br><span class="line">Memory.protect(msg_func2, <span class="number">5</span>, <span class="string">&#x27;rwx&#x27;</span>)</span><br><span class="line">Memory.writeByteArray(msg_func2, [<span class="number">0x90</span>, <span class="number">0x90</span>, <span class="number">0x90</span>, <span class="number">0x90</span>, <span class="number">0x90</span>])</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="完整代码及结果"><a href="#完整代码及结果" class="headerlink" title="完整代码及结果"></a>完整代码及结果</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="keyword">import</span> frida</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">on_message</span>(<span class="params">message, data</span>):</span></span><br><span class="line">    print(<span class="string">&quot;[on_message] message:&quot;</span>, message, <span class="string">&quot;data:&quot;</span>, data)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyHook</span>(<span class="params"><span class="built_in">object</span></span>):</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, target_process, on_message_func = on_message</span>):</span></span><br><span class="line">        self.__session = frida.attach(target_process)</span><br><span class="line">        self.__on_message_func = on_message_func</span><br><span class="line">        </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">hook</span>(<span class="params">self, script</span>):</span></span><br><span class="line">        self.__script = self.__session.create_script(script)</span><br><span class="line">        self.__script.on(<span class="string">&quot;message&quot;</span>, self.__on_message_func)</span><br><span class="line">        self.__script.load()</span><br><span class="line">        print(<span class="string">&quot;Hooking...&quot;</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># working...</span></span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            self.__script.exports.click()</span><br><span class="line"></span><br><span class="line">        sys.stdin.read()</span><br><span class="line">        self.__session.detach()</span><br><span class="line"></span><br><span class="line"><span class="comment"># Js脚本</span></span><br><span class="line">script = <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">// 模拟点击</span></span><br><span class="line"><span class="string">var OnClick_40173A = ptr(&#x27;0x40173A&#x27;);</span></span><br><span class="line"><span class="string">var OnClick_Func = new NativeFunction(OnClick_40173A, &#x27;void&#x27;, []);</span></span><br><span class="line"><span class="string">rpc.exports = &#123;</span></span><br><span class="line"><span class="string">    click : function() &#123;</span></span><br><span class="line"><span class="string">        OnClick_Func();</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">&#125;;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">// Hook获取并设置文本框内容</span></span><br><span class="line"><span class="string">var key_num = 730000;</span></span><br><span class="line"><span class="string">var need_update = false;</span></span><br><span class="line"><span class="string">var GetInput_41B3F0 = ptr(&#x27;0x41B3F0&#x27;);</span></span><br><span class="line"><span class="string">Interceptor.attach(GetInput_41B3F0, &#123;</span></span><br><span class="line"><span class="string">    onLeave : function(retval) &#123;</span></span><br><span class="line"><span class="string">        if(key_num &lt; 1000000) &#123;</span></span><br><span class="line"><span class="string">            Memory.writeAnsiString(ptr(retval.toInt32()), key_num.toString());</span></span><br><span class="line"><span class="string">            if(need_update) &#123;</span></span><br><span class="line"><span class="string">                console.log(&#x27;Testing number = &#x27; + Memory.readAnsiString(ptr(retval.toInt32())));</span></span><br><span class="line"><span class="string">                key_num++;</span></span><br><span class="line"><span class="string">            &#125;</span></span><br><span class="line"><span class="string">            need_update = !need_update;</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">&#125;);</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">// nop掉错误弹窗</span></span><br><span class="line"><span class="string">var msg_func2 = ptr(&#x27;0x00401C03&#x27;);</span></span><br><span class="line"><span class="string">Memory.protect(msg_func2, 5, &#x27;rwx&#x27;)</span></span><br><span class="line"><span class="string">Memory.writeByteArray(msg_func2, [0x90, 0x90, 0x90, 0x90, 0x90])</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(sys.argv) != <span class="number">2</span>:</span><br><span class="line">        print(<span class="string">&quot;Usage example.py &lt;target&gt;&quot;</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            target = <span class="built_in">int</span>(sys.argv[<span class="number">1</span>])</span><br><span class="line">        <span class="keyword">except</span> ValueError <span class="keyword">as</span> e:</span><br><span class="line">            target = sys.argv[<span class="number">1</span>]</span><br><span class="line">        myhook = MyHook(target)</span><br><span class="line">        myhook.hook(script)</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/2021/02/08/frida%E7%88%86%E7%A0%B4%E5%B0%8F%E8%AF%95/3.png"></p>
  
       <!-- reward -->
       
@@ -183,7 +204,7 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://lzeroyuee.cn/2021/02/07/%E5%8D%B3%E6%8F%92%E5%8D%B3%E7%94%A8%E8%AE%BE%E5%A4%87%E6%A3%80%E6%B5%8B%E8%99%9A%E6%8B%9F%E6%9C%BA/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://lzeroyuee.cn/2021/02/08/frida%E7%88%86%E7%A0%B4%E5%B0%8F%E8%AF%95/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -196,19 +217,10 @@
    
   <nav class="article-nav">
     
-      <a href="/2021/02/08/frida%E7%88%86%E7%A0%B4%E5%B0%8F%E8%AF%95/" class="article-nav-link">
-        <strong class="article-nav-caption">上一篇</strong>
-        <div class="article-nav-title">
-          
-            frida爆破小试
-          
-        </div>
-      </a>
     
-    
-      <a href="/2021/02/01/%E6%97%A7%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0%E5%90%88%E9%9B%86/" class="article-nav-link">
+      <a href="/2021/02/07/%E5%8D%B3%E6%8F%92%E5%8D%B3%E7%94%A8%E8%AE%BE%E5%A4%87%E6%A3%80%E6%B5%8B%E8%99%9A%E6%8B%9F%E6%9C%BA/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">旧博客文章合集</div>
+        <div class="article-nav-title">即插即用设备检测虚拟机</div>
       </a>
     
   </nav>
