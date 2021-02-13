@@ -13,7 +13,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    frida隐藏进程小试 |  lzeroyuee&#39;s blog
+    angr入门小试（二） |  lzeroyuee&#39;s blog
   </title>
   <meta name="generator" content="hexo-theme-ayer">
   
@@ -48,7 +48,7 @@
     <main class="content on">
       <section class="outer">
   <article
-  id="post-frida隐藏进程小试"
+  id="post-angr入门小试（二）"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -59,18 +59,18 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  frida隐藏进程小试
+  angr入门小试（二）
 </h1>
  
 
     </header>
      
     <div class="article-meta">
-      <a href="/2021/02/09/frida%E9%9A%90%E8%97%8F%E8%BF%9B%E7%A8%8B%E5%B0%8F%E8%AF%95/" class="article-date">
-  <time datetime="2021-02-09T10:48:10.000Z" itemprop="datePublished">2021-02-09</time>
+      <a href="/2021/02/12/angr%E5%85%A5%E9%97%A8%E5%B0%8F%E8%AF%95%EF%BC%88%E4%BA%8C%EF%BC%89/" class="article-date">
+  <time datetime="2021-02-11T19:02:22.000Z" itemprop="datePublished">2021-02-12</time>
 </a> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E6%94%BB%E9%98%B2%E7%9B%B8%E5%85%B3/">攻防相关</a>
+    <a class="article-category-link" href="/categories/CTF/">CTF</a>
   </div>
   
 <div class="word_count">
@@ -78,7 +78,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">371</span>
+            <span class="post-count">447</span>
         </span>
     </span>
 
@@ -87,7 +87,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">1 分钟</span>
+            <span class="post-count">2 分钟</span>
         </span>
     </span>
 </div>
@@ -102,18 +102,27 @@
   
     <div class="article-entry" itemprop="articleBody">
        
-  <p>Hook NtQuerySystemInformation</p>
+  <p>CTF Hitcon 2017 - sakura</p>
 <a id="more"></a>
 
-<h2 id="NtQuerySystemInformation"><a href="#NtQuerySystemInformation" class="headerlink" title="NtQuerySystemInformation"></a>NtQuerySystemInformation</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">NTSTATUS NTAPI <span class="title">NtQuerySystemInformation</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PVOID SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">    IN ULONG SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PULONG ReturnLength OPTIONAL</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure>
-<p>该函数位于<code>ntdll.dll</code>中，第一个参数指定要查询的类型，若指定<code>SystemProcessInformation(0x5)</code>时，则会得到系统中所有进程的信息，第二个参数则返回一个<code>SYSTEM_PROCESS_INFORMATION</code>结构数组</p>
-<p><code>SYSTEM_PROCESS_INFORMATION.NextEntryOffset</code>是数组中下一个成员的相对本成员的偏移值（每个成员的大小不固定），若此结构为0，则是最后一个节点，例如以下获取进程列表名</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">NTSTATUS</span> <span class="params">( NTAPI *NT_QUERY_SYSTEM_INFOMATION)</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PVOID SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">    IN ULONG SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PULONG ReturnLength OPTIONAL</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    SYSTEM_PROCESS_INFORMATION *spi = <span class="keyword">new</span> SYSTEM_PROCESS_INFORMATION[<span class="number">0x1000</span>];</span><br><span class="line">    ULONG leng;</span><br><span class="line">    NT_QUERY_SYSTEM_INFOMATION nt_query_system_infomation = (NT_QUERY_SYSTEM_INFOMATION)GetProcAddress(GetModuleHandleW(<span class="string">L&quot;ntdll.dll&quot;</span>), <span class="string">&quot;NtQuerySystemInformation&quot;</span>);</span><br><span class="line">    nt_query_system_infomation(SystemProcessInformation, spi, <span class="keyword">sizeof</span>(SYSTEM_PROCESS_INFORMATION) * <span class="number">0x1000</span>, &amp;leng);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> ptr = spi;</span><br><span class="line">    <span class="keyword">while</span>(ptr-&gt;NextEntryOffset != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span>(ptr-&gt;ImageName.Length) &#123;</span><br><span class="line">            wprintf(<span class="string">L&quot;%s\n&quot;</span>, ptr-&gt;ImageName.Buffer);</span><br><span class="line">        &#125;</span><br><span class="line">        ptr = (SYSTEM_PROCESS_INFORMATION *)((BYTE *)ptr + ptr-&gt;NextEntryOffset);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>隐藏进程也就是修改<code>SYSTEM_PROCESS_INFORMATION.NextEntryOffset</code>来跳过需要被隐藏的进程节点</p>
-<h2 id="frida-js"><a href="#frida-js" class="headerlink" title="frida js"></a>frida js</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> query_info_func = Module.findExportByName(<span class="string">&#x27;ntdll.dll&#x27;</span>, <span class="string">&#x27;NtQuerySystemInformation&#x27;</span>);</span><br><span class="line">Interceptor.attach(query_info_func, &#123;</span><br><span class="line">    onEnter : <span class="function"><span class="keyword">function</span>(<span class="params">args</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(args[<span class="number">0</span>] == <span class="number">5</span>) &#123;</span><br><span class="line">            <span class="built_in">this</span>.work = <span class="literal">true</span>;</span><br><span class="line">            <span class="built_in">this</span>.si = args[<span class="number">1</span>];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    onLeave : <span class="function"><span class="keyword">function</span>(<span class="params">retval</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(<span class="built_in">this</span>.work) &#123;</span><br><span class="line">            <span class="keyword">var</span> si_ptr = <span class="built_in">this</span>.si;</span><br><span class="line">            <span class="keyword">var</span> next_offset = Memory.readU32(si_ptr);</span><br><span class="line">            <span class="keyword">var</span> pre_offset = next_offset;</span><br><span class="line">            <span class="keyword">while</span>(next_offset != <span class="number">0</span>) &#123;</span><br><span class="line">                pre_offset = next_offset;</span><br><span class="line">                next_offset = Memory.readU32(si_ptr);</span><br><span class="line">                <span class="comment">// 偏移值64，针对win10 x64</span></span><br><span class="line">                <span class="keyword">var</span> image_name = Memory.readUtf16String(Memory.readPointer(si_ptr.add(<span class="number">64</span>)));</span><br><span class="line">                <span class="comment">// console.log(image_name);</span></span><br><span class="line">                <span class="comment">// 隐藏powershell</span></span><br><span class="line">                <span class="keyword">if</span>(image_name == <span class="string">&quot;powershell.exe&quot;</span>) &#123;</span><br><span class="line">                    <span class="keyword">var</span> next_node = si_ptr.add(next_offset);</span><br><span class="line">                    <span class="keyword">var</span> pre_node = si_ptr.sub(pre_offset);</span><br><span class="line">                    Memory.writeU32(pre_node, next_offset + pre_offset);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                si_ptr = si_ptr.add(next_offset);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="Hitcon-2017-sakura"><a href="#Hitcon-2017-sakura" class="headerlink" title="Hitcon 2017: sakura"></a>Hitcon 2017: sakura</h2><h3 id="解题分析"><a href="#解题分析" class="headerlink" title="解题分析"></a>解题分析</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__int64 __fastcall <span class="title">main</span><span class="params">(<span class="keyword">int</span> a1, <span class="keyword">char</span> **a2, <span class="keyword">char</span> **a3)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> i; <span class="comment">// [rsp+Ch] [rbp-4h]</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// 一共读取400个字节到缓冲区中</span></span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt;= <span class="number">19</span>; ++i )</span><br><span class="line">  &#123;</span><br><span class="line">    a2 = (<span class="keyword">char</span> **)((<span class="keyword">char</span> *)&amp;unk_2121E0 + <span class="number">20</span> * i);</span><br><span class="line">    read(<span class="number">0</span>, a2, <span class="number">0x14</span>uLL);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> ( (<span class="keyword">unsigned</span> __int8)sub_850((__int64)&amp;unk_2121E0) ) <span class="comment">// 验证函数</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hitcon&#123;&quot;</span>);</span><br><span class="line">    sub_10FF6(<span class="string">&quot;hitcon&#123;&quot;</span>, a2);</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0LL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在验证函数<code>sub_850</code>中非常复杂，每一块的验证逻辑又大致相同。验证失败时，会将<code>[rbp+var_1E49]</code>置0，整个验证函数最后会返回<code>[rbp+var_1E49]</code>，此值为1时，验证通过</p>
+<p>由于开了<code>pie</code>，在IDA中显示的是RVA，先通过idapython将<code>[rbp+var_1E49]</code>的RVA全部找出来</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> idc</span><br><span class="line"></span><br><span class="line">start_addr = <span class="number">0x0850</span></span><br><span class="line">end_addr = <span class="number">0x010FF5</span></span><br><span class="line">p = start_addr</span><br><span class="line"></span><br><span class="line">avoid_offset = []</span><br><span class="line"><span class="keyword">while</span> p &lt;= end_addr:</span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;mov     [rbp+var_1E49], 0&#x27;</span> <span class="keyword">in</span> idc.GetDisasm(p):</span><br><span class="line">        avoid_offset.append(p)</span><br><span class="line">    p = idc.next_head(p)</span><br><span class="line">print(avoid_offset)</span><br></pre></td></tr></table></figure>
+<p>在angr中，可以设置入口位置在<code>ImageBase + 0x110BA</code>上，然后将400字节的内容直接放在<code>ImageBase + 0x2121E0</code>处</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.text</span><span class="selector-pseudo">:00000000000110BA</span>                 <span class="selector-tag">lea</span>     <span class="selector-tag">rdi</span>, <span class="selector-tag">unk_2121E0</span></span><br><span class="line"><span class="selector-class">.text</span><span class="selector-pseudo">:00000000000110C1</span>                 <span class="selector-tag">call</span>    <span class="selector-tag">sub_850</span></span><br></pre></td></tr></table></figure>
+<p>验证通过后会调用<code>sub_10FF6</code>来打印flag信息，如下将<code>byte_212040</code>地址的400字节通过sha256转到<code>v2</code>中</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">unsigned</span> __int64 <span class="title">sub_10FF6</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> i; <span class="comment">// [rsp+Ch] [rbp-34h]</span></span><br><span class="line">  <span class="keyword">char</span> v2[<span class="number">40</span>]; <span class="comment">// [rsp+10h] [rbp-30h] BYREF</span></span><br><span class="line">  <span class="keyword">unsigned</span> __int64 v3; <span class="comment">// [rsp+38h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  v3 = __readfsqword(<span class="number">0x28</span>u);</span><br><span class="line">  SHA256(byte_212040, <span class="number">400LL</span>, v2);</span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt;= <span class="number">31</span>; ++i )</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%02x&quot;</span>, (<span class="keyword">unsigned</span> __int8)v2[i]);</span><br><span class="line">  <span class="keyword">return</span> __readfsqword(<span class="number">0x28</span>u) ^ v3;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener" href="https://www.fuzzysecurity.com/tutorials/29.html">https://www.fuzzysecurity.com/tutorials/29.html</a></p>
+
+
+<h3 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a>完整代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> angr</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> hashlib</span><br><span class="line"></span><br><span class="line">image_base = <span class="number">0x400000</span></span><br><span class="line"></span><br><span class="line">avoid_offset = [...]</span><br><span class="line">avoid_offset.append(<span class="number">0x0110EC</span>)</span><br><span class="line"></span><br><span class="line">proj = angr.Project(<span class="string">&#x27;sakura&#x27;</span>, auto_load_libs=<span class="literal">False</span>)</span><br><span class="line">state = proj.factory.blank_state(addr=(image_base + <span class="number">0x110BA</span>))</span><br><span class="line"></span><br><span class="line">data, ret_size = state.posix.get_fd(sys.stdin.fileno()).read_data(<span class="number">400</span>)</span><br><span class="line">state.memory.store(image_base + <span class="number">0x2121E0</span>, data)</span><br><span class="line"></span><br><span class="line"><span class="comment"># setting state</span></span><br><span class="line">simgr = proj.factory.simulation_manager(state)</span><br><span class="line">simgr.one_active.options.add(angr.options.LAZY_SOLVES)</span><br><span class="line"></span><br><span class="line">simgr.explore(find=(image_base + <span class="number">0x00110CA</span>), avoid=[item + image_base <span class="keyword">for</span> item <span class="keyword">in</span> avoid_offset])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取执行路径上byte_212040地址处的400字节内容</span></span><br><span class="line">text = simgr.one_found.solver.<span class="built_in">eval</span>(simgr.one_found.memory.load(image_base + <span class="number">0x212040</span>, <span class="number">400</span>), cast_to=<span class="built_in">bytes</span>)</span><br><span class="line">print(hashlib.sha256(text).hexdigest())</span><br></pre></td></tr></table></figure>
+<p>运行结果及时间如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">pwn@ubuntu:~/workspace$ time python3 exp.py </span><br><span class="line">6c0d62189adfd27a12289890d5b89c0dc8098bc976ecc3f6d61ec0429cccae61</span><br><span class="line"></span><br><span class="line">real	0m48.518s</span><br><span class="line">user	0m47.992s</span><br><span class="line">sys	0m0.526s</span><br></pre></td></tr></table></figure>
+
+
  
       <!-- reward -->
       
@@ -184,7 +193,7 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://lzeroyuee.cn/2021/02/09/frida%E9%9A%90%E8%97%8F%E8%BF%9B%E7%A8%8B%E5%B0%8F%E8%AF%95/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://lzeroyuee.cn/2021/02/12/angr%E5%85%A5%E9%97%A8%E5%B0%8F%E8%AF%95%EF%BC%88%E4%BA%8C%EF%BC%89/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -197,19 +206,19 @@
    
   <nav class="article-nav">
     
-      <a href="/2021/02/12/angr%E5%85%A5%E9%97%A8%E5%B0%8F%E8%AF%95%EF%BC%88%E4%BA%8C%EF%BC%89/" class="article-nav-link">
+      <a href="/2021/02/12/angr%E5%85%A5%E9%97%A8%E5%B0%8F%E8%AF%95/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            angr入门小试（二）
+            angr入门小试
           
         </div>
       </a>
     
     
-      <a href="/2021/02/08/frida%E7%88%86%E7%A0%B4%E5%B0%8F%E8%AF%95/" class="article-nav-link">
+      <a href="/2021/02/09/frida%E9%9A%90%E8%97%8F%E8%BF%9B%E7%A8%8B%E5%B0%8F%E8%AF%95/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">frida爆破小试</div>
+        <div class="article-nav-title">frida隐藏进程小试</div>
       </a>
     
   </nav>
