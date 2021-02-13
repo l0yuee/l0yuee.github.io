@@ -73,26 +73,251 @@
       </tags>
   </entry>
   <entry>
-    <title>frida隐藏进程小试</title>
-    <url>/2021/02/09/frida%E9%9A%90%E8%97%8F%E8%BF%9B%E7%A8%8B%E5%B0%8F%E8%AF%95/</url>
-    <content><![CDATA[<p>Hook NtQuerySystemInformation</p>
+    <title>angr入门小试（二）</title>
+    <url>/2021/02/14/angr%E5%85%A5%E9%97%A8%E5%B0%8F%E8%AF%95%EF%BC%88%E4%BA%8C%EF%BC%89/</url>
+    <content><![CDATA[<p>CTF Hitcon 2017 - sakura</p>
 <a id="more"></a>
 
-<h2 id="NtQuerySystemInformation"><a href="#NtQuerySystemInformation" class="headerlink" title="NtQuerySystemInformation"></a>NtQuerySystemInformation</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">NTSTATUS NTAPI <span class="title">NtQuerySystemInformation</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PVOID SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">    IN ULONG SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PULONG ReturnLength OPTIONAL</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure>
-<p>该函数位于<code>ntdll.dll</code>中，第一个参数指定要查询的类型，若指定<code>SystemProcessInformation(0x5)</code>时，则会得到系统中所有进程的信息，第二个参数则返回一个<code>SYSTEM_PROCESS_INFORMATION</code>结构数组</p>
-<p><code>SYSTEM_PROCESS_INFORMATION.NextEntryOffset</code>是数组中下一个成员的相对本成员的偏移值（每个成员的大小不固定），若此结构为0，则是最后一个节点，例如以下获取进程列表名</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">NTSTATUS</span> <span class="params">( NTAPI *NT_QUERY_SYSTEM_INFOMATION)</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PVOID SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">    IN ULONG SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PULONG ReturnLength OPTIONAL</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    SYSTEM_PROCESS_INFORMATION *spi = <span class="keyword">new</span> SYSTEM_PROCESS_INFORMATION[<span class="number">0x1000</span>];</span><br><span class="line">    ULONG leng;</span><br><span class="line">    NT_QUERY_SYSTEM_INFOMATION nt_query_system_infomation = (NT_QUERY_SYSTEM_INFOMATION)GetProcAddress(GetModuleHandleW(<span class="string">L&quot;ntdll.dll&quot;</span>), <span class="string">&quot;NtQuerySystemInformation&quot;</span>);</span><br><span class="line">    nt_query_system_infomation(SystemProcessInformation, spi, <span class="keyword">sizeof</span>(SYSTEM_PROCESS_INFORMATION) * <span class="number">0x1000</span>, &amp;leng);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> ptr = spi;</span><br><span class="line">    <span class="keyword">while</span>(ptr-&gt;NextEntryOffset != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span>(ptr-&gt;ImageName.Length) &#123;</span><br><span class="line">            wprintf(<span class="string">L&quot;%s\n&quot;</span>, ptr-&gt;ImageName.Buffer);</span><br><span class="line">        &#125;</span><br><span class="line">        ptr = (SYSTEM_PROCESS_INFORMATION *)((BYTE *)ptr + ptr-&gt;NextEntryOffset);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>隐藏进程也就是修改<code>SYSTEM_PROCESS_INFORMATION.NextEntryOffset</code>来跳过需要被隐藏的进程节点</p>
-<h2 id="frida-js"><a href="#frida-js" class="headerlink" title="frida js"></a>frida js</h2><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> query_info_func = Module.findExportByName(<span class="string">&#x27;ntdll.dll&#x27;</span>, <span class="string">&#x27;NtQuerySystemInformation&#x27;</span>);</span><br><span class="line">Interceptor.attach(query_info_func, &#123;</span><br><span class="line">    onEnter : <span class="function"><span class="keyword">function</span>(<span class="params">args</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(args[<span class="number">0</span>] == <span class="number">5</span>) &#123;</span><br><span class="line">            <span class="built_in">this</span>.work = <span class="literal">true</span>;</span><br><span class="line">            <span class="built_in">this</span>.si = args[<span class="number">1</span>];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    onLeave : <span class="function"><span class="keyword">function</span>(<span class="params">retval</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(<span class="built_in">this</span>.work) &#123;</span><br><span class="line">            <span class="keyword">var</span> si_ptr = <span class="built_in">this</span>.si;</span><br><span class="line">            <span class="keyword">var</span> next_offset = Memory.readU32(si_ptr);</span><br><span class="line">            <span class="keyword">var</span> pre_offset = next_offset;</span><br><span class="line">            <span class="keyword">while</span>(next_offset != <span class="number">0</span>) &#123;</span><br><span class="line">                pre_offset = next_offset;</span><br><span class="line">                next_offset = Memory.readU32(si_ptr);</span><br><span class="line">                <span class="comment">// 偏移值64，针对win10 x64</span></span><br><span class="line">                <span class="keyword">var</span> image_name = Memory.readUtf16String(Memory.readPointer(si_ptr.add(<span class="number">64</span>)));</span><br><span class="line">                <span class="comment">// console.log(image_name);</span></span><br><span class="line">                <span class="comment">// 隐藏powershell</span></span><br><span class="line">                <span class="keyword">if</span>(image_name == <span class="string">&quot;powershell.exe&quot;</span>) &#123;</span><br><span class="line">                    <span class="keyword">var</span> next_node = si_ptr.add(next_offset);</span><br><span class="line">                    <span class="keyword">var</span> pre_node = si_ptr.sub(pre_offset);</span><br><span class="line">                    Memory.writeU32(pre_node, next_offset + pre_offset);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                si_ptr = si_ptr.add(next_offset);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="Hitcon-2017-sakura"><a href="#Hitcon-2017-sakura" class="headerlink" title="Hitcon 2017: sakura"></a>Hitcon 2017: sakura</h2><h3 id="解题分析"><a href="#解题分析" class="headerlink" title="解题分析"></a>解题分析</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">__int64 __fastcall <span class="title">main</span><span class="params">(<span class="keyword">int</span> a1, <span class="keyword">char</span> **a2, <span class="keyword">char</span> **a3)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> i; <span class="comment">// [rsp+Ch] [rbp-4h]</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// 一共读取400个字节到缓冲区中</span></span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt;= <span class="number">19</span>; ++i )</span><br><span class="line">  &#123;</span><br><span class="line">    a2 = (<span class="keyword">char</span> **)((<span class="keyword">char</span> *)&amp;unk_2121E0 + <span class="number">20</span> * i);</span><br><span class="line">    read(<span class="number">0</span>, a2, <span class="number">0x14</span>uLL);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> ( (<span class="keyword">unsigned</span> __int8)sub_850((__int64)&amp;unk_2121E0) ) <span class="comment">// 验证函数</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hitcon&#123;&quot;</span>);</span><br><span class="line">    sub_10FF6(<span class="string">&quot;hitcon&#123;&quot;</span>, a2);</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0LL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在验证函数<code>sub_850</code>中非常复杂，每一块的验证逻辑又大致相同。验证失败时，会将<code>[rbp+var_1E49]</code>置0，整个验证函数最后会返回<code>[rbp+var_1E49]</code>，此值为1时，验证通过</p>
+<p>由于开了<code>pie</code>，在IDA中显示的是RVA，先通过idapython将<code>[rbp+var_1E49]</code>的RVA全部找出来</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> idc</span><br><span class="line"></span><br><span class="line">start_addr = <span class="number">0x0850</span></span><br><span class="line">end_addr = <span class="number">0x010FF5</span></span><br><span class="line">p = start_addr</span><br><span class="line"></span><br><span class="line">avoid_offset = []</span><br><span class="line"><span class="keyword">while</span> p &lt;= end_addr:</span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;mov     [rbp+var_1E49], 0&#x27;</span> <span class="keyword">in</span> idc.GetDisasm(p):</span><br><span class="line">        avoid_offset.append(p)</span><br><span class="line">    p = idc.next_head(p)</span><br><span class="line">print(avoid_offset)</span><br></pre></td></tr></table></figure>
+<p>在angr中，可以设置入口位置在<code>ImageBase + 0x110BA</code>上，然后将400字节的内容直接放在<code>ImageBase + 0x2121E0</code>处</p>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-class">.text</span><span class="selector-pseudo">:00000000000110BA</span>                 <span class="selector-tag">lea</span>     <span class="selector-tag">rdi</span>, <span class="selector-tag">unk_2121E0</span></span><br><span class="line"><span class="selector-class">.text</span><span class="selector-pseudo">:00000000000110C1</span>                 <span class="selector-tag">call</span>    <span class="selector-tag">sub_850</span></span><br></pre></td></tr></table></figure>
+<p>验证通过后会调用<code>sub_10FF6</code>来打印flag信息，如下将<code>byte_212040</code>地址的400字节通过sha256转到<code>v2</code>中</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">unsigned</span> __int64 <span class="title">sub_10FF6</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> i; <span class="comment">// [rsp+Ch] [rbp-34h]</span></span><br><span class="line">  <span class="keyword">char</span> v2[<span class="number">40</span>]; <span class="comment">// [rsp+10h] [rbp-30h] BYREF</span></span><br><span class="line">  <span class="keyword">unsigned</span> __int64 v3; <span class="comment">// [rsp+38h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  v3 = __readfsqword(<span class="number">0x28</span>u);</span><br><span class="line">  SHA256(byte_212040, <span class="number">400LL</span>, v2);</span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt;= <span class="number">31</span>; ++i )</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%02x&quot;</span>, (<span class="keyword">unsigned</span> __int8)v2[i]);</span><br><span class="line">  <span class="keyword">return</span> __readfsqword(<span class="number">0x28</span>u) ^ v3;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://www.fuzzysecurity.com/tutorials/29.html">https://www.fuzzysecurity.com/tutorials/29.html</a></p>
+
+
+<h3 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a>完整代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> angr</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> hashlib</span><br><span class="line"></span><br><span class="line">image_base = <span class="number">0x400000</span></span><br><span class="line"></span><br><span class="line">avoid_offset = [...]</span><br><span class="line">avoid_offset.append(<span class="number">0x0110EC</span>)</span><br><span class="line"></span><br><span class="line">proj = angr.Project(<span class="string">&#x27;sakura&#x27;</span>, auto_load_libs=<span class="literal">False</span>)</span><br><span class="line">state = proj.factory.blank_state(addr=(image_base + <span class="number">0x110BA</span>))</span><br><span class="line"></span><br><span class="line">data, ret_size = state.posix.get_fd(sys.stdin.fileno()).read_data(<span class="number">400</span>)</span><br><span class="line">state.memory.store(image_base + <span class="number">0x2121E0</span>, data)</span><br><span class="line"></span><br><span class="line"><span class="comment"># setting state</span></span><br><span class="line">simgr = proj.factory.simulation_manager(state)</span><br><span class="line">simgr.one_active.options.add(angr.options.LAZY_SOLVES)</span><br><span class="line"></span><br><span class="line">simgr.explore(find=(image_base + <span class="number">0x00110CA</span>), avoid=[item + image_base <span class="keyword">for</span> item <span class="keyword">in</span> avoid_offset])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取执行路径上byte_212040地址处的400字节内容</span></span><br><span class="line">text = simgr.one_found.solver.<span class="built_in">eval</span>(simgr.one_found.memory.load(image_base + <span class="number">0x212040</span>, <span class="number">400</span>), cast_to=<span class="built_in">bytes</span>)</span><br><span class="line">print(hashlib.sha256(text).hexdigest())</span><br></pre></td></tr></table></figure>
+<p>运行结果及时间如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pwn@ubuntu:~/workspace$ time python3 exp.py </span><br><span class="line">6c0d62189adfd27a12289890d5b89c0dc8098bc976ecc3f6d61ec0429cccae61</span><br><span class="line"></span><br><span class="line">real	0m48.518s</span><br><span class="line">user	0m47.992s</span><br><span class="line">sys	0m0.526s</span><br></pre></td></tr></table></figure>
+
+
 ]]></content>
       <categories>
-        <category>攻防相关</category>
+        <category>CTF</category>
       </categories>
       <tags>
         <tag>二进制安全</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Pandas库入门</title>
+    <url>/2021/02/12/Pandas%E5%BA%93%E5%85%A5%E9%97%A8/</url>
+    <content><![CDATA[<p>Pandas库入门</p>
+<a id="more"></a>
+
+<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Pandas是python第三方库，以提供高性能易用数据类型和分析工具。Pandas基于NumPy实现，常与NumPy和Matplotlib一同使用</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="Pandas库的理解"><a href="#Pandas库的理解" class="headerlink" title="Pandas库的理解"></a>Pandas库的理解</h2><p>Pandas主要提供两个数据类型：<code>Series</code>和<code>DataFrame</code></p>
+<ul>
+<li><code>Series</code>相当于一维的数据类型</li>
+<li><code>DataFrame</code>相当于二维（N维）的数据类型</li>
+</ul>
+<p>基于上述数据类型的各类操作有：基本操作、运算操作、特征类操作、关联类操作</p>
+<table>
+<thead>
+<tr>
+<th>NumPy</th>
+<th>Pandas</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>基础数据类型</td>
+<td>扩展数据类型</td>
+</tr>
+<tr>
+<td>关注数据的结构表达</td>
+<td>关注数据的应用表达</td>
+</tr>
+<tr>
+<td>维度：数据间关系</td>
+<td>数据与索引关系</td>
+</tr>
+</tbody></table>
+<h3 id="Series类型"><a href="#Series类型" class="headerlink" title="Series类型"></a>Series类型</h3><p>Series类型由一组数据及与之相关的数据索引组成</p>
+<p><img src="/2021/02/12/Pandas%E5%BA%93%E5%85%A5%E9%97%A8/1.png"></p>
+<p>例如：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>a = pd.Series([<span class="number">9</span>, <span class="number">9</span>, <span class="number">7</span>, <span class="number">6</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a</span><br><span class="line"><span class="comment"># 第一列为自动索引</span></span><br><span class="line"><span class="comment"># 第二列为传入的列表值</span></span><br><span class="line"><span class="number">0</span>    <span class="number">9</span></span><br><span class="line"><span class="number">1</span>    <span class="number">9</span></span><br><span class="line"><span class="number">2</span>    <span class="number">7</span></span><br><span class="line"><span class="number">3</span>    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br><span class="line">    </span><br><span class="line"><span class="comment"># 自定义索引，其中index参数位于第二个参数时，可以不指定index</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b = pd.Series([<span class="number">9</span>, <span class="number">8</span>, <span class="number">7</span>, <span class="number">6</span>], index=[<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br></pre></td></tr></table></figure>
+<p>Series类型可以由如下类型创建：</p>
+<ul>
+<li>python列表</li>
+<li>标量值<ul>
+<li><code>s = pd.Series(25, index=[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;])</code>，这里的<code>index</code>不能省略</li>
+</ul>
+</li>
+<li>python字典<ul>
+<li><code>d = pd.Series(&#123;&#39;a&#39;:9, &#39;b&#39;:8, &#39;c&#39;:7&#125;)</code></li>
+<li><code>e = pd.Series(&#123;&#39;a&#39;:9, &#39;b&#39;:8, &#39;c&#39;:7&#125;, index=[&#39;c&#39;, &#39;a&#39;, &#39;b&#39;, &#39;d&#39;])</code></li>
+</ul>
+</li>
+<li>ndarray<ul>
+<li><code>n = pd.Series(numpy.arange(5))</code></li>
+<li><code>n = pd.Series(numpy.arange(5), index=numpy.arange(9, 4, -1))</code></li>
+</ul>
+</li>
+<li>其他函数</li>
+</ul>
+<h4 id="Series类型的基本操作"><a href="#Series类型的基本操作" class="headerlink" title="Series类型的基本操作"></a>Series类型的基本操作</h4><p>Series类型包括<code>index</code>和<code>values</code>两部分</p>
+<p>Series类型的操作类似ndarray类型</p>
+<ul>
+<li><p>索引方法相同，使用<code>[]</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>b = pd.Series([<span class="number">9</span>, <span class="number">8</span>, <span class="number">7</span>, <span class="number">6</span>], [<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.index</span><br><span class="line">Index([<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>], dtype=<span class="string">&#x27;object&#x27;</span>)	<span class="comment"># Series.index的类型为Index，为pandas内建的类型，不可修改</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.values</span><br><span class="line">array([<span class="number">9</span>, <span class="number">8</span>, <span class="number">7</span>, <span class="number">6</span>], dtype=int64)	<span class="comment"># Series.values的类型为array，沿用了ndarray</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="string">&#x27;b&#x27;</span>]</span><br><span class="line"><span class="number">8</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="number">1</span>]	<span class="comment"># 自动索引是默认生成的，但自动索引和自定义索引不能混用</span></span><br><span class="line"><span class="number">8</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[[<span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>, <span class="string">&#x27;a&#x27;</span>]]</span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">dtype: int64</span><br></pre></td></tr></table></figure></li>
+<li><p>NumPy中运算和操作可用于Series类型</p>
+</li>
+<li><p>可以通过Series自定义索引的类别进行切片</p>
+</li>
+<li><p>可以通过自动索引进行切片，如果存在自定义索引，则一同被切片</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 切片</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="number">3</span>]</span><br><span class="line"><span class="number">6</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[:<span class="number">3</span>]</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[b &gt; b.median()]	<span class="comment"># 大于中位数的</span></span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">dtype: int64</span><br></pre></td></tr></table></figure>
+<p>Series类型的操作类似python字典类型</p>
+</li>
+<li><p>通过自定义索引访问</p>
+</li>
+<li><p>保留字<code>in</code>操作</p>
+</li>
+<li><p>使用<code>.get()</code>方法</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="string">&#x27;b&#x27;</span>]</span><br><span class="line"><span class="number">8</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="string">&#x27;c&#x27;</span> <span class="keyword">in</span> b	<span class="comment"># 可以判断自定义索引</span></span><br><span class="line"><span class="literal">True</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="number">0</span> <span class="keyword">in</span> b		<span class="comment"># 不能判断自动索引</span></span><br><span class="line"><span class="literal">False</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.get(<span class="string">&#x27;f&#x27;</span>, <span class="number">100</span>)</span><br><span class="line"><span class="number">100</span></span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<h4 id="Series类型对齐操作"><a href="#Series类型对齐操作" class="headerlink" title="Series类型对齐操作"></a>Series类型对齐操作</h4><p>Series对齐操作：Series + Series，索引值相同的进行运算，索引不同的不进行运算</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>a = pd.Series([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>], [<span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>, <span class="string">&#x27;e&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a</span><br><span class="line">c    <span class="number">1</span></span><br><span class="line">d    <span class="number">2</span></span><br><span class="line">e    <span class="number">3</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a + b</span><br><span class="line">a    NaN</span><br><span class="line">b    NaN</span><br><span class="line">c    <span class="number">8.0</span></span><br><span class="line">d    <span class="number">8.0</span></span><br><span class="line">e    NaN</span><br><span class="line">dtype: float64</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="Series类型的name"><a href="#Series类型的name" class="headerlink" title="Series类型的name"></a>Series类型的name</h4><p>Series对象和索引都可以有一个名字，存储在<code>属性.name</code>中</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.name = <span class="string">&#x27;Series对象&#x27;</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.index.name = <span class="string">&#x27;索引对象&#x27;</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">索引对象</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">Name: Series对象, dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.index</span><br><span class="line">Index([<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>], dtype=<span class="string">&#x27;object&#x27;</span>, name=<span class="string">&#x27;索引对象&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="Series类型的修改"><a href="#Series类型的修改" class="headerlink" title="Series类型的修改"></a>Series类型的修改</h4><p>Series对象可以随时修改并立即生效</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">索引对象</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">Name: Series对象, dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="string">&#x27;a&#x27;</span>] = <span class="number">15</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.name = <span class="string">&#x27;New Series&#x27;</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>] = <span class="number">20</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">索引对象</span><br><span class="line">a    <span class="number">15</span></span><br><span class="line">b    <span class="number">20</span></span><br><span class="line">c    <span class="number">20</span></span><br><span class="line">d     <span class="number">6</span></span><br><span class="line">Name: New Series, dtype: int64</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="DataFrame类型"><a href="#DataFrame类型" class="headerlink" title="DataFrame类型"></a>DataFrame类型</h3><p>DataFrame类型由共用相同索引的一组列组成，如下纵向的叫做<code>index</code>，其坐标轴为<code>axis=0</code>，横向的叫做<code>column</code>，其坐标轴为<code>axis=1</code></p>
+<ul>
+<li>DataFrame是一个表格型的数据类型，每列值类型可以不同</li>
+<li>DataFrame既有行索引，也有列索引</li>
+<li>DataFrame常用于表达二位数据，但也可以用来表达多维数据</li>
+</ul>
+<p><img src="/2021/02/12/Pandas%E5%BA%93%E5%85%A5%E9%97%A8/2.png"></p>
+<p>DataFrame可以由以下类型来创建：</p>
+<ul>
+<li><p>二维ndarray对象</p>
+<ul>
+<li><code>pd.DataFrame(numpy.arange(10).reshape(2, 5))</code></li>
+</ul>
+</li>
+<li><p>一维ndarray、列表、字典、元组或Series构成的字典</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 由Series构成的字段创建DataFrame</span></span><br><span class="line"><span class="comment"># 字典中的键成了列索引</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>dt = &#123;<span class="string">&#x27;one&#x27;</span>:pd.Series([<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>], index=[<span class="string">&#x27;a&#x27;</span>,<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>]),</span><br><span class="line"><span class="meta">... </span><span class="string">&#x27;two&#x27;</span>:pd.Series([<span class="number">9</span>, <span class="number">9</span>, <span class="number">7</span>, <span class="number">6</span>], index=[<span class="string">&#x27;a&#x27;</span>,<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>,<span class="string">&#x27;d&#x27;</span>])&#125;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = pd.DataFrame(dt)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">   one  two</span><br><span class="line">a  <span class="number">1.0</span>    <span class="number">9</span></span><br><span class="line">b  <span class="number">2.0</span>    <span class="number">9</span></span><br><span class="line">c  <span class="number">3.0</span>    <span class="number">7</span></span><br><span class="line">d  NaN    <span class="number">6</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>pd.DataFrame(dt, index=[<span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>], columns=[<span class="string">&#x27;two&#x27;</span>, <span class="string">&#x27;three&#x27;</span>])</span><br><span class="line">   two three</span><br><span class="line">b    <span class="number">9</span>   NaN</span><br><span class="line">c    <span class="number">7</span>   NaN</span><br><span class="line">d    <span class="number">6</span>   NaN</span><br><span class="line"></span><br><span class="line"><span class="comment"># 以列表类似的字典创建</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>dl = &#123;<span class="string">&#x27;one&#x27;</span>:[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>], <span class="string">&#x27;two&#x27;</span>:[<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>]&#125;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = pd.DataFrame(dl, index=[<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">   one two</span><br><span class="line">a    <span class="number">1</span>   a</span><br><span class="line">b    <span class="number">2</span>   b</span><br><span class="line">c    <span class="number">3</span>   c</span><br><span class="line">d    <span class="number">4</span>   d</span><br></pre></td></tr></table></figure></li>
+<li><p>Series类型</p>
+</li>
+<li><p>其他DataFrame类型</p>
+</li>
+</ul>
+<h4 id="DataFrame类型的基本操作"><a href="#DataFrame类型的基本操作" class="headerlink" title="DataFrame类型的基本操作"></a>DataFrame类型的基本操作</h4><p>通过<code>[columns]</code>直接获取columns数据，此数据为Series类型，通过<code>[columns][index]</code>获取<code>value</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">   one two</span><br><span class="line">a    <span class="number">1</span>   a</span><br><span class="line">b    <span class="number">2</span>   b</span><br><span class="line">c    <span class="number">3</span>   c</span><br><span class="line">d    <span class="number">4</span>   d</span><br><span class="line"><span class="comment"># 获取one column数据</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[<span class="string">&#x27;one&#x27;</span>]</span><br><span class="line">a    <span class="number">1</span></span><br><span class="line">b    <span class="number">2</span></span><br><span class="line">c    <span class="number">3</span></span><br><span class="line">d    <span class="number">4</span></span><br><span class="line"><span class="comment"># 获取two column数据</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[<span class="string">&#x27;two&#x27;</span>]</span><br><span class="line">a    a</span><br><span class="line">b    b</span><br><span class="line">c    c</span><br><span class="line">d    d</span><br><span class="line"><span class="comment"># 获取value</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[<span class="string">&#x27;one&#x27;</span>][<span class="string">&#x27;b&#x27;</span>]</span><br><span class="line"><span class="number">2</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="Pandas库的数据类型操作"><a href="#Pandas库的数据类型操作" class="headerlink" title="Pandas库的数据类型操作"></a>Pandas库的数据类型操作</h2><h3 id="改变Series和DataFrame对象"><a href="#改变Series和DataFrame对象" class="headerlink" title="改变Series和DataFrame对象"></a>改变Series和DataFrame对象</h3><ul>
+<li><p>增加或重排：重新索引</p>
+</li>
+<li><p>删除：drop</p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>dl = &#123;<span class="string">&#x27;城市&#x27;</span>:[<span class="string">&#x27;北京&#x27;</span>,<span class="string">&#x27;上海&#x27;</span>,<span class="string">&#x27;广州&#x27;</span>,<span class="string">&#x27;深圳&#x27;</span>,<span class="string">&#x27;沈阳&#x27;</span>],</span><br><span class="line"><span class="meta">... </span><span class="string">&#x27;环比&#x27;</span>:[<span class="number">101.5</span>,<span class="number">101.2</span>,<span class="number">101.3</span>,<span class="number">102.0</span>,<span class="number">100.1</span>],</span><br><span class="line"><span class="meta">... </span><span class="string">&#x27;同比&#x27;</span>:[<span class="number">120.7</span>,<span class="number">127.3</span>,<span class="number">119.4</span>,<span class="number">140.9</span>,<span class="number">101.4</span>],</span><br><span class="line"><span class="meta">... </span><span class="string">&#x27;定基&#x27;</span>:[<span class="number">121.4</span>,<span class="number">127.8</span>,<span class="number">120.0</span>,<span class="number">145.5</span>,<span class="number">101.6</span>]&#125;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = pd.DataFrame(dl, index=[<span class="string">&#x27;c1&#x27;</span>,<span class="string">&#x27;c2&#x27;</span>,<span class="string">&#x27;c3&#x27;</span>,<span class="string">&#x27;c4&#x27;</span>,<span class="string">&#x27;c5&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br></pre></td></tr></table></figure>
+
+
+<h4 id="重新索引"><a href="#重新索引" class="headerlink" title="重新索引"></a>重新索引</h4><p><code>.reindex()</code>能够改变或重排Series和DataFrame索引</p>
+<ul>
+<li><p>以<code>columns</code>重排列</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = d.reindex(columns=[<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;定基&#x27;</span>,<span class="string">&#x27;同比&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     定基     同比     环比</span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span></span><br></pre></td></tr></table></figure></li>
+<li><p>以<code>index</code>重排列</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = d.reindex(index=[<span class="string">&#x27;c5&#x27;</span>,<span class="string">&#x27;c4&#x27;</span>,<span class="string">&#x27;c3&#x27;</span>,<span class="string">&#x27;c2&#x27;</span>,<span class="string">&#x27;c1&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     定基     同比     环比</span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<h4 id="索引类型的常用方法"><a href="#索引类型的常用方法" class="headerlink" title="索引类型的常用方法"></a>索引类型的常用方法</h4><p>在Series和DataFrame的索引是<code>Index</code>类型，<code>Index</code>对象本身属于不可修改的，其常用方法如下：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>.append(idx)</code></td>
+<td>连接另一个<code>Index</code>对象，产生新的<code>Index</code>对象</td>
+</tr>
+<tr>
+<td><code>.diff(idx)</code></td>
+<td>计算差集，产生新的<code>Index</code>对象</td>
+</tr>
+<tr>
+<td><code>.intersection(idx)</code></td>
+<td>计算交集</td>
+</tr>
+<tr>
+<td><code>.union(idx)</code></td>
+<td>计算并集</td>
+</tr>
+<tr>
+<td><code>.delete(loc)</code></td>
+<td>删除loc位置处的元素</td>
+</tr>
+<tr>
+<td><code>.insert(loc, e)</code></td>
+<td>在loc位置处增加一个元素e</td>
+</tr>
+</tbody></table>
+<ul>
+<li><p>插入一个新的<code>columns</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>newc = d.columns.insert(<span class="number">4</span>, <span class="string">&#x27;新增&#x27;</span>)	<span class="comment"># 获取原来的columns，inser插入了一个新列</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>newc</span><br><span class="line">Index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;定基&#x27;</span>, <span class="string">&#x27;同比&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>, <span class="string">&#x27;新增&#x27;</span>], dtype=<span class="string">&#x27;object&#x27;</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>newd = d.reindex(columns=newc, fill_value=<span class="number">200</span>)	<span class="comment"># 以新的columns列表重新排列，并设置填充值fill_value为200</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>newd</span><br><span class="line">    城市     定基     同比     环比   新增</span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span>  <span class="number">200</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span>  <span class="number">200</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span>  <span class="number">200</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span>  <span class="number">200</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span>  <span class="number">200</span></span><br></pre></td></tr></table></figure></li>
+<li><p>删除第二个<code>columns</code>，插入一个<code>index</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     定基     同比     环比</span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br><span class="line"><span class="comment"># 删除columns</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nc = d.columns.delete(<span class="number">2</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nc</span><br><span class="line">Index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;定基&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>], dtype=<span class="string">&#x27;object&#x27;</span>)</span><br><span class="line"><span class="comment"># 增加index</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>ni = d.index.insert(<span class="number">5</span>, <span class="string">&#x27;c0&#x27;</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>ni</span><br><span class="line">Index([<span class="string">&#x27;c5&#x27;</span>, <span class="string">&#x27;c4&#x27;</span>, <span class="string">&#x27;c3&#x27;</span>, <span class="string">&#x27;c2&#x27;</span>, <span class="string">&#x27;c1&#x27;</span>, <span class="string">&#x27;c0&#x27;</span>], dtype=<span class="string">&#x27;object&#x27;</span>)</span><br><span class="line"><span class="comment"># 重排，c0由c1填充</span></span><br><span class="line"><span class="comment"># 这里如果是nd = d.reindex(index=ni, columns=nc, method=&#x27;ffill&#x27;)则会报错，可能是pandas版本不同</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nd = d.reindex(index=ni, columns=nc).ffill()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nd</span><br><span class="line">    城市     定基     环比</span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">100.1</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">102.0</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">101.3</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">101.2</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">101.5</span></span><br><span class="line">c0  北京  <span class="number">121.4</span>  <span class="number">101.5</span></span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<h4 id="drop删除索引元素"><a href="#drop删除索引元素" class="headerlink" title="drop删除索引元素"></a>drop删除索引元素</h4><p><code>.drop</code>可以删除Series和DataFrame指定的行或列索引</p>
+<ul>
+<li><p>Series删除索引元素</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>a = pd.Series([<span class="number">9</span>,<span class="number">8</span>,<span class="number">7</span>,<span class="number">6</span>], index=[<span class="string">&#x27;a&#x27;</span>,<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>,<span class="string">&#x27;d&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a.drop([<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>])</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br></pre></td></tr></table></figure></li>
+<li><p>DataFrame删除指定行、列索引元素</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     定基     同比     环比</span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br><span class="line"><span class="comment"># 删除index c5，默认axis=0</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.drop(<span class="string">&#x27;c5&#x27;</span>)</span><br><span class="line">    城市     定基     同比     环比</span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br><span class="line"><span class="comment"># 删除columns 城市，需要指定axis=1</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.drop(<span class="string">&#x27;城市&#x27;</span>, axis=<span class="number">1</span>)</span><br><span class="line">       定基     同比     环比</span><br><span class="line">c5  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span></span><br><span class="line">c4  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c3  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c2  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c1  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<h2 id="Pandas库数据类型运算"><a href="#Pandas库数据类型运算" class="headerlink" title="Pandas库数据类型运算"></a>Pandas库数据类型运算</h2><h3 id="算术运算法则"><a href="#算术运算法则" class="headerlink" title="算术运算法则"></a>算术运算法则</h3><ul>
+<li>根据行列索引，补齐后运算，运算默认产生浮点数</li>
+<li>补齐残缺项默认填充<code>NaN</code></li>
+<li>维度不同运算采取广播运算<ul>
+<li>广播运算，即低维度的将作用到高维度的每个数据上</li>
+<li>一维Series默认在<code>axis=1</code>轴上参与运算</li>
+</ul>
+</li>
+<li>采用<code>+-*/</code>符号进行的二元运算会产生新的对象</li>
+<li>运算也有一些方法，如<code>.add/.sub</code>等，采用方法可以多设定一些额外参数</li>
+</ul>
+<h3 id="比较运算法则"><a href="#比较运算法则" class="headerlink" title="比较运算法则"></a>比较运算法则</h3><ul>
+<li>比较运算只能比较相同索引的元素，不进行补齐</li>
+<li>不同维度采取 广播运算</li>
+<li>采用<code>&gt; &lt; &gt;= &lt;= == !=</code>等符号进行的二元运算会产生布尔对象</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://pandas.pydata.org/docs/">pandas documentation</a></p>
+<p><a href="https://pandas.pydata.org/docs/reference/index.html">pandas - API reference</a></p>
+]]></content>
+      <categories>
+        <category>Python</category>
+      </categories>
+      <tags>
+        <tag>数据分析</tag>
       </tags>
   </entry>
   <entry>
@@ -130,6 +355,29 @@
 
 
 <p><img src="/2021/02/08/frida%E7%88%86%E7%A0%B4%E5%B0%8F%E8%AF%95/3.png"></p>
+]]></content>
+      <categories>
+        <category>攻防相关</category>
+      </categories>
+      <tags>
+        <tag>二进制安全</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>frida隐藏进程小试</title>
+    <url>/2021/02/09/frida%E9%9A%90%E8%97%8F%E8%BF%9B%E7%A8%8B%E5%B0%8F%E8%AF%95/</url>
+    <content><![CDATA[<p>Hook NtQuerySystemInformation</p>
+<a id="more"></a>
+
+<h2 id="NtQuerySystemInformation"><a href="#NtQuerySystemInformation" class="headerlink" title="NtQuerySystemInformation"></a>NtQuerySystemInformation</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">NTSTATUS NTAPI <span class="title">NtQuerySystemInformation</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PVOID SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">    IN ULONG SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PULONG ReturnLength OPTIONAL</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>该函数位于<code>ntdll.dll</code>中，第一个参数指定要查询的类型，若指定<code>SystemProcessInformation(0x5)</code>时，则会得到系统中所有进程的信息，第二个参数则返回一个<code>SYSTEM_PROCESS_INFORMATION</code>结构数组</p>
+<p><code>SYSTEM_PROCESS_INFORMATION.NextEntryOffset</code>是数组中下一个成员的相对本成员的偏移值（每个成员的大小不固定），若此结构为0，则是最后一个节点，例如以下获取进程列表名</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">NTSTATUS</span> <span class="params">( NTAPI *NT_QUERY_SYSTEM_INFOMATION)</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PVOID SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">    IN ULONG SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PULONG ReturnLength OPTIONAL</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    SYSTEM_PROCESS_INFORMATION *spi = <span class="keyword">new</span> SYSTEM_PROCESS_INFORMATION[<span class="number">0x1000</span>];</span><br><span class="line">    ULONG leng;</span><br><span class="line">    NT_QUERY_SYSTEM_INFOMATION nt_query_system_infomation = (NT_QUERY_SYSTEM_INFOMATION)GetProcAddress(GetModuleHandleW(<span class="string">L&quot;ntdll.dll&quot;</span>), <span class="string">&quot;NtQuerySystemInformation&quot;</span>);</span><br><span class="line">    nt_query_system_infomation(SystemProcessInformation, spi, <span class="keyword">sizeof</span>(SYSTEM_PROCESS_INFORMATION) * <span class="number">0x1000</span>, &amp;leng);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> ptr = spi;</span><br><span class="line">    <span class="keyword">while</span>(ptr-&gt;NextEntryOffset != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span>(ptr-&gt;ImageName.Length) &#123;</span><br><span class="line">            wprintf(<span class="string">L&quot;%s\n&quot;</span>, ptr-&gt;ImageName.Buffer);</span><br><span class="line">        &#125;</span><br><span class="line">        ptr = (SYSTEM_PROCESS_INFORMATION *)((BYTE *)ptr + ptr-&gt;NextEntryOffset);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>隐藏进程也就是修改<code>SYSTEM_PROCESS_INFORMATION.NextEntryOffset</code>来跳过需要被隐藏的进程节点</p>
+<h2 id="frida-js"><a href="#frida-js" class="headerlink" title="frida js"></a>frida js</h2><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> query_info_func = Module.findExportByName(<span class="string">&#x27;ntdll.dll&#x27;</span>, <span class="string">&#x27;NtQuerySystemInformation&#x27;</span>);</span><br><span class="line">Interceptor.attach(query_info_func, &#123;</span><br><span class="line">    onEnter : <span class="function"><span class="keyword">function</span>(<span class="params">args</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(args[<span class="number">0</span>] == <span class="number">5</span>) &#123;</span><br><span class="line">            <span class="built_in">this</span>.work = <span class="literal">true</span>;</span><br><span class="line">            <span class="built_in">this</span>.si = args[<span class="number">1</span>];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    onLeave : <span class="function"><span class="keyword">function</span>(<span class="params">retval</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(<span class="built_in">this</span>.work) &#123;</span><br><span class="line">            <span class="keyword">var</span> si_ptr = <span class="built_in">this</span>.si;</span><br><span class="line">            <span class="keyword">var</span> next_offset = Memory.readU32(si_ptr);</span><br><span class="line">            <span class="keyword">var</span> pre_offset = next_offset;</span><br><span class="line">            <span class="keyword">while</span>(next_offset != <span class="number">0</span>) &#123;</span><br><span class="line">                pre_offset = next_offset;</span><br><span class="line">                next_offset = Memory.readU32(si_ptr);</span><br><span class="line">                <span class="comment">// 偏移值64，针对win10 x64</span></span><br><span class="line">                <span class="keyword">var</span> image_name = Memory.readUtf16String(Memory.readPointer(si_ptr.add(<span class="number">64</span>)));</span><br><span class="line">                <span class="comment">// console.log(image_name);</span></span><br><span class="line">                <span class="comment">// 隐藏powershell</span></span><br><span class="line">                <span class="keyword">if</span>(image_name == <span class="string">&quot;powershell.exe&quot;</span>) &#123;</span><br><span class="line">                    <span class="keyword">var</span> next_node = si_ptr.add(next_offset);</span><br><span class="line">                    <span class="keyword">var</span> pre_node = si_ptr.sub(pre_offset);</span><br><span class="line">                    Memory.writeU32(pre_node, next_offset + pre_offset);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                si_ptr = si_ptr.add(next_offset);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://www.fuzzysecurity.com/tutorials/29.html">https://www.fuzzysecurity.com/tutorials/29.html</a></p>
 ]]></content>
       <categories>
         <category>攻防相关</category>
@@ -423,254 +671,6 @@
       </categories>
       <tags>
         <tag>过去</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Pandas库入门</title>
-    <url>/2021/02/12/Pandas%E5%BA%93%E5%85%A5%E9%97%A8/</url>
-    <content><![CDATA[<p>Pandas库入门</p>
-<a id="more"></a>
-
-<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Pandas是python第三方库，以提供高性能易用数据类型和分析工具。Pandas基于NumPy实现，常与NumPy和Matplotlib一同使用</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br></pre></td></tr></table></figure>
-
-
-<h2 id="Pandas库的理解"><a href="#Pandas库的理解" class="headerlink" title="Pandas库的理解"></a>Pandas库的理解</h2><p>Pandas主要提供两个数据类型：<code>Series</code>和<code>DataFrame</code></p>
-<ul>
-<li><code>Series</code>相当于一维的数据类型</li>
-<li><code>DataFrame</code>相当于二维（N维）的数据类型</li>
-</ul>
-<p>基于上述数据类型的各类操作有：基本操作、运算操作、特征类操作、关联类操作</p>
-<table>
-<thead>
-<tr>
-<th>NumPy</th>
-<th>Pandas</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>基础数据类型</td>
-<td>扩展数据类型</td>
-</tr>
-<tr>
-<td>关注数据的结构表达</td>
-<td>关注数据的应用表达</td>
-</tr>
-<tr>
-<td>维度：数据间关系</td>
-<td>数据与索引关系</td>
-</tr>
-</tbody></table>
-<h3 id="Series类型"><a href="#Series类型" class="headerlink" title="Series类型"></a>Series类型</h3><p>Series类型由一组数据及与之相关的数据索引组成</p>
-<p><img src="/2021/02/12/Pandas%E5%BA%93%E5%85%A5%E9%97%A8/1.png"></p>
-<p>例如：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>a = pd.Series([<span class="number">9</span>, <span class="number">9</span>, <span class="number">7</span>, <span class="number">6</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a</span><br><span class="line"><span class="comment"># 第一列为自动索引</span></span><br><span class="line"><span class="comment"># 第二列为传入的列表值</span></span><br><span class="line"><span class="number">0</span>    <span class="number">9</span></span><br><span class="line"><span class="number">1</span>    <span class="number">9</span></span><br><span class="line"><span class="number">2</span>    <span class="number">7</span></span><br><span class="line"><span class="number">3</span>    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br><span class="line">    </span><br><span class="line"><span class="comment"># 自定义索引，其中index参数位于第二个参数时，可以不指定index</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b = pd.Series([<span class="number">9</span>, <span class="number">8</span>, <span class="number">7</span>, <span class="number">6</span>], index=[<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br></pre></td></tr></table></figure>
-<p>Series类型可以由如下类型创建：</p>
-<ul>
-<li>python列表</li>
-<li>标量值<ul>
-<li><code>s = pd.Series(25, index=[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;])</code>，这里的<code>index</code>不能省略</li>
-</ul>
-</li>
-<li>python字典<ul>
-<li><code>d = pd.Series(&#123;&#39;a&#39;:9, &#39;b&#39;:8, &#39;c&#39;:7&#125;)</code></li>
-<li><code>e = pd.Series(&#123;&#39;a&#39;:9, &#39;b&#39;:8, &#39;c&#39;:7&#125;, index=[&#39;c&#39;, &#39;a&#39;, &#39;b&#39;, &#39;d&#39;])</code></li>
-</ul>
-</li>
-<li>ndarray<ul>
-<li><code>n = pd.Series(numpy.arange(5))</code></li>
-<li><code>n = pd.Series(numpy.arange(5), index=numpy.arange(9, 4, -1))</code></li>
-</ul>
-</li>
-<li>其他函数</li>
-</ul>
-<h4 id="Series类型的基本操作"><a href="#Series类型的基本操作" class="headerlink" title="Series类型的基本操作"></a>Series类型的基本操作</h4><p>Series类型包括<code>index</code>和<code>values</code>两部分</p>
-<p>Series类型的操作类似ndarray类型</p>
-<ul>
-<li><p>索引方法相同，使用<code>[]</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>b = pd.Series([<span class="number">9</span>, <span class="number">8</span>, <span class="number">7</span>, <span class="number">6</span>], [<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.index</span><br><span class="line">Index([<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>], dtype=<span class="string">&#x27;object&#x27;</span>)	<span class="comment"># Series.index的类型为Index，为pandas内建的类型，不可修改</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.values</span><br><span class="line">array([<span class="number">9</span>, <span class="number">8</span>, <span class="number">7</span>, <span class="number">6</span>], dtype=int64)	<span class="comment"># Series.values的类型为array，沿用了ndarray</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="string">&#x27;b&#x27;</span>]</span><br><span class="line"><span class="number">8</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="number">1</span>]	<span class="comment"># 自动索引是默认生成的，但自动索引和自定义索引不能混用</span></span><br><span class="line"><span class="number">8</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[[<span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>, <span class="string">&#x27;a&#x27;</span>]]</span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">dtype: int64</span><br></pre></td></tr></table></figure></li>
-<li><p>NumPy中运算和操作可用于Series类型</p>
-</li>
-<li><p>可以通过Series自定义索引的类别进行切片</p>
-</li>
-<li><p>可以通过自动索引进行切片，如果存在自定义索引，则一同被切片</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 切片</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="number">3</span>]</span><br><span class="line"><span class="number">6</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[:<span class="number">3</span>]</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[b &gt; b.median()]	<span class="comment"># 大于中位数的</span></span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">dtype: int64</span><br></pre></td></tr></table></figure>
-<p>Series类型的操作类似python字典类型</p>
-</li>
-<li><p>通过自定义索引访问</p>
-</li>
-<li><p>保留字<code>in</code>操作</p>
-</li>
-<li><p>使用<code>.get()</code>方法</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="string">&#x27;b&#x27;</span>]</span><br><span class="line"><span class="number">8</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="string">&#x27;c&#x27;</span> <span class="keyword">in</span> b	<span class="comment"># 可以判断自定义索引</span></span><br><span class="line"><span class="literal">True</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="number">0</span> <span class="keyword">in</span> b		<span class="comment"># 不能判断自动索引</span></span><br><span class="line"><span class="literal">False</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.get(<span class="string">&#x27;f&#x27;</span>, <span class="number">100</span>)</span><br><span class="line"><span class="number">100</span></span><br></pre></td></tr></table></figure>
-
-
-</li>
-</ul>
-<h4 id="Series类型对齐操作"><a href="#Series类型对齐操作" class="headerlink" title="Series类型对齐操作"></a>Series类型对齐操作</h4><p>Series对齐操作：Series + Series，索引值相同的进行运算，索引不同的不进行运算</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>a = pd.Series([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>], [<span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>, <span class="string">&#x27;e&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a</span><br><span class="line">c    <span class="number">1</span></span><br><span class="line">d    <span class="number">2</span></span><br><span class="line">e    <span class="number">3</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a + b</span><br><span class="line">a    NaN</span><br><span class="line">b    NaN</span><br><span class="line">c    <span class="number">8.0</span></span><br><span class="line">d    <span class="number">8.0</span></span><br><span class="line">e    NaN</span><br><span class="line">dtype: float64</span><br></pre></td></tr></table></figure>
-
-
-<h4 id="Series类型的name"><a href="#Series类型的name" class="headerlink" title="Series类型的name"></a>Series类型的name</h4><p>Series对象和索引都可以有一个名字，存储在<code>属性.name</code>中</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.name = <span class="string">&#x27;Series对象&#x27;</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.index.name = <span class="string">&#x27;索引对象&#x27;</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">索引对象</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">Name: Series对象, dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.index</span><br><span class="line">Index([<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>], dtype=<span class="string">&#x27;object&#x27;</span>, name=<span class="string">&#x27;索引对象&#x27;</span>)</span><br></pre></td></tr></table></figure>
-
-
-<h4 id="Series类型的修改"><a href="#Series类型的修改" class="headerlink" title="Series类型的修改"></a>Series类型的修改</h4><p>Series对象可以随时修改并立即生效</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">索引对象</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">Name: Series对象, dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="string">&#x27;a&#x27;</span>] = <span class="number">15</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b.name = <span class="string">&#x27;New Series&#x27;</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b[<span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>] = <span class="number">20</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">索引对象</span><br><span class="line">a    <span class="number">15</span></span><br><span class="line">b    <span class="number">20</span></span><br><span class="line">c    <span class="number">20</span></span><br><span class="line">d     <span class="number">6</span></span><br><span class="line">Name: New Series, dtype: int64</span><br></pre></td></tr></table></figure>
-
-
-<h3 id="DataFrame类型"><a href="#DataFrame类型" class="headerlink" title="DataFrame类型"></a>DataFrame类型</h3><p>DataFrame类型由共用相同索引的一组列组成，如下纵向的叫做<code>index</code>，其坐标轴为<code>axis=0</code>，横向的叫做<code>column</code>，其坐标轴为<code>axis=1</code></p>
-<ul>
-<li>DataFrame是一个表格型的数据类型，每列值类型可以不同</li>
-<li>DataFrame既有行索引，也有列索引</li>
-<li>DataFrame常用于表达二位数据，但也可以用来表达多维数据</li>
-</ul>
-<p><img src="/2021/02/12/Pandas%E5%BA%93%E5%85%A5%E9%97%A8/2.png"></p>
-<p>DataFrame可以由以下类型来创建：</p>
-<ul>
-<li><p>二维ndarray对象</p>
-<ul>
-<li><code>pd.DataFrame(numpy.arange(10).reshape(2, 5))</code></li>
-</ul>
-</li>
-<li><p>一维ndarray、列表、字典、元组或Series构成的字典</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 由Series构成的字段创建DataFrame</span></span><br><span class="line"><span class="comment"># 字典中的键成了列索引</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>dt = &#123;<span class="string">&#x27;one&#x27;</span>:pd.Series([<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>], index=[<span class="string">&#x27;a&#x27;</span>,<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>]),</span><br><span class="line"><span class="meta">... </span><span class="string">&#x27;two&#x27;</span>:pd.Series([<span class="number">9</span>, <span class="number">9</span>, <span class="number">7</span>, <span class="number">6</span>], index=[<span class="string">&#x27;a&#x27;</span>,<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>,<span class="string">&#x27;d&#x27;</span>])&#125;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = pd.DataFrame(dt)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">   one  two</span><br><span class="line">a  <span class="number">1.0</span>    <span class="number">9</span></span><br><span class="line">b  <span class="number">2.0</span>    <span class="number">9</span></span><br><span class="line">c  <span class="number">3.0</span>    <span class="number">7</span></span><br><span class="line">d  NaN    <span class="number">6</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>pd.DataFrame(dt, index=[<span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>], columns=[<span class="string">&#x27;two&#x27;</span>, <span class="string">&#x27;three&#x27;</span>])</span><br><span class="line">   two three</span><br><span class="line">b    <span class="number">9</span>   NaN</span><br><span class="line">c    <span class="number">7</span>   NaN</span><br><span class="line">d    <span class="number">6</span>   NaN</span><br><span class="line"></span><br><span class="line"><span class="comment"># 以列表类似的字典创建</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>dl = &#123;<span class="string">&#x27;one&#x27;</span>:[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>], <span class="string">&#x27;two&#x27;</span>:[<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>]&#125;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = pd.DataFrame(dl, index=[<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;d&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">   one two</span><br><span class="line">a    <span class="number">1</span>   a</span><br><span class="line">b    <span class="number">2</span>   b</span><br><span class="line">c    <span class="number">3</span>   c</span><br><span class="line">d    <span class="number">4</span>   d</span><br></pre></td></tr></table></figure></li>
-<li><p>Series类型</p>
-</li>
-<li><p>其他DataFrame类型</p>
-</li>
-</ul>
-<h4 id="DataFrame类型的基本操作"><a href="#DataFrame类型的基本操作" class="headerlink" title="DataFrame类型的基本操作"></a>DataFrame类型的基本操作</h4><p>通过<code>[columns]</code>直接获取columns数据，此数据为Series类型，通过<code>[columns][index]</code>获取<code>value</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">   one two</span><br><span class="line">a    <span class="number">1</span>   a</span><br><span class="line">b    <span class="number">2</span>   b</span><br><span class="line">c    <span class="number">3</span>   c</span><br><span class="line">d    <span class="number">4</span>   d</span><br><span class="line"><span class="comment"># 获取one column数据</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[<span class="string">&#x27;one&#x27;</span>]</span><br><span class="line">a    <span class="number">1</span></span><br><span class="line">b    <span class="number">2</span></span><br><span class="line">c    <span class="number">3</span></span><br><span class="line">d    <span class="number">4</span></span><br><span class="line"><span class="comment"># 获取two column数据</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[<span class="string">&#x27;two&#x27;</span>]</span><br><span class="line">a    a</span><br><span class="line">b    b</span><br><span class="line">c    c</span><br><span class="line">d    d</span><br><span class="line"><span class="comment"># 获取value</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[<span class="string">&#x27;one&#x27;</span>][<span class="string">&#x27;b&#x27;</span>]</span><br><span class="line"><span class="number">2</span></span><br></pre></td></tr></table></figure>
-
-
-<h2 id="Pandas库的数据类型操作"><a href="#Pandas库的数据类型操作" class="headerlink" title="Pandas库的数据类型操作"></a>Pandas库的数据类型操作</h2><h3 id="改变Series和DataFrame对象"><a href="#改变Series和DataFrame对象" class="headerlink" title="改变Series和DataFrame对象"></a>改变Series和DataFrame对象</h3><ul>
-<li><p>增加或重排：重新索引</p>
-</li>
-<li><p>删除：drop</p>
-</li>
-</ul>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>dl = &#123;<span class="string">&#x27;城市&#x27;</span>:[<span class="string">&#x27;北京&#x27;</span>,<span class="string">&#x27;上海&#x27;</span>,<span class="string">&#x27;广州&#x27;</span>,<span class="string">&#x27;深圳&#x27;</span>,<span class="string">&#x27;沈阳&#x27;</span>],</span><br><span class="line"><span class="meta">... </span><span class="string">&#x27;环比&#x27;</span>:[<span class="number">101.5</span>,<span class="number">101.2</span>,<span class="number">101.3</span>,<span class="number">102.0</span>,<span class="number">100.1</span>],</span><br><span class="line"><span class="meta">... </span><span class="string">&#x27;同比&#x27;</span>:[<span class="number">120.7</span>,<span class="number">127.3</span>,<span class="number">119.4</span>,<span class="number">140.9</span>,<span class="number">101.4</span>],</span><br><span class="line"><span class="meta">... </span><span class="string">&#x27;定基&#x27;</span>:[<span class="number">121.4</span>,<span class="number">127.8</span>,<span class="number">120.0</span>,<span class="number">145.5</span>,<span class="number">101.6</span>]&#125;</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = pd.DataFrame(dl, index=[<span class="string">&#x27;c1&#x27;</span>,<span class="string">&#x27;c2&#x27;</span>,<span class="string">&#x27;c3&#x27;</span>,<span class="string">&#x27;c4&#x27;</span>,<span class="string">&#x27;c5&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br></pre></td></tr></table></figure>
-
-
-<h4 id="重新索引"><a href="#重新索引" class="headerlink" title="重新索引"></a>重新索引</h4><p><code>.reindex()</code>能够改变或重排Series和DataFrame索引</p>
-<ul>
-<li><p>以<code>columns</code>重排列</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = d.reindex(columns=[<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;定基&#x27;</span>,<span class="string">&#x27;同比&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     定基     同比     环比</span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span></span><br></pre></td></tr></table></figure></li>
-<li><p>以<code>index</code>重排列</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d = d.reindex(index=[<span class="string">&#x27;c5&#x27;</span>,<span class="string">&#x27;c4&#x27;</span>,<span class="string">&#x27;c3&#x27;</span>,<span class="string">&#x27;c2&#x27;</span>,<span class="string">&#x27;c1&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     定基     同比     环比</span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br></pre></td></tr></table></figure>
-
-
-</li>
-</ul>
-<h4 id="索引类型的常用方法"><a href="#索引类型的常用方法" class="headerlink" title="索引类型的常用方法"></a>索引类型的常用方法</h4><p>在Series和DataFrame的索引是<code>Index</code>类型，<code>Index</code>对象本身属于不可修改的，其常用方法如下：</p>
-<table>
-<thead>
-<tr>
-<th>方法</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>.append(idx)</code></td>
-<td>连接另一个<code>Index</code>对象，产生新的<code>Index</code>对象</td>
-</tr>
-<tr>
-<td><code>.diff(idx)</code></td>
-<td>计算差集，产生新的<code>Index</code>对象</td>
-</tr>
-<tr>
-<td><code>.intersection(idx)</code></td>
-<td>计算交集</td>
-</tr>
-<tr>
-<td><code>.union(idx)</code></td>
-<td>计算并集</td>
-</tr>
-<tr>
-<td><code>.delete(loc)</code></td>
-<td>删除loc位置处的元素</td>
-</tr>
-<tr>
-<td><code>.insert(loc, e)</code></td>
-<td>在loc位置处增加一个元素e</td>
-</tr>
-</tbody></table>
-<ul>
-<li><p>插入一个新的<code>columns</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>newc = d.columns.insert(<span class="number">4</span>, <span class="string">&#x27;新增&#x27;</span>)	<span class="comment"># 获取原来的columns，inser插入了一个新列</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>newc</span><br><span class="line">Index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;定基&#x27;</span>, <span class="string">&#x27;同比&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>, <span class="string">&#x27;新增&#x27;</span>], dtype=<span class="string">&#x27;object&#x27;</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>newd = d.reindex(columns=newc, fill_value=<span class="number">200</span>)	<span class="comment"># 以新的columns列表重新排列，并设置填充值fill_value为200</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>newd</span><br><span class="line">    城市     定基     同比     环比   新增</span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span>  <span class="number">200</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span>  <span class="number">200</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span>  <span class="number">200</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span>  <span class="number">200</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span>  <span class="number">200</span></span><br></pre></td></tr></table></figure></li>
-<li><p>删除第二个<code>columns</code>，插入一个<code>index</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     定基     同比     环比</span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br><span class="line"><span class="comment"># 删除columns</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nc = d.columns.delete(<span class="number">2</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nc</span><br><span class="line">Index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;定基&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>], dtype=<span class="string">&#x27;object&#x27;</span>)</span><br><span class="line"><span class="comment"># 增加index</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>ni = d.index.insert(<span class="number">5</span>, <span class="string">&#x27;c0&#x27;</span>)</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>ni</span><br><span class="line">Index([<span class="string">&#x27;c5&#x27;</span>, <span class="string">&#x27;c4&#x27;</span>, <span class="string">&#x27;c3&#x27;</span>, <span class="string">&#x27;c2&#x27;</span>, <span class="string">&#x27;c1&#x27;</span>, <span class="string">&#x27;c0&#x27;</span>], dtype=<span class="string">&#x27;object&#x27;</span>)</span><br><span class="line"><span class="comment"># 重排，c0由c1填充</span></span><br><span class="line"><span class="comment"># 这里如果是nd = d.reindex(index=ni, columns=nc, method=&#x27;ffill&#x27;)则会报错，可能是pandas版本不同</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nd = d.reindex(index=ni, columns=nc).ffill()</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>nd</span><br><span class="line">    城市     定基     环比</span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">100.1</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">102.0</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">101.3</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">101.2</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">101.5</span></span><br><span class="line">c0  北京  <span class="number">121.4</span>  <span class="number">101.5</span></span><br></pre></td></tr></table></figure>
-
-
-</li>
-</ul>
-<h4 id="drop删除索引元素"><a href="#drop删除索引元素" class="headerlink" title="drop删除索引元素"></a>drop删除索引元素</h4><p><code>.drop</code>可以删除Series和DataFrame指定的行或列索引</p>
-<ul>
-<li><p>Series删除索引元素</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>a = pd.Series([<span class="number">9</span>,<span class="number">8</span>,<span class="number">7</span>,<span class="number">6</span>], index=[<span class="string">&#x27;a&#x27;</span>,<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>,<span class="string">&#x27;d&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">b    <span class="number">8</span></span><br><span class="line">c    <span class="number">7</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a.drop([<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>])</span><br><span class="line">a    <span class="number">9</span></span><br><span class="line">d    <span class="number">6</span></span><br><span class="line">dtype: int64</span><br></pre></td></tr></table></figure></li>
-<li><p>DataFrame删除指定行、列索引元素</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     定基     同比     环比</span><br><span class="line">c5  沈阳  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span></span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br><span class="line"><span class="comment"># 删除index c5，默认axis=0</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.drop(<span class="string">&#x27;c5&#x27;</span>)</span><br><span class="line">    城市     定基     同比     环比</span><br><span class="line">c4  深圳  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c3  广州  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c2  上海  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c1  北京  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br><span class="line"><span class="comment"># 删除columns 城市，需要指定axis=1</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.drop(<span class="string">&#x27;城市&#x27;</span>, axis=<span class="number">1</span>)</span><br><span class="line">       定基     同比     环比</span><br><span class="line">c5  <span class="number">101.6</span>  <span class="number">101.4</span>  <span class="number">100.1</span></span><br><span class="line">c4  <span class="number">145.5</span>  <span class="number">140.9</span>  <span class="number">102.0</span></span><br><span class="line">c3  <span class="number">120.0</span>  <span class="number">119.4</span>  <span class="number">101.3</span></span><br><span class="line">c2  <span class="number">127.8</span>  <span class="number">127.3</span>  <span class="number">101.2</span></span><br><span class="line">c1  <span class="number">121.4</span>  <span class="number">120.7</span>  <span class="number">101.5</span></span><br></pre></td></tr></table></figure>
-
-
-</li>
-</ul>
-<h2 id="Pandas库数据类型运算"><a href="#Pandas库数据类型运算" class="headerlink" title="Pandas库数据类型运算"></a>Pandas库数据类型运算</h2><h3 id="算术运算法则"><a href="#算术运算法则" class="headerlink" title="算术运算法则"></a>算术运算法则</h3><ul>
-<li>根据行列索引，补齐后运算，运算默认产生浮点数</li>
-<li>补齐残缺项默认填充<code>NaN</code></li>
-<li>维度不同运算采取广播运算<ul>
-<li>广播运算，即低维度的将作用到高维度的每个数据上</li>
-<li>一维Series默认在<code>axis=1</code>轴上参与运算</li>
-</ul>
-</li>
-<li>采用<code>+-*/</code>符号进行的二元运算会产生新的对象</li>
-<li>运算也有一些方法，如<code>.add/.sub</code>等，采用方法可以多设定一些额外参数</li>
-</ul>
-<h3 id="比较运算法则"><a href="#比较运算法则" class="headerlink" title="比较运算法则"></a>比较运算法则</h3><ul>
-<li>比较运算只能比较相同索引的元素，不进行补齐</li>
-<li>不同维度采取 广播运算</li>
-<li>采用<code>&gt; &lt; &gt;= &lt;= == !=</code>等符号进行的二元运算会产生布尔对象</li>
-</ul>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://pandas.pydata.org/docs/">pandas documentation</a></p>
-<p><a href="https://pandas.pydata.org/docs/reference/index.html">pandas - API reference</a></p>
-]]></content>
-      <categories>
-        <category>Python</category>
-      </categories>
-      <tags>
-        <tag>数据分析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>angr入门小试（二）</title>
-    <url>/2021/02/12/angr%E5%85%A5%E9%97%A8%E5%B0%8F%E8%AF%95%EF%BC%88%E4%BA%8C%EF%BC%89/</url>
-    <content><![CDATA[<p>CTF Hitcon 2017 - sakura</p>
-<a id="more"></a>
-
-
-<h2 id="Hitcon-2017-sakura"><a href="#Hitcon-2017-sakura" class="headerlink" title="Hitcon 2017: sakura"></a>Hitcon 2017: sakura</h2><h3 id="解题分析"><a href="#解题分析" class="headerlink" title="解题分析"></a>解题分析</h3><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">__int64 __fastcall <span class="title">main</span><span class="params">(<span class="keyword">int</span> a1, <span class="keyword">char</span> **a2, <span class="keyword">char</span> **a3)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> i; <span class="comment">// [rsp+Ch] [rbp-4h]</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// 一共读取400个字节到缓冲区中</span></span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt;= <span class="number">19</span>; ++i )</span><br><span class="line">  &#123;</span><br><span class="line">    a2 = (<span class="keyword">char</span> **)((<span class="keyword">char</span> *)&amp;unk_2121E0 + <span class="number">20</span> * i);</span><br><span class="line">    read(<span class="number">0</span>, a2, <span class="number">0x14</span>uLL);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> ( (<span class="keyword">unsigned</span> __int8)sub_850((__int64)&amp;unk_2121E0) ) <span class="comment">// 验证函数</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hitcon&#123;&quot;</span>);</span><br><span class="line">    sub_10FF6(<span class="string">&quot;hitcon&#123;&quot;</span>, a2);</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">&quot;&#125;&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0LL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在验证函数<code>sub_850</code>中非常复杂，每一块的验证逻辑又大致相同。验证失败时，会将<code>[rbp+var_1E49]</code>置0，整个验证函数最后会返回<code>[rbp+var_1E49]</code>，此值为1时，验证通过</p>
-<p>由于开了<code>pie</code>，在IDA中显示的是RVA，先通过idapython将<code>[rbp+var_1E49]</code>的RVA全部找出来</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> idc</span><br><span class="line"></span><br><span class="line">start_addr = <span class="number">0x0850</span></span><br><span class="line">end_addr = <span class="number">0x010FF5</span></span><br><span class="line">p = start_addr</span><br><span class="line"></span><br><span class="line">avoid_offset = []</span><br><span class="line"><span class="keyword">while</span> p &lt;= end_addr:</span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;mov     [rbp+var_1E49], 0&#x27;</span> <span class="keyword">in</span> idc.GetDisasm(p):</span><br><span class="line">        avoid_offset.append(p)</span><br><span class="line">    p = idc.next_head(p)</span><br><span class="line">print(avoid_offset)</span><br></pre></td></tr></table></figure>
-<p>在angr中，可以设置入口位置在<code>ImageBase + 0x110BA</code>上，然后将400字节的内容直接放在<code>ImageBase + 0x2121E0</code>处</p>
-<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-class">.text</span><span class="selector-pseudo">:00000000000110BA</span>                 <span class="selector-tag">lea</span>     <span class="selector-tag">rdi</span>, <span class="selector-tag">unk_2121E0</span></span><br><span class="line"><span class="selector-class">.text</span><span class="selector-pseudo">:00000000000110C1</span>                 <span class="selector-tag">call</span>    <span class="selector-tag">sub_850</span></span><br></pre></td></tr></table></figure>
-<p>验证通过后会调用<code>sub_10FF6</code>来打印flag信息，如下将<code>byte_212040</code>地址的400字节通过sha256转到<code>v2</code>中</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">unsigned</span> __int64 <span class="title">sub_10FF6</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> i; <span class="comment">// [rsp+Ch] [rbp-34h]</span></span><br><span class="line">  <span class="keyword">char</span> v2[<span class="number">40</span>]; <span class="comment">// [rsp+10h] [rbp-30h] BYREF</span></span><br><span class="line">  <span class="keyword">unsigned</span> __int64 v3; <span class="comment">// [rsp+38h] [rbp-8h]</span></span><br><span class="line"></span><br><span class="line">  v3 = __readfsqword(<span class="number">0x28</span>u);</span><br><span class="line">  SHA256(byte_212040, <span class="number">400LL</span>, v2);</span><br><span class="line">  <span class="keyword">for</span> ( i = <span class="number">0</span>; i &lt;= <span class="number">31</span>; ++i )</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%02x&quot;</span>, (<span class="keyword">unsigned</span> __int8)v2[i]);</span><br><span class="line">  <span class="keyword">return</span> __readfsqword(<span class="number">0x28</span>u) ^ v3;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-
-<h3 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a>完整代码</h3><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> angr</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> hashlib</span><br><span class="line"></span><br><span class="line">image_base = <span class="number">0x400000</span></span><br><span class="line"></span><br><span class="line">avoid_offset = [...]</span><br><span class="line">avoid_offset.append(<span class="number">0x0110EC</span>)</span><br><span class="line"></span><br><span class="line">proj = angr.Project(<span class="string">&#x27;sakura&#x27;</span>, auto_load_libs=<span class="literal">False</span>)</span><br><span class="line">state = proj.factory.blank_state(addr=(image_base + <span class="number">0x110BA</span>))</span><br><span class="line"></span><br><span class="line">data, ret_size = state.posix.get_fd(sys.stdin.fileno()).read_data(<span class="number">400</span>)</span><br><span class="line">state.memory.store(image_base + <span class="number">0x2121E0</span>, data)</span><br><span class="line"></span><br><span class="line"><span class="comment"># setting state</span></span><br><span class="line">simgr = proj.factory.simulation_manager(state)</span><br><span class="line">simgr.one_active.options.add(angr.options.LAZY_SOLVES)</span><br><span class="line"></span><br><span class="line">simgr.explore(find=(image_base + <span class="number">0x00110CA</span>), avoid=[item + image_base <span class="keyword">for</span> item <span class="keyword">in</span> avoid_offset])</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取执行路径上byte_212040地址处的400字节内容</span></span><br><span class="line">text = simgr.one_found.solver.<span class="built_in">eval</span>(simgr.one_found.memory.load(image_base + <span class="number">0x212040</span>, <span class="number">400</span>), cast_to=<span class="built_in">bytes</span>)</span><br><span class="line">print(hashlib.sha256(text).hexdigest())</span><br></pre></td></tr></table></figure>
-<p>运行结果及时间如下：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pwn@ubuntu:~/workspace$ time python3 exp.py </span><br><span class="line">6c0d62189adfd27a12289890d5b89c0dc8098bc976ecc3f6d61ec0429cccae61</span><br><span class="line"></span><br><span class="line">real	0m48.518s</span><br><span class="line">user	0m47.992s</span><br><span class="line">sys	0m0.526s</span><br></pre></td></tr></table></figure>
-
-
-]]></content>
-      <categories>
-        <category>CTF</category>
-      </categories>
-      <tags>
-        <tag>二进制安全</tag>
       </tags>
   </entry>
 </search>
