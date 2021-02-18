@@ -25,10 +25,10 @@
 </li>
 <li><p><code>链接器 --&gt; 输入 --&gt; 附加依赖项</code>添加如下项目：</p>
 <figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">pin</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">xed</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">pinvm</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">pincrt</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">kernel32</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">crtbeginS</span><span class="selector-class">.obj</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">x86</span>需要额外添加：</span><br><span class="line"><span class="selector-tag">ntdll-32</span><span class="selector-class">.lib</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">x64</span>需要额外添加：</span><br><span class="line"><span class="selector-tag">ntdll-64</span><span class="selector-class">.lib</span></span><br></pre></td></tr></table></figure>
-<p>编译完成后会在相应的生成目录下生成`MyPinTool.dll``</p>
+<p>编译完成后会在相应的生成目录下生成<code>MyPinTool.dll</code></p>
 </li>
 </ul>
-<p>执行``pin32 -t .\MyPinTool.dll -o log.log – cmd /c echo 123<code>，可记录</code>MyPinTool.dll`中基本块数目和指令数目</p>
+<p>执行<code>pin32 -t .\MyPinTool.dll -o log.log -- cmd /c echo 123</code>，可记录<code>MyPinTool.dll</code>中基本块数目和指令数目</p>
 <p><img src="/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/1.png"></p>
 ]]></content>
       <categories>

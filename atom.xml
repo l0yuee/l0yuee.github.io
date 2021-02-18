@@ -6,7 +6,7 @@
   <link href="http://lzeroyuee.cn/atom.xml" rel="self"/>
   
   <link href="http://lzeroyuee.cn/"/>
-  <updated>2021-02-18T15:19:11.242Z</updated>
+  <updated>2021-02-18T15:43:10.516Z</updated>
   <id>http://lzeroyuee.cn/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="http://lzeroyuee.cn/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/"/>
     <id>http://lzeroyuee.cn/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/</id>
     <published>2021-02-18T15:17:04.000Z</published>
-    <updated>2021-02-18T15:19:11.242Z</updated>
+    <updated>2021-02-18T15:43:10.516Z</updated>
     
     
     <summary type="html">&lt;h2 id=&quot;简介&quot;&gt;&lt;a href=&quot;#简介&quot; class=&quot;headerlink&quot; title=&quot;简介&quot;&gt;&lt;/a&gt;简介&lt;/h2&gt;&lt;p&gt;Pin是Intel开发的二进制动态插桩引擎，支持Windows、Linux、Mac、Android，并提供了API可发开自己的插桩工具&lt;/p&gt;</summary>
