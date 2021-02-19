@@ -928,4 +928,23 @@
         <tag>过去</tag>
       </tags>
   </entry>
+  <entry>
+    <title>白名单之zipfldr.dll利用</title>
+    <url>/2021/02/19/%E7%99%BD%E5%90%8D%E5%8D%95%E4%B9%8Bzipfldr-dll%E5%88%A9%E7%94%A8/</url>
+    <content><![CDATA[<h2 id="zipfldr-dll"><a href="#zipfldr-dll" class="headerlink" title="zipfldr.dll"></a>zipfldr.dll</h2><p>windows自带的zip压缩组件中存在一个<code>zipfldr.dll</code>，可以被利用</p>
+<a id="more"></a>
+
+<p>此dll位于<code>C:\Windows\System32</code>或<code>C:\Windows\SysWow64</code>下，且存在一个导出函数<code>RouteTheCall</code></p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> __fastcall <span class="title">RouteTheCall</span><span class="params">(HWND a1, HINSTANCE a2, <span class="keyword">const</span> <span class="keyword">char</span> *a3)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  WCHAR pwszDst[<span class="number">264</span>]; <span class="comment">// [rsp+30h] [rbp-228h] BYREF</span></span><br><span class="line"></span><br><span class="line">  SHAnsiToUnicode(a3, pwszDst, <span class="number">260</span>);</span><br><span class="line">  PathRemoveBlanksW(pwszDst);</span><br><span class="line">  ShellExecuteW(<span class="number">0</span>i64, <span class="number">0</span>i64, pwszDst, <span class="number">0</span>i64, <span class="number">0</span>i64, <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到此函数调用<code>ShellExecuteW</code>来执行传入的参数所指向的程序</p>
+<h2 id="利用"><a href="#利用" class="headerlink" title="利用"></a>利用</h2><p>由于此程序为DLL，则需要使用<code>rundll32.exe</code>来执行，如下：</p>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">rundll32</span> <span class="selector-tag">zipfldr</span><span class="selector-class">.dll</span>, <span class="selector-tag">RouteTheCall</span> <span class="selector-tag">powershell</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>攻防相关</category>
+      </categories>
+      <tags>
+        <tag>二进制安全</tag>
+      </tags>
+  </entry>
 </search>

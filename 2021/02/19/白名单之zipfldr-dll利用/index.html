@@ -13,7 +13,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    Intel Pin的安装与配置 |  lzeroyuee&#39;s blog
+    白名单之zipfldr.dll利用 |  lzeroyuee&#39;s blog
   </title>
   <meta name="generator" content="hexo-theme-ayer">
   
@@ -48,7 +48,7 @@
     <main class="content on">
       <section class="outer">
   <article
-  id="post-Intel-Pin的安装与配置"
+  id="post-白名单之zipfldr-dll利用"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -59,18 +59,18 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  Intel Pin的安装与配置
+  白名单之zipfldr.dll利用
 </h1>
  
 
     </header>
      
     <div class="article-meta">
-      <a href="/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/" class="article-date">
-  <time datetime="2021-02-18T15:17:04.000Z" itemprop="datePublished">2021-02-18</time>
+      <a href="/2021/02/19/%E7%99%BD%E5%90%8D%E5%8D%95%E4%B9%8Bzipfldr-dll%E5%88%A9%E7%94%A8/" class="article-date">
+  <time datetime="2021-02-19T13:22:28.000Z" itemprop="datePublished">2021-02-19</time>
 </a> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/CTF/">CTF</a>
+    <a class="article-category-link" href="/categories/%E6%94%BB%E9%98%B2%E7%9B%B8%E5%85%B3/">攻防相关</a>
   </div>
   
 <div class="word_count">
@@ -78,7 +78,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">369</span>
+            <span class="post-count">123</span>
         </span>
     </span>
 
@@ -102,33 +102,14 @@
   
     <div class="article-entry" itemprop="articleBody">
        
-  <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Pin是Intel开发的二进制动态插桩引擎，支持Windows、Linux、Mac、Android，并提供了API可发开自己的插桩工具</p>
+  <h2 id="zipfldr-dll"><a href="#zipfldr-dll" class="headerlink" title="zipfldr.dll"></a>zipfldr.dll</h2><p>windows自带的zip压缩组件中存在一个<code>zipfldr.dll</code>，可以被利用</p>
 <a id="more"></a>
 
-<p><a target="_blank" rel="noopener" href="https://software.intel.com/content/www/us/en/develop/articles/pin-a-dynamic-binary-instrumentation-tool.html">Pin - A Dynamic Binary Instrumentation Tool</a></p>
-<h2 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h2><h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><ol>
-<li><p>下载<a target="_blank" rel="noopener" href="https://software.intel.com/content/www/us/en/develop/articles/pin-a-binary-instrumentation-tool-downloads.html">pin</a>并解压到目录下</p>
-</li>
-<li><p>将<code>pin.exe</code>备份重命名，新建<code>pin32.bat</code>和<code>pin64.bat</code>文件</p>
-</li>
-<li><p>向<code>pin32.bat</code>和<code>pin64.bat</code>文件中写入如下内容（64位的将<strong>ia32</strong>替换为<strong>Intel64</strong>）</p>
-<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@echo <span class="literal">off</span></span><br><span class="line">%~dp0<span class="string">\ia32\bin\pin.exe</span> %*</span><br></pre></td></tr></table></figure></li>
-<li><p>添加至环境变量PATH中，即可以使用<code>pin32</code>和<code>pin64</code></p>
-</li>
-</ol>
-<h3 id="MyPinTool"><a href="#MyPinTool" class="headerlink" title="MyPinTool"></a>MyPinTool</h3><p>在目录<code>%PinDir%\source\tools\MyPinTool</code>下有示例代码，使用VS编译即可，编译中可能存在错误，对照错误提示修改，主要的编译环境配置如下：</p>
-<ul>
-<li><p><code>C/C++ --&gt; 常规 --&gt; 附加包含目录</code>添加如下路径：</p>
-<figure class="highlight taggerscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\i</span>nclude<span class="symbol">\p</span>in</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\i</span>nclude<span class="symbol">\p</span>in<span class="symbol">\g</span>en</span><br><span class="line">..<span class="symbol">\I</span>nstLib</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>omponents<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\s</span>tlport<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\l</span>ibstdc++<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\k</span>ernel<span class="symbol">\u</span>api</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\k</span>ernel<span class="symbol">\u</span>api<span class="symbol">\a</span>sm-x86</span><br><span class="line"></span><br><span class="line">对x86需要额外添加：</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\a</span>rch-x86</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\x</span>ed-ia32<span class="symbol">\i</span>nclude<span class="symbol">\x</span>ed</span><br><span class="line"></span><br><span class="line">对x64需要额外添加：</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\a</span>rch-x86_64</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\x</span>ed-intel64<span class="symbol">\i</span>nclude<span class="symbol">\x</span>ed</span><br></pre></td></tr></table></figure></li>
-<li><p><code>链接器 --&gt; 高级 --&gt; 映像具有安全异常处理程序</code>设置为<strong>否</strong></p>
-</li>
-<li><p><code>链接器 --&gt; 输入 --&gt; 附加依赖项</code>添加如下项目：</p>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">pin</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">xed</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">pinvm</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">pincrt</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">kernel32</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">crtbeginS</span><span class="selector-class">.obj</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">x86</span>需要额外添加：</span><br><span class="line"><span class="selector-tag">ntdll-32</span><span class="selector-class">.lib</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">x64</span>需要额外添加：</span><br><span class="line"><span class="selector-tag">ntdll-64</span><span class="selector-class">.lib</span></span><br></pre></td></tr></table></figure>
-<p>编译完成后会在相应的生成目录下生成<code>MyPinTool.dll</code></p>
-</li>
-</ul>
-<p>执行<code>pin32 -t .\MyPinTool.dll -o log.log -- cmd /c echo 123</code>，可记录<code>MyPinTool.dll</code>中基本块数目和指令数目</p>
-<p><img src="/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/1.png"></p>
+<p>此dll位于<code>C:\Windows\System32</code>或<code>C:\Windows\SysWow64</code>下，且存在一个导出函数<code>RouteTheCall</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> __fastcall <span class="title">RouteTheCall</span><span class="params">(HWND a1, HINSTANCE a2, <span class="keyword">const</span> <span class="keyword">char</span> *a3)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  WCHAR pwszDst[<span class="number">264</span>]; <span class="comment">// [rsp+30h] [rbp-228h] BYREF</span></span><br><span class="line"></span><br><span class="line">  SHAnsiToUnicode(a3, pwszDst, <span class="number">260</span>);</span><br><span class="line">  PathRemoveBlanksW(pwszDst);</span><br><span class="line">  ShellExecuteW(<span class="number">0</span>i64, <span class="number">0</span>i64, pwszDst, <span class="number">0</span>i64, <span class="number">0</span>i64, <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到此函数调用<code>ShellExecuteW</code>来执行传入的参数所指向的程序</p>
+<h2 id="利用"><a href="#利用" class="headerlink" title="利用"></a>利用</h2><p>由于此程序为DLL，则需要使用<code>rundll32.exe</code>来执行，如下：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">rundll32</span> <span class="selector-tag">zipfldr</span><span class="selector-class">.dll</span>, <span class="selector-tag">RouteTheCall</span> <span class="selector-tag">powershell</span></span><br></pre></td></tr></table></figure>
  
       <!-- reward -->
       
@@ -199,7 +180,7 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://lzeroyuee.cn/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://lzeroyuee.cn/2021/02/19/%E7%99%BD%E5%90%8D%E5%8D%95%E4%B9%8Bzipfldr-dll%E5%88%A9%E7%94%A8/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -212,19 +193,10 @@
    
   <nav class="article-nav">
     
-      <a href="/2021/02/19/%E7%99%BD%E5%90%8D%E5%8D%95%E4%B9%8Bzipfldr-dll%E5%88%A9%E7%94%A8/" class="article-nav-link">
-        <strong class="article-nav-caption">上一篇</strong>
-        <div class="article-nav-title">
-          
-            白名单之zipfldr.dll利用
-          
-        </div>
-      </a>
     
-    
-      <a href="/2021/02/17/Pandas%E5%BA%93%E8%BF%9B%E9%98%B6/" class="article-nav-link">
+      <a href="/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">Pandas库进阶</div>
+        <div class="article-nav-title">Intel Pin的安装与配置</div>
       </a>
     
   </nav>
