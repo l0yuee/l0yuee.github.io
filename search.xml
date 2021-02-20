@@ -947,4 +947,74 @@
         <tag>二进制安全</tag>
       </tags>
   </entry>
+  <entry>
+    <title>MyPinTool的基本框架</title>
+    <url>/2021/02/20/MyPinTool%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A1%86%E6%9E%B6/</url>
+    <content><![CDATA[<h2 id="MyPinTool"><a href="#MyPinTool" class="headerlink" title="MyPinTool"></a>MyPinTool</h2><a id="more"></a>
+
+<p>在<code>MyPinTool</code>中，其入口点为<code>Ptrace_DllMainCRTStartup</code>函数，但是其也有个<code>main</code>函数</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>( PIN_Init(argc,argv) )</span><br><span class="line">    &#123;	<span class="comment">// 初始化运行库，当错误或者使用-h参数时，打印帮助信息</span></span><br><span class="line">        <span class="keyword">return</span> Usage();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 根据命令行初始化fileName，为 -o 参数指定的输出文件</span></span><br><span class="line">    <span class="built_in">string</span> fileName = KnobOutputFile.Value();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!fileName.empty()) &#123; out = <span class="keyword">new</span> <span class="built_in">std</span>::ofstream(fileName.c_str());&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// -count 参数所设置的值，默认为1的时候会注册下面三个插桩函数</span></span><br><span class="line">    <span class="keyword">if</span> (KnobCount)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 注册执行trace命令时所执行的函数</span></span><br><span class="line">        TRACE_AddInstrumentFunction(Trace, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 注册每个线程启动时的所执行的函数</span></span><br><span class="line">        PIN_AddThreadStartFunction(ThreadStart, <span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 注册程序退出时所执行的函数</span></span><br><span class="line">        PIN_AddFiniFunction(Fini, <span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">cerr</span> &lt;&lt;  <span class="string">&quot;===============================================&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cerr</span> &lt;&lt;  <span class="string">&quot;This application is instrumented by MyPinTool&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">if</span> (!KnobOutputFile.Value().empty()) </span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cerr</span> &lt;&lt; <span class="string">&quot;See file &quot;</span> &lt;&lt; KnobOutputFile.Value() &lt;&lt; <span class="string">&quot; for analysis results&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">cerr</span> &lt;&lt;  <span class="string">&quot;===============================================&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 启动程序，该函数不会返回</span></span><br><span class="line">    PIN_StartProgram();</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="帮助信息"><a href="#帮助信息" class="headerlink" title="帮助信息"></a>帮助信息</h3><figure class="highlight livecodeserver"><table><tr><td class="code"><pre><span class="line">Pin tools switches</span><br><span class="line"></span><br><span class="line">-count  [default <span class="number">1</span>]</span><br><span class="line">        count instructions, basic blocks <span class="keyword">and</span> threads <span class="keyword">in</span> <span class="keyword">the</span> application</span><br><span class="line">-logfile  [default pintool.<span class="built_in">log</span>]</span><br><span class="line">        The <span class="built_in">log</span> <span class="built_in">file</span> path <span class="keyword">and</span> <span class="built_in">file</span> name</span><br><span class="line">-o  [default ]</span><br><span class="line">        specify <span class="built_in">file</span> name <span class="keyword">for</span> MyPinTool output</span><br><span class="line">-symbol_path  [default ]</span><br><span class="line">        List <span class="keyword">of</span> paths separated <span class="keyword">with</span> semicolons that is searched <span class="keyword">for</span> symbol</span><br><span class="line">        <span class="keyword">and</span> <span class="built_in">line</span> information</span><br><span class="line">-unique_logfile  [default <span class="number">0</span>]</span><br><span class="line">        The <span class="built_in">log</span> <span class="built_in">file</span> names will contain <span class="keyword">the</span> pid</span><br><span class="line"></span><br><span class="line">Symbols controls</span><br><span class="line"></span><br><span class="line">-ignore_debug_info  [default <span class="number">0</span>]</span><br><span class="line">        Ignore debug info <span class="keyword">for</span> <span class="keyword">the</span> image. Symbols are taken <span class="built_in">from</span> <span class="keyword">the</span> symbol</span><br><span class="line">        tables.</span><br><span class="line">-reduce_rtn_size_mode  [default auto]</span><br><span class="line">        Mode <span class="keyword">for</span> RTN size reduction: <span class="built_in">delete</span> trailing instructions <span class="keyword">after</span> RET <span class="keyword">if</span></span><br><span class="line">        there is no jump <span class="built_in">to</span> <span class="keyword">the</span> rtn part <span class="keyword">after</span> <span class="keyword">the</span> RET. Possible modes are:</span><br><span class="line">        auto/never/always</span><br><span class="line">-short_name  [default <span class="number">0</span>]</span><br><span class="line">        Use <span class="keyword">the</span> shortest name <span class="keyword">for</span> <span class="keyword">the</span> RTN. Names <span class="keyword">with</span> <span class="built_in">version</span> substrings are</span><br><span class="line">        preferred over <span class="keyword">the</span> same name <span class="keyword">without</span> <span class="keyword">the</span> substring.</span><br><span class="line">-support_jit_api  [default <span class="number">0</span>]</span><br><span class="line">        Enables <span class="keyword">the</span> Jitted Functions Support</span><br><span class="line">-unrestricted_rtn_size  [default <span class="number">0</span>]</span><br><span class="line">        Use <span class="keyword">the</span> unrestricted RTN size. When <span class="built_in">set</span> <span class="keyword">the</span> RTN size defined <span class="keyword">by</span> <span class="keyword">the</span></span><br><span class="line">        distance between RTN <span class="built_in">start</span> <span class="built_in">to</span> <span class="keyword">the</span> beginning <span class="keyword">of</span> next RTN.</span><br><span class="line"></span><br><span class="line">Statistic switches</span><br><span class="line"></span><br><span class="line">-profile  [default <span class="number">0</span>]</span><br><span class="line">        print amount <span class="keyword">of</span> memory dynamically allocated but <span class="keyword">not</span> yet freed <span class="keyword">by</span> <span class="keyword">the</span></span><br><span class="line">        tool</span><br><span class="line">-statistic  [default <span class="number">0</span>]</span><br><span class="line">        print general statistics</span><br><span class="line"></span><br><span class="line">General switches (available <span class="keyword">in</span> pin <span class="keyword">and</span> tool)</span><br><span class="line"></span><br><span class="line">-h  [default <span class="number">0</span>]</span><br><span class="line">        Print help message (same <span class="keyword">as</span> -help)</span><br><span class="line">-help  [default <span class="number">0</span>]</span><br><span class="line">        Print help message</span><br><span class="line">-ifeellucky  [default <span class="number">0</span>]</span><br><span class="line">        skip warning message <span class="keyword">for</span> unsupported platforms <span class="keyword">and</span> <span class="built_in">convert</span> some errors</span><br><span class="line">        <span class="built_in">to</span> warnings</span><br><span class="line">-slow_asserts  [default <span class="number">0</span>]</span><br><span class="line">        Perform expensive sanity checks</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="插桩方式"><a href="#插桩方式" class="headerlink" title="插桩方式"></a>插桩方式</h3><p>Pin提供以下几种插桩方式</p>
+<table>
+<thead>
+<tr>
+<th>插桩粒度</th>
+<th>API</th>
+<th>执行时机</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>指令级插桩 <strong>instruction</strong></td>
+<td>INS_AddInstrumentFunction</td>
+<td>执行一条新指令</td>
+</tr>
+<tr>
+<td>轨迹级插桩 <strong>trace</strong></td>
+<td>TRACE_AddInstrumentFunction</td>
+<td>执行一个新trace</td>
+</tr>
+<tr>
+<td>镜像级插桩 <strong>image</strong></td>
+<td>IMG_AddInstrumentFunction</td>
+<td>加载新镜像时</td>
+</tr>
+<tr>
+<td>函数级插桩 <strong>routine</strong></td>
+<td>RTN_AddInstrumentFunction</td>
+<td>执行一个新函数时</td>
+</tr>
+</tbody></table>
+<ul>
+<li>指令级插桩<ul>
+<li>对于动态生成的代码也能对其动态插桩</li>
+</ul>
+</li>
+<li>轨迹级插桩<ul>
+<li>相当于基本块级的插桩，会在基本块的入口处调用，若其中执行动态生成了新的基本块（新的轨迹），也能对新的轨迹进行动态插桩</li>
+</ul>
+</li>
+<li>镜像级插桩<ul>
+<li>依赖符号信息，需要在调用<code>PIN_Init</code>前调用<code>Pin_InitSymbols</code>对程序进行符号分析</li>
+</ul>
+</li>
+<li>函数级插桩<ul>
+<li>依赖符号信息，需要在调用<code>PIN_Init</code>前调用<code>Pin_InitSymbols</code>对程序进行符号分析</li>
+</ul>
+</li>
+</ul>
+<h3 id="官方示例"><a href="#官方示例" class="headerlink" title="官方示例"></a>官方示例</h3><p>在官方的<code>MyPinTool</code>示例中，注册了三个插桩函数，其中该示例的主要功能在**<em>轨迹级插桩**</em>上</p>
+<h4 id="Trace"><a href="#Trace" class="headerlink" title="Trace"></a>Trace</h4><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">VOID <span class="title">CountBbl</span><span class="params">(UINT32 numInstInBbl)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    bblCount++;</span><br><span class="line">    insCount += numInstInBbl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">VOID <span class="title">Trace</span><span class="params">(TRACE trace, VOID *v)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">// 遍历每一个基本块</span></span><br><span class="line">    <span class="keyword">for</span> (BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 在基本块执行之前插入CountBbl()函数，并传递当前基本块的指令个数</span></span><br><span class="line">        BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)CountBbl, IARG_UINT32, BBL_NumIns(bbl), IARG_END);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>CTF</category>
+      </categories>
+      <tags>
+        <tag>二进制安全</tag>
+      </tags>
+  </entry>
 </search>
