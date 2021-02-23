@@ -1017,4 +1017,152 @@
         <tag>二进制安全</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Linux Pwn - 安全机制</title>
+    <url>/2021/02/23/Linux-Pwn-%E5%AE%89%E5%85%A8%E6%9C%BA%E5%88%B6/</url>
+    <content><![CDATA[<p>Linux下的安全机制有：</p>
+<ul>
+<li>Stack Canaries</li>
+<li>NX</li>
+<li>ASLR/PIE</li>
+<li>FORTIFY_SOURCE</li>
+<li>RELRO</li>
+</ul>
+<a id="more"></a>
+
+<h2 id="Stack-Canaries"><a href="#Stack-Canaries" class="headerlink" title="Stack Canaries"></a>Stack Canaries</h2><p>Linux平台上的安全cookie（与Windows上安全cookie具有相同的作用），用于缓解缓冲区溢出</p>
+<p>Canaries通常可以分为三类：</p>
+<table>
+<thead>
+<tr>
+<th align="center">种类</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong>Terminator Canaries</strong></td>
+<td align="center">Canaries的低位被设置为<code>\x00</code>，可以用来截断字符串</td>
+</tr>
+<tr>
+<td align="center"><strong>Random Canaries</strong></td>
+<td align="center">在程序初始化时生成一个随机值，并保存一份备份在一个相对安全的地方（TLS）<br>在Linux中，TLS在<code>fs</code>指向的位置（x64），而在x86下则是<code>gs</code><br>Canaries值位于<code>fs:[0x28]</code>或<code>gs:[0x14]</code></td>
+</tr>
+<tr>
+<td align="center"><strong>Random XOR Canaries</strong></td>
+<td align="center">在Random Canaries基础上增加了异或操作</td>
+</tr>
+</tbody></table>
+<p><code>checksec.sh</code>检查如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -s <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>&quot;</span> 2&gt;/dev/null | grep -Eq <span class="string">&#x27;__stack_chk_fail|__intel_security_cookie&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">  echo_message <span class="string">&#x27;\033[32mCanary found   \033[m   &#x27;</span> <span class="string">&#x27;Canary found,&#x27;</span> <span class="string">&#x27; canary=&quot;yes&quot;&#x27;</span> <span class="string">&#x27;&quot;canary&quot;:&quot;yes&quot;,&#x27;</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  echo_message <span class="string">&#x27;\033[31mNo canary found\033[m   &#x27;</span> <span class="string">&#x27;No Canary found,&#x27;</span> <span class="string">&#x27; canary=&quot;no&quot;&#x27;</span> <span class="string">&#x27;&quot;canary&quot;:&quot;no&quot;,&#x27;</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="No-eXecute"><a href="#No-eXecute" class="headerlink" title="No-eXecute"></a>No-eXecute</h2><p>相当于Windows平台上的DEP（数据执行保护），NX的实现由软件和硬件共同完成</p>
+<ul>
+<li>硬件层：利用CPU的NX位，对相应页表项中的第63位进行设置<ul>
+<li>NX=1，不可知性</li>
+<li>NX=0，可执行</li>
+</ul>
+</li>
+<li>软件层面：需要操作系统支持NX以配置页表，涉及相关API<ul>
+<li>Windows：<code>VirtualAlloc</code>、<code>VirtualProtect</code>等</li>
+<li>Linux：<code>mmap</code>、<code>mprotect</code>等</li>
+</ul>
+</li>
+</ul>
+<p><code>checksec.sh</code>检查如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -l <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;GNU_STACK&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">  <span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -l <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>&quot;</span> 2&gt;/dev/null | grep <span class="string">&#x27;GNU_STACK&#x27;</span> | grep -q <span class="string">&#x27;RWE&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">    echo_message <span class="string">&#x27;\033[31mNX disabled\033[m   &#x27;</span> <span class="string">&#x27;NX disabled,&#x27;</span> <span class="string">&#x27; nx=&quot;no&quot;&#x27;</span> <span class="string">&#x27;&quot;nx&quot;:&quot;no&quot;,&#x27;</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    echo_message <span class="string">&#x27;\033[32mNX enabled \033[m   &#x27;</span> <span class="string">&#x27;NX enabled,&#x27;</span> <span class="string">&#x27; nx=&quot;yes&quot;&#x27;</span> <span class="string">&#x27;&quot;nx&quot;:&quot;yes&quot;,&#x27;</span></span><br><span class="line">  <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  echo_message <span class="string">&#x27;\033[31mNX disabled\033[m   &#x27;</span> <span class="string">&#x27;NX disabled,&#x27;</span> <span class="string">&#x27; nx=&quot;no&quot;&#x27;</span> <span class="string">&#x27;&quot;nx&quot;:&quot;no&quot;,&#x27;</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="ASLR和PIE"><a href="#ASLR和PIE" class="headerlink" title="ASLR和PIE"></a>ASLR和PIE</h2><p>ASLR（地址空间随机化），在Linux上ASLR的全局配置为<code>/proc/sys/kernel/randomize_va_space</code>，有以下三种情况：</p>
+<ul>
+<li><code>0</code>，表示关闭ASLR</li>
+<li><code>1</code>，表示部分开启（mmap的基址，stack和vdso页面随机化）</li>
+<li><code>2</code>，表示完全开启（增加heap随机化）</li>
+</ul>
+<p>另外，在PIE（位置无关可执行文件）开启下，相当于可执行文件也支持重定位，即每次执行时的装载地址都会不同</p>
+<table>
+<thead>
+<tr>
+<th align="center">ASLR</th>
+<th align="center">Executable</th>
+<th align="center">PLT</th>
+<th align="center">Heap</th>
+<th align="center">Stack</th>
+<th align="center">Shared Libaries</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">0</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">×</td>
+</tr>
+<tr>
+<td align="center">1</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">√</td>
+<td align="center">√</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td align="center">×</td>
+<td align="center">×</td>
+<td align="center">√</td>
+<td align="center">√</td>
+<td align="center">√</td>
+</tr>
+<tr>
+<td align="center">2 + PIE</td>
+<td align="center">√</td>
+<td align="center">√</td>
+<td align="center">√</td>
+<td align="center">√</td>
+<td align="center">√</td>
+</tr>
+</tbody></table>
+<p><code>checksec.sh</code>检查如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -h <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;Type:[[:space:]]*EXEC&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">  echo_message <span class="string">&#x27;\033[31mNo PIE       \033[m   &#x27;</span> <span class="string">&#x27;No PIE,&#x27;</span> <span class="string">&#x27; pie=&quot;no&quot;&#x27;</span> <span class="string">&#x27;&quot;pie&quot;:&quot;no&quot;,&#x27;</span></span><br><span class="line"><span class="keyword">elif</span> <span class="variable">$&#123;readelf&#125;</span> -h <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;Type:[[:space:]]*DYN&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">  <span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -d <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;DEBUG&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">    echo_message <span class="string">&#x27;\033[32mPIE enabled  \033[m   &#x27;</span> <span class="string">&#x27;PIE enabled,&#x27;</span> <span class="string">&#x27; pie=&quot;yes&quot;&#x27;</span> <span class="string">&#x27;&quot;pie&quot;:&quot;yes&quot;,&#x27;</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    echo_message <span class="string">&#x27;\033[33mDSO          \033[m   &#x27;</span> <span class="string">&#x27;DSO,&#x27;</span> <span class="string">&#x27; pie=&quot;dso&quot;&#x27;</span> <span class="string">&#x27;&quot;pie&quot;:&quot;dso&quot;,&#x27;</span></span><br><span class="line">  <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">elif</span> <span class="variable">$&#123;readelf&#125;</span> -h <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;Type:[[:space:]]*REL&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">  echo_message <span class="string">&#x27;\033[33mREL          \033[m   &#x27;</span> <span class="string">&#x27;REL,&#x27;</span> <span class="string">&#x27; pie=&quot;rel&quot;&#x27;</span> <span class="string">&#x27;&quot;pie&quot;:&quot;rel&quot;,&#x27;</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  echo_message <span class="string">&#x27;\033[33mNot an ELF file\033[m   &#x27;</span> <span class="string">&#x27;Not an ELF file,&#x27;</span> <span class="string">&#x27; pie=&quot;not_elf&quot;&#x27;</span> <span class="string">&#x27;&quot;pie&quot;:&quot;not_elf&quot;,&#x27;</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h2 id="FORTIFY-SOURCE"><a href="#FORTIFY-SOURCE" class="headerlink" title="FORTIFY_SOURCE"></a>FORTIFY_SOURCE</h2><p>FORITFY_SOURCE机制相当于glibc的一个安全补丁，可为字符串操作函数提供轻量级的缓冲区溢出攻击和格式化字符串攻击检查。即会将存在隐患的函数替换为更加安全的函数，这些更加安全的函数位于glibc源码的debug目录下</p>
+<p>此机制在Unbuntu 16.04（GCC-5.4.0）中是默认关闭的。当指定了O1优化则开启FORTIFY_SOURCE等级1，对于等级2需要手动开启</p>
+<ul>
+<li><code>-D_FORTIFY_SOURCE=1</code>，开启缓冲区溢出攻击检查</li>
+<li><code>-D_FORTIFY_SOURCE=2</code>，开启缓冲区溢出攻击和格式化字符串攻击检查</li>
+</ul>
+<p><code>checksec.sh</code>检查如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> grep -q <span class="string">&#x27;_chk$&#x27;</span> &lt;&lt;&lt;<span class="string">&quot;<span class="variable">$FS_functions</span>&quot;</span>; <span class="keyword">then</span></span><br><span class="line">  echo_message <span class="string">&#x27;\033[32mYes\033[m&#x27;</span> <span class="string">&#x27;Yes,&#x27;</span> <span class="string">&#x27; fortify_source=&quot;yes&quot; &#x27;</span> <span class="string">&#x27;&quot;fortify_source&quot;:&quot;yes&quot;,&#x27;</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  echo_message <span class="string">&quot;\033[31mNo\033[m&quot;</span> <span class="string">&quot;No,&quot;</span> <span class="string">&#x27; fortify_source=&quot;no&quot; &#x27;</span> <span class="string">&#x27;&quot;fortify_source&quot;:&quot;no&quot;,&#x27;</span></span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h2 id="RELRO"><a href="#RELRO" class="headerlink" title="RELRO"></a>RELRO</h2><p>RELRO机制为了解决要吃绑定的安全问题而出现，RELOR有两种形式：</p>
+<ul>
+<li><code>Partial RELRO</code><ul>
+<li>一些段（<code>.dynamic</code>、<code>.got</code>等）在初始化后被设置为只读</li>
+<li>Ubuntu 16.04 GCC-5.4.0默认开启</li>
+</ul>
+</li>
+<li><code>Full RELRO</code><ul>
+<li>禁止延迟绑定，<code>.got.plt</code>段将会合并到<code>.got</code>段中，并且直接初始化为目标函数地址</li>
+<li><code>link_map</code>和<code>dl_runtime_resolve</code>不会被装载</li>
+</ul>
+</li>
+</ul>
+<p><code>checksec.sh</code>检查如下：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -l <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>/exe&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;Program Headers&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">  <span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -l <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>/exe&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;GNU_RELRO&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">    <span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -d <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>/exe&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;BIND_NOW&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">echo_message <span class="string">&#x27;\033[32mFull RELRO   \033[m   &#x27;</span> <span class="string">&#x27;Full RELRO,&#x27;</span> <span class="string">&#x27; relro=&quot;full&quot;&#x27;</span> <span class="string">&#x27;&quot;relro&quot;:&quot;full&quot;,&#x27;</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">echo_message <span class="string">&#x27;\033[33mPartial RELRO\033[m   &#x27;</span> <span class="string">&#x27;Partial RELRO,&#x27;</span> <span class="string">&#x27; relro=&quot;partial&quot;&#x27;</span> <span class="string">&#x27;&quot;relro&quot;:&quot;partial&quot;,&#x27;</span></span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    echo_message <span class="string">&#x27;\033[31mNo RELRO     \033[m   &#x27;</span> <span class="string">&#x27;No RELRO,&#x27;</span> <span class="string">&#x27; relro=&quot;no&quot;&#x27;</span> <span class="string">&#x27;&quot;relro&quot;:&quot;no&quot;,&#x27;</span></span><br><span class="line">  <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  <span class="built_in">echo</span> -n -e <span class="string">&#x27;\033[31mPermission denied (please run as root)\033[m\n&#x27;</span></span><br><span class="line">  <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>CTF</category>
+      </categories>
+      <tags>
+        <tag>二进制安全</tag>
+      </tags>
+  </entry>
 </search>
