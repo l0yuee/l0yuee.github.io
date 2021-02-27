@@ -39,6 +39,57 @@
       </tags>
   </entry>
   <entry>
+    <title>Linux Pwn - Shellcode</title>
+    <url>/2021/02/25/Linux-Pwn-Shellcode/</url>
+    <content><![CDATA[<p>简易shellcode：使用<code>execve</code>来调用本地shell</p>
+<a id="more"></a>
+
+<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><p>系统调用相关的指令有：</p>
+<ul>
+<li><code>int 0x80/iret</code><ul>
+<li>软中断</li>
+<li><code>eax</code>为系统调用号，参数依次为<code>ebx</code>、<code>ecx</code>、<code>edx</code>、<code>esi</code>、<code>edi</code> </li>
+</ul>
+</li>
+<li><code>sysenter/sysret</code><ul>
+<li>x86下快速系统调用</li>
+</ul>
+</li>
+<li><code>syscall/sysret</code><ul>
+<li>x64下快速系统调用</li>
+<li><code>rax</code>为系统调用号，参数依次为<code>rdi</code>、<code>rsi</code>、<code>rdx</code>、<code>r10</code>、<code>r8</code>、<code>r9</code> </li>
+</ul>
+</li>
+</ul>
+<h2 id="Linux-execve-shellcode"><a href="#Linux-execve-shellcode" class="headerlink" title="Linux execve shellcode"></a>Linux execve shellcode</h2><p>利用<code>execve</code>系统调用可以启动一个新程序</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">EXECVE(2)                                        Linux Programmer<span class="string">&#x27;s Manual                                        EXECVE(2)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">NAME</span></span><br><span class="line"><span class="string">       execve - execute program</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">SYNOPSIS</span></span><br><span class="line"><span class="string">       #include &lt;unistd.h&gt;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">       int execve(const char *filename, char *const argv[],</span></span><br><span class="line"><span class="string">                  char *const envp[]);</span></span><br></pre></td></tr></table></figure>
+<p>在<code>unistd_32.h</code>和<code>unistd_64.h</code>下保存着各个系统调用编号</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// unistd_32.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __NR_execve 11</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// unistd_64.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __NR_execve 59</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="x86"><a href="#x86" class="headerlink" title="x86"></a>x86</h3><p>需要注意<code>/bin/sh</code>为7个字节，改为<code>/bin//sh</code>为8个字节刚好把<code>\x00</code>给去掉，而linux解析不会出问题，防止<code>NULL</code>截断</p>
+<p>由于字节序的问题，<code>/bin/sh</code>必须要做处理</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">global _start</span><br><span class="line">section .text</span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line">    ; execve(&quot;&#x2F;bin&#x2F;&#x2F;sh&quot;)</span><br><span class="line">    xor eax, eax</span><br><span class="line">    push eax</span><br><span class="line"></span><br><span class="line">    ; ecx -&gt; args, edx -&gt; env &#x3D;&#x3D; NULL</span><br><span class="line">    mul ecx</span><br><span class="line"></span><br><span class="line">    ; push &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">    push 0x68732F2F</span><br><span class="line">    push 0x6E69622F</span><br><span class="line"></span><br><span class="line">    ; ebx -&gt; &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">    mov ebx, esp</span><br><span class="line"></span><br><span class="line">    ; call execve</span><br><span class="line">    mov al, 11</span><br><span class="line">    int 0x80</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="x64"><a href="#x64" class="headerlink" title="x64"></a>x64</h3><p>在x64下<code>/bin/sh</code>刚好可以利用传输数据时64位位长来隐式将<code>\x00</code>填上去，不用考虑截断</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">global _start</span><br><span class="line">section .text</span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line">    ; rsi -&gt; args</span><br><span class="line">	xor rsi,rsi</span><br><span class="line">    xor rdx, rdx</span><br><span class="line"></span><br><span class="line">    ; push &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">	mov rdi,0x68732f6e69622f</span><br><span class="line">	push rdi</span><br><span class="line">	push rsp</span><br><span class="line">    ; rdi -&gt; &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">	pop rdi</span><br><span class="line"></span><br><span class="line">	push 59</span><br><span class="line">	pop rax</span><br><span class="line">	cdq</span><br><span class="line">    ; call execve(&quot;&#x2F;bin&#x2F;&#x2F;sh&quot;)</span><br><span class="line">	syscall</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="生成shellcode"><a href="#生成shellcode" class="headerlink" title="生成shellcode"></a>生成shellcode</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">; GetShellCode.sh</span><br><span class="line"><span class="keyword">if</span> [ <span class="variable">$2</span> = <span class="string">&quot;-m32&quot;</span> ]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">    nasm -f elf32 <span class="variable">$1</span> -o shellcode.o</span><br><span class="line">    ld -m elf_i386 shellcode.o -o shellcode</span><br><span class="line">    rm -rf shellcode.o</span><br><span class="line"><span class="keyword">elif</span> [ <span class="variable">$2</span> = <span class="string">&quot;-m64&quot;</span> ]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">    nasm -f elf64 <span class="variable">$1</span> -o shellcode.o</span><br><span class="line">    ld -m elf_x86_64 shellcode.o -o shellcode</span><br><span class="line">    rm -rf shellcode.o</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>CTF</category>
+      </categories>
+      <tags>
+        <tag>二进制安全</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Linux Pwn - 安全机制</title>
     <url>/2021/02/23/Linux-Pwn-%E5%AE%89%E5%85%A8%E6%9C%BA%E5%88%B6/</url>
     <content><![CDATA[<p>Linux下的安全机制有：</p>
@@ -178,57 +229,6 @@
 </ul>
 <p><code>checksec.sh</code>检查如下：</p>
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -l <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>/exe&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;Program Headers&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">  <span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -l <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>/exe&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;GNU_RELRO&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">    <span class="keyword">if</span> <span class="variable">$&#123;readelf&#125;</span> -d <span class="string">&quot;<span class="variable">$&#123;1&#125;</span>/exe&quot;</span> 2&gt;/dev/null | grep -q <span class="string">&#x27;BIND_NOW&#x27;</span>; <span class="keyword">then</span></span><br><span class="line">echo_message <span class="string">&#x27;\033[32mFull RELRO   \033[m   &#x27;</span> <span class="string">&#x27;Full RELRO,&#x27;</span> <span class="string">&#x27; relro=&quot;full&quot;&#x27;</span> <span class="string">&#x27;&quot;relro&quot;:&quot;full&quot;,&#x27;</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">echo_message <span class="string">&#x27;\033[33mPartial RELRO\033[m   &#x27;</span> <span class="string">&#x27;Partial RELRO,&#x27;</span> <span class="string">&#x27; relro=&quot;partial&quot;&#x27;</span> <span class="string">&#x27;&quot;relro&quot;:&quot;partial&quot;,&#x27;</span></span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    echo_message <span class="string">&#x27;\033[31mNo RELRO     \033[m   &#x27;</span> <span class="string">&#x27;No RELRO,&#x27;</span> <span class="string">&#x27; relro=&quot;no&quot;&#x27;</span> <span class="string">&#x27;&quot;relro&quot;:&quot;no&quot;,&#x27;</span></span><br><span class="line">  <span class="keyword">fi</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">  <span class="built_in">echo</span> -n -e <span class="string">&#x27;\033[31mPermission denied (please run as root)\033[m\n&#x27;</span></span><br><span class="line">  <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>CTF</category>
-      </categories>
-      <tags>
-        <tag>二进制安全</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Linux Pwn - Shellcode</title>
-    <url>/2021/02/25/Linux-Pwn-Shellcode/</url>
-    <content><![CDATA[<p>简易shellcode：使用<code>execve</code>来调用本地shell</p>
-<a id="more"></a>
-
-<h2 id="系统调用"><a href="#系统调用" class="headerlink" title="系统调用"></a>系统调用</h2><p>系统调用相关的指令有：</p>
-<ul>
-<li><code>int 0x80/iret</code><ul>
-<li>软中断</li>
-<li><code>eax</code>为系统调用号，参数依次为<code>ebx</code>、<code>ecx</code>、<code>edx</code>、<code>esi</code>、<code>edi</code> </li>
-</ul>
-</li>
-<li><code>sysenter/sysret</code><ul>
-<li>x86下快速系统调用</li>
-</ul>
-</li>
-<li><code>syscall/sysret</code><ul>
-<li>x64下快速系统调用</li>
-<li><code>rax</code>为系统调用号，参数依次为<code>rdi</code>、<code>rsi</code>、<code>rdx</code>、<code>r10</code>、<code>r8</code>、<code>r9</code> </li>
-</ul>
-</li>
-</ul>
-<h2 id="Linux-execve-shellcode"><a href="#Linux-execve-shellcode" class="headerlink" title="Linux execve shellcode"></a>Linux execve shellcode</h2><p>利用<code>execve</code>系统调用可以启动一个新程序</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">EXECVE(2)                                        Linux Programmer<span class="string">&#x27;s Manual                                        EXECVE(2)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">NAME</span></span><br><span class="line"><span class="string">       execve - execute program</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">SYNOPSIS</span></span><br><span class="line"><span class="string">       #include &lt;unistd.h&gt;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">       int execve(const char *filename, char *const argv[],</span></span><br><span class="line"><span class="string">                  char *const envp[]);</span></span><br></pre></td></tr></table></figure>
-<p>在<code>unistd_32.h</code>和<code>unistd_64.h</code>下保存着各个系统调用编号</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// unistd_32.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __NR_execve 11</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// unistd_64.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> __NR_execve 59</span></span><br></pre></td></tr></table></figure>
-
-
-<h3 id="x86"><a href="#x86" class="headerlink" title="x86"></a>x86</h3><p>需要注意<code>/bin/sh</code>为7个字节，改为<code>/bin//sh</code>为8个字节刚好把<code>\x00</code>给去掉，而linux解析不会出问题，防止<code>NULL</code>截断</p>
-<p>由于字节序的问题，<code>/bin/sh</code>必须要做处理</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">global _start</span><br><span class="line">section .text</span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line">    ; execve(&quot;&#x2F;bin&#x2F;&#x2F;sh&quot;)</span><br><span class="line">    xor eax, eax</span><br><span class="line">    push eax</span><br><span class="line"></span><br><span class="line">    ; ecx -&gt; args, edx -&gt; env &#x3D;&#x3D; NULL</span><br><span class="line">    mul ecx</span><br><span class="line"></span><br><span class="line">    ; push &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">    push 0x68732F2F</span><br><span class="line">    push 0x6E69622F</span><br><span class="line"></span><br><span class="line">    ; ebx -&gt; &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">    mov ebx, esp</span><br><span class="line"></span><br><span class="line">    ; call execve</span><br><span class="line">    mov al, 11</span><br><span class="line">    int 0x80</span><br></pre></td></tr></table></figure>
-
-
-
-
-<h3 id="x64"><a href="#x64" class="headerlink" title="x64"></a>x64</h3><p>在x64下<code>/bin/sh</code>刚好可以利用传输数据时64位位长来隐式将<code>\x00</code>填上去，不用考虑截断</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">global _start</span><br><span class="line">section .text</span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line">    ; rsi -&gt; args</span><br><span class="line">	xor rsi,rsi</span><br><span class="line">    xor rdx, rdx</span><br><span class="line"></span><br><span class="line">    ; push &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">	mov rdi,0x68732f6e69622f</span><br><span class="line">	push rdi</span><br><span class="line">	push rsp</span><br><span class="line">    ; rdi -&gt; &quot;&#x2F;bin&#x2F;&#x2F;sh&quot;</span><br><span class="line">	pop rdi</span><br><span class="line"></span><br><span class="line">	push 59</span><br><span class="line">	pop rax</span><br><span class="line">	cdq</span><br><span class="line">    ; call execve(&quot;&#x2F;bin&#x2F;&#x2F;sh&quot;)</span><br><span class="line">	syscall</span><br></pre></td></tr></table></figure>
-
-
-
-
-<h3 id="生成shellcode"><a href="#生成shellcode" class="headerlink" title="生成shellcode"></a>生成shellcode</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">; GetShellCode.sh</span><br><span class="line"><span class="keyword">if</span> [ <span class="variable">$2</span> = <span class="string">&quot;-m32&quot;</span> ]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">    nasm -f elf32 <span class="variable">$1</span> -o shellcode.o</span><br><span class="line">    ld -m elf_i386 shellcode.o -o shellcode</span><br><span class="line">    rm -rf shellcode.o</span><br><span class="line"><span class="keyword">elif</span> [ <span class="variable">$2</span> = <span class="string">&quot;-m64&quot;</span> ]</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">    nasm -f elf64 <span class="variable">$1</span> -o shellcode.o</span><br><span class="line">    ld -m elf_x86_64 shellcode.o -o shellcode</span><br><span class="line">    rm -rf shellcode.o</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>CTF</category>
@@ -970,6 +970,29 @@
       </tags>
   </entry>
   <entry>
+    <title>frida隐藏进程小试</title>
+    <url>/2021/02/09/frida%E9%9A%90%E8%97%8F%E8%BF%9B%E7%A8%8B%E5%B0%8F%E8%AF%95/</url>
+    <content><![CDATA[<p>Hook NtQuerySystemInformation</p>
+<a id="more"></a>
+
+<h2 id="NtQuerySystemInformation"><a href="#NtQuerySystemInformation" class="headerlink" title="NtQuerySystemInformation"></a>NtQuerySystemInformation</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">NTSTATUS NTAPI <span class="title">NtQuerySystemInformation</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PVOID SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">    IN ULONG SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PULONG ReturnLength OPTIONAL</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>该函数位于<code>ntdll.dll</code>中，第一个参数指定要查询的类型，若指定<code>SystemProcessInformation(0x5)</code>时，则会得到系统中所有进程的信息，第二个参数则返回一个<code>SYSTEM_PROCESS_INFORMATION</code>结构数组</p>
+<p><code>SYSTEM_PROCESS_INFORMATION.NextEntryOffset</code>是数组中下一个成员的相对本成员的偏移值（每个成员的大小不固定），若此结构为0，则是最后一个节点，例如以下获取进程列表名</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">NTSTATUS</span> <span class="params">( NTAPI *NT_QUERY_SYSTEM_INFOMATION)</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PVOID SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">    IN ULONG SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PULONG ReturnLength OPTIONAL</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    SYSTEM_PROCESS_INFORMATION *spi = <span class="keyword">new</span> SYSTEM_PROCESS_INFORMATION[<span class="number">0x1000</span>];</span><br><span class="line">    ULONG leng;</span><br><span class="line">    NT_QUERY_SYSTEM_INFOMATION nt_query_system_infomation = (NT_QUERY_SYSTEM_INFOMATION)GetProcAddress(GetModuleHandleW(<span class="string">L&quot;ntdll.dll&quot;</span>), <span class="string">&quot;NtQuerySystemInformation&quot;</span>);</span><br><span class="line">    nt_query_system_infomation(SystemProcessInformation, spi, <span class="keyword">sizeof</span>(SYSTEM_PROCESS_INFORMATION) * <span class="number">0x1000</span>, &amp;leng);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> ptr = spi;</span><br><span class="line">    <span class="keyword">while</span>(ptr-&gt;NextEntryOffset != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span>(ptr-&gt;ImageName.Length) &#123;</span><br><span class="line">            wprintf(<span class="string">L&quot;%s\n&quot;</span>, ptr-&gt;ImageName.Buffer);</span><br><span class="line">        &#125;</span><br><span class="line">        ptr = (SYSTEM_PROCESS_INFORMATION *)((BYTE *)ptr + ptr-&gt;NextEntryOffset);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>隐藏进程也就是修改<code>SYSTEM_PROCESS_INFORMATION.NextEntryOffset</code>来跳过需要被隐藏的进程节点</p>
+<h2 id="frida-js"><a href="#frida-js" class="headerlink" title="frida js"></a>frida js</h2><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> query_info_func = Module.findExportByName(<span class="string">&#x27;ntdll.dll&#x27;</span>, <span class="string">&#x27;NtQuerySystemInformation&#x27;</span>);</span><br><span class="line">Interceptor.attach(query_info_func, &#123;</span><br><span class="line">    onEnter : <span class="function"><span class="keyword">function</span>(<span class="params">args</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(args[<span class="number">0</span>] == <span class="number">5</span>) &#123;</span><br><span class="line">            <span class="built_in">this</span>.work = <span class="literal">true</span>;</span><br><span class="line">            <span class="built_in">this</span>.si = args[<span class="number">1</span>];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    onLeave : <span class="function"><span class="keyword">function</span>(<span class="params">retval</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(<span class="built_in">this</span>.work) &#123;</span><br><span class="line">            <span class="keyword">var</span> si_ptr = <span class="built_in">this</span>.si;</span><br><span class="line">            <span class="keyword">var</span> next_offset = Memory.readU32(si_ptr);</span><br><span class="line">            <span class="keyword">var</span> pre_offset = next_offset;</span><br><span class="line">            <span class="keyword">while</span>(next_offset != <span class="number">0</span>) &#123;</span><br><span class="line">                pre_offset = next_offset;</span><br><span class="line">                next_offset = Memory.readU32(si_ptr);</span><br><span class="line">                <span class="comment">// 偏移值64，针对win10 x64</span></span><br><span class="line">                <span class="keyword">var</span> image_name = Memory.readUtf16String(Memory.readPointer(si_ptr.add(<span class="number">64</span>)));</span><br><span class="line">                <span class="comment">// console.log(image_name);</span></span><br><span class="line">                <span class="comment">// 隐藏powershell</span></span><br><span class="line">                <span class="keyword">if</span>(image_name == <span class="string">&quot;powershell.exe&quot;</span>) &#123;</span><br><span class="line">                    <span class="keyword">var</span> next_node = si_ptr.add(next_offset);</span><br><span class="line">                    <span class="keyword">var</span> pre_node = si_ptr.sub(pre_offset);</span><br><span class="line">                    Memory.writeU32(pre_node, next_offset + pre_offset);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                si_ptr = si_ptr.add(next_offset);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://www.fuzzysecurity.com/tutorials/29.html">https://www.fuzzysecurity.com/tutorials/29.html</a></p>
+]]></content>
+      <categories>
+        <category>攻防相关</category>
+      </categories>
+      <tags>
+        <tag>二进制安全</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>angr入门小试（二）</title>
     <url>/2021/02/14/angr%E5%85%A5%E9%97%A8%E5%B0%8F%E8%AF%95%EF%BC%88%E4%BA%8C%EF%BC%89/</url>
     <content><![CDATA[<p>CTF Hitcon 2017 - sakura</p>
@@ -1036,29 +1059,6 @@
 
 
 <p><img src="/2021/02/08/frida%E7%88%86%E7%A0%B4%E5%B0%8F%E8%AF%95/3.png"></p>
-]]></content>
-      <categories>
-        <category>攻防相关</category>
-      </categories>
-      <tags>
-        <tag>二进制安全</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>frida隐藏进程小试</title>
-    <url>/2021/02/09/frida%E9%9A%90%E8%97%8F%E8%BF%9B%E7%A8%8B%E5%B0%8F%E8%AF%95/</url>
-    <content><![CDATA[<p>Hook NtQuerySystemInformation</p>
-<a id="more"></a>
-
-<h2 id="NtQuerySystemInformation"><a href="#NtQuerySystemInformation" class="headerlink" title="NtQuerySystemInformation"></a>NtQuerySystemInformation</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">NTSTATUS NTAPI <span class="title">NtQuerySystemInformation</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PVOID SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">    IN ULONG SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PULONG ReturnLength OPTIONAL</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br></pre></td></tr></table></figure>
-<p>该函数位于<code>ntdll.dll</code>中，第一个参数指定要查询的类型，若指定<code>SystemProcessInformation(0x5)</code>时，则会得到系统中所有进程的信息，第二个参数则返回一个<code>SYSTEM_PROCESS_INFORMATION</code>结构数组</p>
-<p><code>SYSTEM_PROCESS_INFORMATION.NextEntryOffset</code>是数组中下一个成员的相对本成员的偏移值（每个成员的大小不固定），若此结构为0，则是最后一个节点，例如以下获取进程列表名</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">NTSTATUS</span> <span class="params">( NTAPI *NT_QUERY_SYSTEM_INFOMATION)</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PVOID SystemInformation,</span></span></span><br><span class="line"><span class="function"><span class="params">    IN ULONG SystemInformationLength,</span></span></span><br><span class="line"><span class="function"><span class="params">    OUT PULONG ReturnLength OPTIONAL</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    SYSTEM_PROCESS_INFORMATION *spi = <span class="keyword">new</span> SYSTEM_PROCESS_INFORMATION[<span class="number">0x1000</span>];</span><br><span class="line">    ULONG leng;</span><br><span class="line">    NT_QUERY_SYSTEM_INFOMATION nt_query_system_infomation = (NT_QUERY_SYSTEM_INFOMATION)GetProcAddress(GetModuleHandleW(<span class="string">L&quot;ntdll.dll&quot;</span>), <span class="string">&quot;NtQuerySystemInformation&quot;</span>);</span><br><span class="line">    nt_query_system_infomation(SystemProcessInformation, spi, <span class="keyword">sizeof</span>(SYSTEM_PROCESS_INFORMATION) * <span class="number">0x1000</span>, &amp;leng);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> ptr = spi;</span><br><span class="line">    <span class="keyword">while</span>(ptr-&gt;NextEntryOffset != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span>(ptr-&gt;ImageName.Length) &#123;</span><br><span class="line">            wprintf(<span class="string">L&quot;%s\n&quot;</span>, ptr-&gt;ImageName.Buffer);</span><br><span class="line">        &#125;</span><br><span class="line">        ptr = (SYSTEM_PROCESS_INFORMATION *)((BYTE *)ptr + ptr-&gt;NextEntryOffset);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>隐藏进程也就是修改<code>SYSTEM_PROCESS_INFORMATION.NextEntryOffset</code>来跳过需要被隐藏的进程节点</p>
-<h2 id="frida-js"><a href="#frida-js" class="headerlink" title="frida js"></a>frida js</h2><figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> query_info_func = Module.findExportByName(<span class="string">&#x27;ntdll.dll&#x27;</span>, <span class="string">&#x27;NtQuerySystemInformation&#x27;</span>);</span><br><span class="line">Interceptor.attach(query_info_func, &#123;</span><br><span class="line">    onEnter : <span class="function"><span class="keyword">function</span>(<span class="params">args</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(args[<span class="number">0</span>] == <span class="number">5</span>) &#123;</span><br><span class="line">            <span class="built_in">this</span>.work = <span class="literal">true</span>;</span><br><span class="line">            <span class="built_in">this</span>.si = args[<span class="number">1</span>];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line">    onLeave : <span class="function"><span class="keyword">function</span>(<span class="params">retval</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(<span class="built_in">this</span>.work) &#123;</span><br><span class="line">            <span class="keyword">var</span> si_ptr = <span class="built_in">this</span>.si;</span><br><span class="line">            <span class="keyword">var</span> next_offset = Memory.readU32(si_ptr);</span><br><span class="line">            <span class="keyword">var</span> pre_offset = next_offset;</span><br><span class="line">            <span class="keyword">while</span>(next_offset != <span class="number">0</span>) &#123;</span><br><span class="line">                pre_offset = next_offset;</span><br><span class="line">                next_offset = Memory.readU32(si_ptr);</span><br><span class="line">                <span class="comment">// 偏移值64，针对win10 x64</span></span><br><span class="line">                <span class="keyword">var</span> image_name = Memory.readUtf16String(Memory.readPointer(si_ptr.add(<span class="number">64</span>)));</span><br><span class="line">                <span class="comment">// console.log(image_name);</span></span><br><span class="line">                <span class="comment">// 隐藏powershell</span></span><br><span class="line">                <span class="keyword">if</span>(image_name == <span class="string">&quot;powershell.exe&quot;</span>) &#123;</span><br><span class="line">                    <span class="keyword">var</span> next_node = si_ptr.add(next_offset);</span><br><span class="line">                    <span class="keyword">var</span> pre_node = si_ptr.sub(pre_offset);</span><br><span class="line">                    Memory.writeU32(pre_node, next_offset + pre_offset);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                si_ptr = si_ptr.add(next_offset);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-
-
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://www.fuzzysecurity.com/tutorials/29.html">https://www.fuzzysecurity.com/tutorials/29.html</a></p>
 ]]></content>
       <categories>
         <category>攻防相关</category>
