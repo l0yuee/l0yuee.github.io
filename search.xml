@@ -1595,4 +1595,22 @@
         <tag>过去</tag>
       </tags>
   </entry>
+  <entry>
+    <title>New LOLBins - .Net5-CreateDump</title>
+    <url>/2021/03/04/New-LOLBins-Net5-CreateDump/</url>
+    <content><![CDATA[<h2 id="CreateDump"><a href="#CreateDump" class="headerlink" title="CreateDump"></a>CreateDump</h2><p>CreateDump.exe是跟着.Net5一同安装的，属于Native bin，可直接运行在没有.Net5环境的机器中</p>
+<p><a href="https://twitter.com/bopin2020/status/1366400799199272960">相关参考</a></p>
+<a id="more"></a>
+
+<h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><p>dump内存一类的程序一般需要使用powershell，在powershell中开启了<code>SeDebugPrivilege</code>，而cmd中默认没有</p>
+<p>如果使用cmd的话需要提权到system</p>
+<p><img src="/2021/03/04/New-LOLBins-Net5-CreateDump/1.png"></p>
+]]></content>
+      <categories>
+        <category>攻防相关</category>
+      </categories>
+      <tags>
+        <tag>二进制安全</tag>
+      </tags>
+  </entry>
 </search>
