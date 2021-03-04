@@ -321,9 +321,13 @@
   <entry>
     <title>Linux Pwn - 栈溢出与ROP（一）</title>
     <url>/2021/03/04/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%B8%80%EF%BC%89/</url>
-    <content><![CDATA[<h1 id="Linux-Pwn-栈溢出与ROP（一）"><a href="#Linux-Pwn-栈溢出与ROP（一）" class="headerlink" title="Linux Pwn - 栈溢出与ROP（一）"></a>Linux Pwn - 栈溢出与ROP（一）</h1><h2 id="栈溢出"><a href="#栈溢出" class="headerlink" title="栈溢出"></a>栈溢出</h2><p>栈溢出属于缓冲区溢出的一种，利用方法包括shellcode注入、ret2libc、ROP等</p>
+    <content><![CDATA[<h2 id="栈溢出"><a href="#栈溢出" class="headerlink" title="栈溢出"></a>栈溢出</h2><p>栈溢出属于缓冲区溢出的一种，利用方法包括shellcode注入、ret2libc、ROP等</p>
 <p>主要通过对缓冲区的写入，覆盖栈上数据，控制关键数据达到控制程序执行流程</p>
 <p>有关栈帧的相关资料参考：<a href="https://ctf-wiki.org/pwn/linux/stackoverflow/stack-intro/">栈介绍</a></p>
+<a id="more"></a>
+
+
+
 <h3 id="shellcode注入与ret2libc"><a href="#shellcode注入与ret2libc" class="headerlink" title="shellcode注入与ret2libc"></a>shellcode注入与ret2libc</h3><p>shellcode注入与ret2libc是两种比较简单的利用方式</p>
 <ul>
 <li>shellcode注入<ul>
