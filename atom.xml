@@ -6,7 +6,7 @@
   <link href="http://lzeroyuee.cn/atom.xml" rel="self"/>
   
   <link href="http://lzeroyuee.cn/"/>
-  <updated>2021-03-06T13:24:20.702Z</updated>
+  <updated>2021-03-06T15:24:20.125Z</updated>
   <id>http://lzeroyuee.cn/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="http://lzeroyuee.cn/2021/03/06/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%B8%89%EF%BC%89/"/>
     <id>http://lzeroyuee.cn/2021/03/06/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%B8%89%EF%BC%89/</id>
     <published>2021-03-06T13:22:36.000Z</published>
-    <updated>2021-03-06T13:24:20.702Z</updated>
+    <updated>2021-03-06T15:24:20.125Z</updated>
     
     
     <summary type="html">&lt;h2 id=&quot;SROP&quot;&gt;&lt;a href=&quot;#SROP&quot; class=&quot;headerlink&quot; title=&quot;SROP&quot;&gt;&lt;/a&gt;SROP&lt;/h2&gt;&lt;p&gt;SROP在论文&lt;a href=&quot;https://www.cs.vu.nl/~herbertb/papers/srop_sp14.pdf&quot;&gt;Framing Signals — A Return to Portable Shellcode&lt;/a&gt;中被提出&lt;/p&gt;
