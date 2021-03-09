@@ -144,6 +144,67 @@
     
     
     <article
+  id="post-Linux-Pwn-栈溢出与ROP（五）"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2021/03/09/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%BA%94%EF%BC%89/"
+    >Linux Pwn - 栈溢出与ROP（五）</a> 
+</h2>
+ 
+
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2021/03/09/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%BA%94%EF%BC%89/" class="article-date">
+  <time datetime="2021-03-09T15:01:48.000Z" itemprop="datePublished">2021-03-09</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/CTF/">CTF</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h2 id="ret2dl-resolve"><a href="#ret2dl-resolve" class="headerlink" title="ret2dl-resolve"></a>ret2dl-resolve</h2><p>该技术在<a target="_blank" rel="noopener" href="https://www.usenix.org/system/files/conference/usenixsecurity15/sec15-paper-di-frederico.pdf">How The ELF Ruined Christmas</a>中被提出。随着安全防御机制的不断完善，现代的漏洞利用通常包含两个阶段：</p>
+<ol>
+<li>通过信息泄露获得程序的内存布局</li>
+<li>进行实际的漏洞利用</li>
+</ol>
+<p>从程序中泄露出内存布局并不一定都可靠，而<strong>ret2dl-resolve</strong>巧妙利用了ELF格式以及动态装载器的弱点，不需要进行信息泄露就可用直接标识关键函数的位置并调用</p> 
+      <a class="article-more-link" href="/2021/03/09/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%BA%94%EF%BC%89/"
+        >阅读更多...</a
+      >
+       
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%AE%89%E5%85%A8/" rel="tag">二进制安全</a></li></ul>
+
+    </footer>
+  </div>
+
+    
+ 
+    
+</article>
+
+    
+    <article
   id="post-Immunity-Canvas7-26踩坑记录"
   class="article article-type-post"
   itemscope
@@ -634,69 +695,6 @@
        
   <p>简易shellcode：使用<code>execve</code>来调用本地shell</p> 
       <a class="article-more-link" href="/2021/02/25/Linux-Pwn-Shellcode/"
-        >阅读更多...</a
-      >
-       
-      <!-- reward -->
-      
-    </div>
-    
-
-    <!-- copyright -->
-    
-    <footer class="article-footer">
-       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%AE%89%E5%85%A8/" rel="tag">二进制安全</a></li></ul>
-
-    </footer>
-  </div>
-
-    
- 
-    
-</article>
-
-    
-    <article
-  id="post-Linux-Pwn-安全机制"
-  class="article article-type-post"
-  itemscope
-  itemprop="blogPost"
-  data-scroll-reveal
->
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2021/02/23/Linux-Pwn-%E5%AE%89%E5%85%A8%E6%9C%BA%E5%88%B6/"
-    >Linux Pwn - 安全机制</a> 
-</h2>
- 
-
-    </header>
-     
-    <div class="article-meta">
-      <a href="/2021/02/23/Linux-Pwn-%E5%AE%89%E5%85%A8%E6%9C%BA%E5%88%B6/" class="article-date">
-  <time datetime="2021-02-23T13:21:17.000Z" itemprop="datePublished">2021-02-23</time>
-</a> 
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/CTF/">CTF</a>
-  </div>
-   
-    </div>
-      
-    <div class="article-entry" itemprop="articleBody">
-       
-  <p>Linux下的安全机制有：</p>
-<ul>
-<li>Stack Canaries</li>
-<li>NX</li>
-<li>ASLR/PIE</li>
-<li>FORTIFY_SOURCE</li>
-<li>RELRO</li>
-</ul> 
-      <a class="article-more-link" href="/2021/02/23/Linux-Pwn-%E5%AE%89%E5%85%A8%E6%9C%BA%E5%88%B6/"
         >阅读更多...</a
       >
        
