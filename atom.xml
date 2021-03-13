@@ -6,7 +6,7 @@
   <link href="http://lzeroyuee.cn/atom.xml" rel="self"/>
   
   <link href="http://lzeroyuee.cn/"/>
-  <updated>2021-03-09T15:03:21.109Z</updated>
+  <updated>2021-03-13T05:28:30.442Z</updated>
   <id>http://lzeroyuee.cn/</id>
   
   <author>
@@ -21,7 +21,7 @@
     <link href="http://lzeroyuee.cn/2021/03/09/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%BA%94%EF%BC%89/"/>
     <id>http://lzeroyuee.cn/2021/03/09/Linux-Pwn-%E6%A0%88%E6%BA%A2%E5%87%BA%E4%B8%8EROP%EF%BC%88%E4%BA%94%EF%BC%89/</id>
     <published>2021-03-09T15:01:48.000Z</published>
-    <updated>2021-03-09T15:03:21.109Z</updated>
+    <updated>2021-03-13T05:28:30.442Z</updated>
     
     
     <summary type="html">&lt;h2 id=&quot;ret2dl-resolve&quot;&gt;&lt;a href=&quot;#ret2dl-resolve&quot; class=&quot;headerlink&quot; title=&quot;ret2dl-resolve&quot;&gt;&lt;/a&gt;ret2dl-resolve&lt;/h2&gt;&lt;p&gt;该技术在&lt;a href=&quot;https://www.usenix.org/system/files/conference/usenixsecurity15/sec15-paper-di-frederico.pdf&quot;&gt;How The ELF Ruined Christmas&lt;/a&gt;中被提出。随着安全防御机制的不断完善，现代的漏洞利用通常包含两个阶段：&lt;/p&gt;
