@@ -1,6 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Intel Pin的安装与配置</title>
+    <url>/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/</url>
+    <content><![CDATA[<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Pin是Intel开发的二进制动态插桩引擎，支持Windows、Linux、Mac、Android，并提供了API可发开自己的插桩工具</p>
+<a id="more"></a>
+
+<p><a href="https://software.intel.com/content/www/us/en/develop/articles/pin-a-dynamic-binary-instrumentation-tool.html">Pin - A Dynamic Binary Instrumentation Tool</a></p>
+<h2 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h2><h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><ol>
+<li><p>下载<a href="https://software.intel.com/content/www/us/en/develop/articles/pin-a-binary-instrumentation-tool-downloads.html">pin</a>并解压到目录下</p>
+</li>
+<li><p>将<code>pin.exe</code>备份重命名，新建<code>pin32.bat</code>和<code>pin64.bat</code>文件</p>
+</li>
+<li><p>向<code>pin32.bat</code>和<code>pin64.bat</code>文件中写入如下内容（64位的将<strong>ia32</strong>替换为<strong>Intel64</strong>）</p>
+<figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">@echo <span class="literal">off</span></span><br><span class="line">%~dp0<span class="string">\ia32\bin\pin.exe</span> %*</span><br></pre></td></tr></table></figure></li>
+<li><p>添加至环境变量PATH中，即可以使用<code>pin32</code>和<code>pin64</code></p>
+</li>
+</ol>
+<h3 id="MyPinTool"><a href="#MyPinTool" class="headerlink" title="MyPinTool"></a>MyPinTool</h3><p>在目录<code>%PinDir%\source\tools\MyPinTool</code>下有示例代码，使用VS编译即可，编译中可能存在错误，对照错误提示修改，主要的编译环境配置如下：</p>
+<ul>
+<li><p><code>C/C++ --&gt; 常规 --&gt; 附加包含目录</code>添加如下路径：</p>
+<figure class="highlight taggerscript"><table><tr><td class="code"><pre><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\i</span>nclude<span class="symbol">\p</span>in</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\i</span>nclude<span class="symbol">\p</span>in<span class="symbol">\g</span>en</span><br><span class="line">..<span class="symbol">\I</span>nstLib</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>omponents<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\s</span>tlport<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\l</span>ibstdc++<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\k</span>ernel<span class="symbol">\u</span>api</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\k</span>ernel<span class="symbol">\u</span>api<span class="symbol">\a</span>sm-x86</span><br><span class="line"></span><br><span class="line">对x86需要额外添加：</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\a</span>rch-x86</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\x</span>ed-ia32<span class="symbol">\i</span>nclude<span class="symbol">\x</span>ed</span><br><span class="line"></span><br><span class="line">对x64需要额外添加：</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\a</span>rch-x86_64</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\x</span>ed-intel64<span class="symbol">\i</span>nclude<span class="symbol">\x</span>ed</span><br></pre></td></tr></table></figure></li>
+<li><p><code>链接器 --&gt; 高级 --&gt; 映像具有安全异常处理程序</code>设置为<strong>否</strong></p>
+</li>
+<li><p><code>链接器 --&gt; 输入 --&gt; 附加依赖项</code>添加如下项目：</p>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">pin</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">xed</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">pinvm</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">pincrt</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">kernel32</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">crtbeginS</span><span class="selector-class">.obj</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">x86</span>需要额外添加：</span><br><span class="line"><span class="selector-tag">ntdll-32</span><span class="selector-class">.lib</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">x64</span>需要额外添加：</span><br><span class="line"><span class="selector-tag">ntdll-64</span><span class="selector-class">.lib</span></span><br></pre></td></tr></table></figure>
+<p>编译完成后会在相应的生成目录下生成<code>MyPinTool.dll</code></p>
+</li>
+</ul>
+<p>执行<code>pin32 -t .\MyPinTool.dll -o log.log -- cmd /c echo 123</code>，可记录<code>MyPinTool.dll</code>中基本块数目和指令数目</p>
+<p><img src="/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/1.png"></p>
+]]></content>
+      <categories>
+        <category>CTF</category>
+      </categories>
+      <tags>
+        <tag>二进制安全</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Immunity Canvas7.26踩坑记录</title>
     <url>/2021/03/08/Immunity-Canvas7-26%E8%B8%A9%E5%9D%91%E8%AE%B0%E5%BD%95/</url>
     <content><![CDATA[<p><img src="/2021/03/08/Immunity-Canvas7-26%E8%B8%A9%E5%9D%91%E8%AE%B0%E5%BD%95/0.png"></p>
@@ -42,44 +80,6 @@
       </categories>
       <tags>
         <tag>工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Intel Pin的安装与配置</title>
-    <url>/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/</url>
-    <content><![CDATA[<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Pin是Intel开发的二进制动态插桩引擎，支持Windows、Linux、Mac、Android，并提供了API可发开自己的插桩工具</p>
-<a id="more"></a>
-
-<p><a href="https://software.intel.com/content/www/us/en/develop/articles/pin-a-dynamic-binary-instrumentation-tool.html">Pin - A Dynamic Binary Instrumentation Tool</a></p>
-<h2 id="环境配置"><a href="#环境配置" class="headerlink" title="环境配置"></a>环境配置</h2><h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><ol>
-<li><p>下载<a href="https://software.intel.com/content/www/us/en/develop/articles/pin-a-binary-instrumentation-tool-downloads.html">pin</a>并解压到目录下</p>
-</li>
-<li><p>将<code>pin.exe</code>备份重命名，新建<code>pin32.bat</code>和<code>pin64.bat</code>文件</p>
-</li>
-<li><p>向<code>pin32.bat</code>和<code>pin64.bat</code>文件中写入如下内容（64位的将<strong>ia32</strong>替换为<strong>Intel64</strong>）</p>
-<figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">@echo <span class="literal">off</span></span><br><span class="line">%~dp0<span class="string">\ia32\bin\pin.exe</span> %*</span><br></pre></td></tr></table></figure></li>
-<li><p>添加至环境变量PATH中，即可以使用<code>pin32</code>和<code>pin64</code></p>
-</li>
-</ol>
-<h3 id="MyPinTool"><a href="#MyPinTool" class="headerlink" title="MyPinTool"></a>MyPinTool</h3><p>在目录<code>%PinDir%\source\tools\MyPinTool</code>下有示例代码，使用VS编译即可，编译中可能存在错误，对照错误提示修改，主要的编译环境配置如下：</p>
-<ul>
-<li><p><code>C/C++ --&gt; 常规 --&gt; 附加包含目录</code>添加如下路径：</p>
-<figure class="highlight taggerscript"><table><tr><td class="code"><pre><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\i</span>nclude<span class="symbol">\p</span>in</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\i</span>nclude<span class="symbol">\p</span>in<span class="symbol">\g</span>en</span><br><span class="line">..<span class="symbol">\I</span>nstLib</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>omponents<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\s</span>tlport<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\l</span>ibstdc++<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\k</span>ernel<span class="symbol">\u</span>api</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\k</span>ernel<span class="symbol">\u</span>api<span class="symbol">\a</span>sm-x86</span><br><span class="line"></span><br><span class="line">对x86需要额外添加：</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\a</span>rch-x86</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\x</span>ed-ia32<span class="symbol">\i</span>nclude<span class="symbol">\x</span>ed</span><br><span class="line"></span><br><span class="line">对x64需要额外添加：</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\c</span>rt<span class="symbol">\i</span>nclude<span class="symbol">\a</span>rch-x86_64</span><br><span class="line">..<span class="symbol">\.</span>.<span class="symbol">\.</span>.<span class="symbol">\e</span>xtras<span class="symbol">\x</span>ed-intel64<span class="symbol">\i</span>nclude<span class="symbol">\x</span>ed</span><br></pre></td></tr></table></figure></li>
-<li><p><code>链接器 --&gt; 高级 --&gt; 映像具有安全异常处理程序</code>设置为<strong>否</strong></p>
-</li>
-<li><p><code>链接器 --&gt; 输入 --&gt; 附加依赖项</code>添加如下项目：</p>
-<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-tag">pin</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">xed</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">pinvm</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">pincrt</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">kernel32</span><span class="selector-class">.lib</span></span><br><span class="line"><span class="selector-tag">crtbeginS</span><span class="selector-class">.obj</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">x86</span>需要额外添加：</span><br><span class="line"><span class="selector-tag">ntdll-32</span><span class="selector-class">.lib</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">x64</span>需要额外添加：</span><br><span class="line"><span class="selector-tag">ntdll-64</span><span class="selector-class">.lib</span></span><br></pre></td></tr></table></figure>
-<p>编译完成后会在相应的生成目录下生成<code>MyPinTool.dll</code></p>
-</li>
-</ul>
-<p>执行<code>pin32 -t .\MyPinTool.dll -o log.log -- cmd /c echo 123</code>，可记录<code>MyPinTool.dll</code>中基本块数目和指令数目</p>
-<p><img src="/2021/02/18/Intel-Pin%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/1.png"></p>
-]]></content>
-      <categories>
-        <category>CTF</category>
-      </categories>
-      <tags>
-        <tag>二进制安全</tag>
       </tags>
   </entry>
   <entry>
@@ -995,97 +995,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Pandas库入门（二）</title>
-    <url>/2021/02/16/Pandas%E5%BA%93%E5%85%A5%E9%97%A8%EF%BC%88%E4%BA%8C%EF%BC%89/</url>
-    <content><![CDATA[<p>pandas库入门 - 补充</p>
-<a id="more"></a>
-
-<h2 id="MultiIndex与Panel"><a href="#MultiIndex与Panel" class="headerlink" title="MultiIndex与Panel"></a>MultiIndex与Panel</h2><h3 id="MultiIndex"><a href="#MultiIndex" class="headerlink" title="MultiIndex"></a>MultiIndex</h3><p>通过<code>set_index([...])</code>可以设置索引，当设置多个索引时，<code>Index</code>对象会成为<code>MultiIndex</code>对象</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.set_index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>])</span><br><span class="line">             同比     定基</span><br><span class="line">城市 环比</span><br><span class="line">北京 <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">上海 <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">广州 <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">深圳 <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">沈阳 <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.set_index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>]).index</span><br><span class="line">MultiIndex([(<span class="string">&#x27;北京&#x27;</span>, <span class="number">101.5</span>),</span><br><span class="line">            (<span class="string">&#x27;上海&#x27;</span>, <span class="number">101.2</span>),</span><br><span class="line">            (<span class="string">&#x27;广州&#x27;</span>, <span class="number">101.3</span>),</span><br><span class="line">            (<span class="string">&#x27;深圳&#x27;</span>, <span class="number">102.0</span>),</span><br><span class="line">            (<span class="string">&#x27;沈阳&#x27;</span>, <span class="number">100.1</span>)],</span><br><span class="line">           names=[<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>])</span><br></pre></td></tr></table></figure>
-<p><code>MultiIndex</code>是多级或分层索引，拥有属性<code>names</code>和<code>levels</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.set_index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>]).index.names</span><br><span class="line">FrozenList([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.set_index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>]).index.levels</span><br><span class="line">FrozenList([[<span class="string">&#x27;上海&#x27;</span>, <span class="string">&#x27;北京&#x27;</span>, <span class="string">&#x27;广州&#x27;</span>, <span class="string">&#x27;沈阳&#x27;</span>, <span class="string">&#x27;深圳&#x27;</span>], [<span class="number">100.1</span>, <span class="number">101.2</span>, <span class="number">101.3</span>, <span class="number">101.5</span>, <span class="number">102.0</span>]])</span><br></pre></td></tr></table></figure>
-
-<h3 id="Panel"><a href="#Panel" class="headerlink" title="Panel"></a>Panel</h3><p>面板数据，用于存储三维数据（从pandas 0.20.0开始已经弃用），推荐使用DataFrame</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>p = pd.Panel(numpy.arange(<span class="number">24</span>).reshape(<span class="number">4</span>,<span class="number">3</span>,<span class="number">2</span>),items=<span class="built_in">list</span>(<span class="string">&#x27;ABCD&#x27;</span>),major_axis=pd.date_range(<span class="string">&#x27;20210210&#x27;</span>,periods=<span class="number">3</span>),minor_axis=[<span class="string">&#x27;first&#x27;</span>,<span class="string">&#x27;second&#x27;</span>])</span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">&quot;&lt;stdin&gt;&quot;</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">TypeError: Panel() takes no arguments	<span class="comment"># Panel已弃用</span></span><br></pre></td></tr></table></figure>
-
-
-<h2 id="组合索引-loc与iloc"><a href="#组合索引-loc与iloc" class="headerlink" title="组合索引 loc与iloc"></a>组合索引 loc与iloc</h2><p><code>loc</code>和<code>iloc</code>可以实现组合索引，其中<code>loc</code>针对自定义索引，<code>iloc</code>针对自动索引</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.loc[d.index[:<span class="number">3</span>], [<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;同比&#x27;</span>]]</span><br><span class="line">    城市     同比</span><br><span class="line">c1  北京  <span class="number">120.7</span></span><br><span class="line">c2  上海  <span class="number">127.3</span></span><br><span class="line">c3  广州  <span class="number">119.4</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.iloc[:<span class="number">3</span>, d.columns.get_indexer([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;同比&#x27;</span>])]</span><br><span class="line">    城市     同比</span><br><span class="line">c1  北京  <span class="number">120.7</span></span><br><span class="line">c2  上海  <span class="number">127.3</span></span><br><span class="line">c3  广州  <span class="number">119.4</span></span><br></pre></td></tr></table></figure>
-
-
-<h2 id="排序"><a href="#排序" class="headerlink" title="排序"></a>排序</h2><ul>
-<li><p>对内容进行排序<code>sort_values</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 默认升序</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.sort_values(by=<span class="string">&#x27;环比&#x27;</span>)</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line"><span class="comment"># 指定降序</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.sort_values(by=<span class="string">&#x27;环比&#x27;</span>, ascending=<span class="literal">False</span>)</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="comment"># 多条件排序，先排序&#x27;环比&#x27;，后排序&#x27;同比&#x27;</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.sort_values(by=[<span class="string">&#x27;环比&#x27;</span>, <span class="string">&#x27;同比&#x27;</span>], ascending=<span class="literal">False</span>)</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br></pre></td></tr></table></figure></li>
-<li><p>对所有进行排序<code>sort_index</code></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.sort_index()</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.sort_index(ascending=<span class="literal">False</span>)</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br></pre></td></tr></table></figure>
-
-
-</li>
-</ul>
-<h2 id="逻辑运算与布尔索引"><a href="#逻辑运算与布尔索引" class="headerlink" title="逻辑运算与布尔索引"></a>逻辑运算与布尔索引</h2><h3 id="布尔索引"><a href="#布尔索引" class="headerlink" title="布尔索引"></a>布尔索引</h3><p>逻辑运算返回的是一组带索引的布尔值，例如：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="comment"># &#x27;环比&#x27; &lt; 102</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[<span class="string">&#x27;环比&#x27;</span>] &lt; <span class="number">102</span></span><br><span class="line">c1     <span class="literal">True</span></span><br><span class="line">c2     <span class="literal">True</span></span><br><span class="line">c3     <span class="literal">True</span></span><br><span class="line">c4    <span class="literal">False</span></span><br><span class="line">c5     <span class="literal">True</span></span><br><span class="line"><span class="comment"># &#x27;环比&#x27; &lt; 102 且 &#x27;同比&#x27; &lt; 120，注意优先级</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>(d[<span class="string">&#x27;环比&#x27;</span>] &lt; <span class="number">102</span>) &amp; (d[<span class="string">&#x27;同比&#x27;</span>] &lt; <span class="number">120</span>)</span><br><span class="line">c1    <span class="literal">False</span></span><br><span class="line">c2    <span class="literal">False</span></span><br><span class="line">c3     <span class="literal">True</span></span><br><span class="line">c4    <span class="literal">False</span></span><br><span class="line">c5     <span class="literal">True</span></span><br><span class="line">dtype: <span class="built_in">bool</span></span><br></pre></td></tr></table></figure>
-<p>利用布尔值可以快速筛选出符合条件的数据</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 筛选出 &#x27;环比&#x27; &lt; 102 的数据</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[d[<span class="string">&#x27;环比&#x27;</span>] &lt; <span class="number">102</span>]</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="comment"># &#x27;环比&#x27; &lt; 102 且 &#x27;同比&#x27; &lt; 120 的数据</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[(d[<span class="string">&#x27;环比&#x27;</span>] &lt; <span class="number">102</span>) &amp; (d[<span class="string">&#x27;同比&#x27;</span>] &lt; <span class="number">120</span>)]</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br></pre></td></tr></table></figure>
-
-
-<h3 id="逻辑运算函数"><a href="#逻辑运算函数" class="headerlink" title="逻辑运算函数"></a>逻辑运算函数</h3><ul>
-<li><p><code>query(expr)</code>查询符合条件的数据</p>
-<ul>
-<li><p><code>expr</code>为查询的字符串</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.query(<span class="string">&#x27;环比 &lt; 102 &amp; 同比 &lt; 120&#x27;</span>)</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br></pre></td></tr></table></figure></li>
-</ul>
-</li>
-<li><p><code>isin(values)</code>查询一组数中是否存在某些值</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.isin([<span class="number">101.3</span>, <span class="number">101</span>])</span><br><span class="line">       城市     环比     同比     定基</span><br><span class="line">c1  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span></span><br><span class="line">c2  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span></span><br><span class="line">c3  <span class="literal">False</span>   <span class="literal">True</span>  <span class="literal">False</span>  <span class="literal">False</span></span><br><span class="line">c4  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span></span><br><span class="line">c5  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span></span><br></pre></td></tr></table></figure>
-
-
-</li>
-</ul>
-<h2 id="自定义运算"><a href="#自定义运算" class="headerlink" title="自定义运算"></a>自定义运算</h2><p>函数<code>apply(func, axis=0)</code>可以对数据进行自定义运算，运算方式取决去传入参数<code>func</code>，例如：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[<span class="string">&#x27;定基&#x27;</span>].apply(<span class="keyword">lambda</span> x:x + <span class="number">10</span>)</span><br><span class="line">c1    <span class="number">131.4</span></span><br><span class="line">c2    <span class="number">137.8</span></span><br><span class="line">c3    <span class="number">130.0</span></span><br><span class="line">c4    <span class="number">155.5</span></span><br><span class="line">c5    <span class="number">111.6</span></span><br><span class="line">Name: 定基, dtype: float64</span><br></pre></td></tr></table></figure>
-
-
-<h2 id="读写文件"><a href="#读写文件" class="headerlink" title="读写文件"></a>读写文件</h2><p>pandas支持多种文件读写操作，详细见官方文档，以下为常用的</p>
-<h3 id="CSV"><a href="#CSV" class="headerlink" title="CSV"></a>CSV</h3><ul>
-<li><code>pandas.read_csv(filepath_or_buffer, sep=&#39;,&#39;, delimiter=None)</code><ul>
-<li><code>filepath_or_buffer</code>：文件路径</li>
-<li><code>usecols</code>：指定要读取的<code>columns</code></li>
-<li><code>names</code>：读取后设置<code>columns</code>字段值</li>
-</ul>
-</li>
-<li><code>DataFrame.to_csv(path_or_buf=None, columns=None, header=True, index=True, index_label=None, mode=&#39;w&#39;, encoding=None)</code><ul>
-<li><code>mode</code>：读写模式</li>
-<li><code>index</code>：是否写<code>index</code>索引</li>
-<li><code>header</code>：是否写<code>columns</code>索引</li>
-</ul>
-</li>
-</ul>
-<h3 id="hdf5"><a href="#hdf5" class="headerlink" title="hdf5"></a>hdf5</h3><p>HDF5文件的读取和存储需要指定一个key，值为要存储的DataFrame</p>
-<ul>
-<li><code>pandas.read_hdf(path_or_buf, key=None, **kwargs)</code><ul>
-<li><code>key</code>：读取的键</li>
-<li><code>mode</code>：打开模式</li>
-</ul>
-</li>
-<li><code>DataFrame.to_hdf(path_or_buf, key, **kwargs)</code></li>
-</ul>
-<h3 id="json"><a href="#json" class="headerlink" title="json"></a>json</h3><ul>
-<li><code>pandas.read_json(path_or_buf=None, orient=None, typ=&#39;frame&#39;, lines=False)</code><ul>
-<li><code>orient</code>：一般填<code>&quot;records&quot;</code></li>
-<li><code>lines</code>：默认按行读取</li>
-</ul>
-</li>
-<li><code>DataFrame.to_json(path_or_buf=None, orient=None, typ=&#39;frame&#39;, lines=False)</code></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Python</category>
-      </categories>
-      <tags>
-        <tag>数据分析</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Pandas库入门</title>
     <url>/2021/02/12/Pandas%E5%BA%93%E5%85%A5%E9%97%A8/</url>
     <content><![CDATA[<p>Pandas库入门</p>
@@ -1302,6 +1211,97 @@
       </tags>
   </entry>
   <entry>
+    <title>Pandas库入门（二）</title>
+    <url>/2021/02/16/Pandas%E5%BA%93%E5%85%A5%E9%97%A8%EF%BC%88%E4%BA%8C%EF%BC%89/</url>
+    <content><![CDATA[<p>pandas库入门 - 补充</p>
+<a id="more"></a>
+
+<h2 id="MultiIndex与Panel"><a href="#MultiIndex与Panel" class="headerlink" title="MultiIndex与Panel"></a>MultiIndex与Panel</h2><h3 id="MultiIndex"><a href="#MultiIndex" class="headerlink" title="MultiIndex"></a>MultiIndex</h3><p>通过<code>set_index([...])</code>可以设置索引，当设置多个索引时，<code>Index</code>对象会成为<code>MultiIndex</code>对象</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.set_index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>])</span><br><span class="line">             同比     定基</span><br><span class="line">城市 环比</span><br><span class="line">北京 <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">上海 <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">广州 <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">深圳 <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">沈阳 <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.set_index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>]).index</span><br><span class="line">MultiIndex([(<span class="string">&#x27;北京&#x27;</span>, <span class="number">101.5</span>),</span><br><span class="line">            (<span class="string">&#x27;上海&#x27;</span>, <span class="number">101.2</span>),</span><br><span class="line">            (<span class="string">&#x27;广州&#x27;</span>, <span class="number">101.3</span>),</span><br><span class="line">            (<span class="string">&#x27;深圳&#x27;</span>, <span class="number">102.0</span>),</span><br><span class="line">            (<span class="string">&#x27;沈阳&#x27;</span>, <span class="number">100.1</span>)],</span><br><span class="line">           names=[<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>])</span><br></pre></td></tr></table></figure>
+<p><code>MultiIndex</code>是多级或分层索引，拥有属性<code>names</code>和<code>levels</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.set_index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>]).index.names</span><br><span class="line">FrozenList([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>])</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.set_index([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;环比&#x27;</span>]).index.levels</span><br><span class="line">FrozenList([[<span class="string">&#x27;上海&#x27;</span>, <span class="string">&#x27;北京&#x27;</span>, <span class="string">&#x27;广州&#x27;</span>, <span class="string">&#x27;沈阳&#x27;</span>, <span class="string">&#x27;深圳&#x27;</span>], [<span class="number">100.1</span>, <span class="number">101.2</span>, <span class="number">101.3</span>, <span class="number">101.5</span>, <span class="number">102.0</span>]])</span><br></pre></td></tr></table></figure>
+
+<h3 id="Panel"><a href="#Panel" class="headerlink" title="Panel"></a>Panel</h3><p>面板数据，用于存储三维数据（从pandas 0.20.0开始已经弃用），推荐使用DataFrame</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>p = pd.Panel(numpy.arange(<span class="number">24</span>).reshape(<span class="number">4</span>,<span class="number">3</span>,<span class="number">2</span>),items=<span class="built_in">list</span>(<span class="string">&#x27;ABCD&#x27;</span>),major_axis=pd.date_range(<span class="string">&#x27;20210210&#x27;</span>,periods=<span class="number">3</span>),minor_axis=[<span class="string">&#x27;first&#x27;</span>,<span class="string">&#x27;second&#x27;</span>])</span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">&quot;&lt;stdin&gt;&quot;</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">TypeError: Panel() takes no arguments	<span class="comment"># Panel已弃用</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="组合索引-loc与iloc"><a href="#组合索引-loc与iloc" class="headerlink" title="组合索引 loc与iloc"></a>组合索引 loc与iloc</h2><p><code>loc</code>和<code>iloc</code>可以实现组合索引，其中<code>loc</code>针对自定义索引，<code>iloc</code>针对自动索引</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.loc[d.index[:<span class="number">3</span>], [<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;同比&#x27;</span>]]</span><br><span class="line">    城市     同比</span><br><span class="line">c1  北京  <span class="number">120.7</span></span><br><span class="line">c2  上海  <span class="number">127.3</span></span><br><span class="line">c3  广州  <span class="number">119.4</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.iloc[:<span class="number">3</span>, d.columns.get_indexer([<span class="string">&#x27;城市&#x27;</span>, <span class="string">&#x27;同比&#x27;</span>])]</span><br><span class="line">    城市     同比</span><br><span class="line">c1  北京  <span class="number">120.7</span></span><br><span class="line">c2  上海  <span class="number">127.3</span></span><br><span class="line">c3  广州  <span class="number">119.4</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="排序"><a href="#排序" class="headerlink" title="排序"></a>排序</h2><ul>
+<li><p>对内容进行排序<code>sort_values</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 默认升序</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.sort_values(by=<span class="string">&#x27;环比&#x27;</span>)</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line"><span class="comment"># 指定降序</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.sort_values(by=<span class="string">&#x27;环比&#x27;</span>, ascending=<span class="literal">False</span>)</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="comment"># 多条件排序，先排序&#x27;环比&#x27;，后排序&#x27;同比&#x27;</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.sort_values(by=[<span class="string">&#x27;环比&#x27;</span>, <span class="string">&#x27;同比&#x27;</span>], ascending=<span class="literal">False</span>)</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br></pre></td></tr></table></figure></li>
+<li><p>对所有进行排序<code>sort_index</code></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.sort_index()</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.sort_index(ascending=<span class="literal">False</span>)</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<h2 id="逻辑运算与布尔索引"><a href="#逻辑运算与布尔索引" class="headerlink" title="逻辑运算与布尔索引"></a>逻辑运算与布尔索引</h2><h3 id="布尔索引"><a href="#布尔索引" class="headerlink" title="布尔索引"></a>布尔索引</h3><p>逻辑运算返回的是一组带索引的布尔值，例如：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="comment"># &#x27;环比&#x27; &lt; 102</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[<span class="string">&#x27;环比&#x27;</span>] &lt; <span class="number">102</span></span><br><span class="line">c1     <span class="literal">True</span></span><br><span class="line">c2     <span class="literal">True</span></span><br><span class="line">c3     <span class="literal">True</span></span><br><span class="line">c4    <span class="literal">False</span></span><br><span class="line">c5     <span class="literal">True</span></span><br><span class="line"><span class="comment"># &#x27;环比&#x27; &lt; 102 且 &#x27;同比&#x27; &lt; 120，注意优先级</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>(d[<span class="string">&#x27;环比&#x27;</span>] &lt; <span class="number">102</span>) &amp; (d[<span class="string">&#x27;同比&#x27;</span>] &lt; <span class="number">120</span>)</span><br><span class="line">c1    <span class="literal">False</span></span><br><span class="line">c2    <span class="literal">False</span></span><br><span class="line">c3     <span class="literal">True</span></span><br><span class="line">c4    <span class="literal">False</span></span><br><span class="line">c5     <span class="literal">True</span></span><br><span class="line">dtype: <span class="built_in">bool</span></span><br></pre></td></tr></table></figure>
+<p>利用布尔值可以快速筛选出符合条件的数据</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 筛选出 &#x27;环比&#x27; &lt; 102 的数据</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[d[<span class="string">&#x27;环比&#x27;</span>] &lt; <span class="number">102</span>]</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="comment"># &#x27;环比&#x27; &lt; 102 且 &#x27;同比&#x27; &lt; 120 的数据</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[(d[<span class="string">&#x27;环比&#x27;</span>] &lt; <span class="number">102</span>) &amp; (d[<span class="string">&#x27;同比&#x27;</span>] &lt; <span class="number">120</span>)]</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="逻辑运算函数"><a href="#逻辑运算函数" class="headerlink" title="逻辑运算函数"></a>逻辑运算函数</h3><ul>
+<li><p><code>query(expr)</code>查询符合条件的数据</p>
+<ul>
+<li><p><code>expr</code>为查询的字符串</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.query(<span class="string">&#x27;环比 &lt; 102 &amp; 同比 &lt; 120&#x27;</span>)</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><code>isin(values)</code>查询一组数中是否存在某些值</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d</span><br><span class="line">    城市     环比     同比     定基</span><br><span class="line">c1  北京  <span class="number">101.5</span>  <span class="number">120.7</span>  <span class="number">121.4</span></span><br><span class="line">c2  上海  <span class="number">101.2</span>  <span class="number">127.3</span>  <span class="number">127.8</span></span><br><span class="line">c3  广州  <span class="number">101.3</span>  <span class="number">119.4</span>  <span class="number">120.0</span></span><br><span class="line">c4  深圳  <span class="number">102.0</span>  <span class="number">140.9</span>  <span class="number">145.5</span></span><br><span class="line">c5  沈阳  <span class="number">100.1</span>  <span class="number">101.4</span>  <span class="number">101.6</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>d.isin([<span class="number">101.3</span>, <span class="number">101</span>])</span><br><span class="line">       城市     环比     同比     定基</span><br><span class="line">c1  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span></span><br><span class="line">c2  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span></span><br><span class="line">c3  <span class="literal">False</span>   <span class="literal">True</span>  <span class="literal">False</span>  <span class="literal">False</span></span><br><span class="line">c4  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span></span><br><span class="line">c5  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span>  <span class="literal">False</span></span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<h2 id="自定义运算"><a href="#自定义运算" class="headerlink" title="自定义运算"></a>自定义运算</h2><p>函数<code>apply(func, axis=0)</code>可以对数据进行自定义运算，运算方式取决去传入参数<code>func</code>，例如：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>d[<span class="string">&#x27;定基&#x27;</span>].apply(<span class="keyword">lambda</span> x:x + <span class="number">10</span>)</span><br><span class="line">c1    <span class="number">131.4</span></span><br><span class="line">c2    <span class="number">137.8</span></span><br><span class="line">c3    <span class="number">130.0</span></span><br><span class="line">c4    <span class="number">155.5</span></span><br><span class="line">c5    <span class="number">111.6</span></span><br><span class="line">Name: 定基, dtype: float64</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="读写文件"><a href="#读写文件" class="headerlink" title="读写文件"></a>读写文件</h2><p>pandas支持多种文件读写操作，详细见官方文档，以下为常用的</p>
+<h3 id="CSV"><a href="#CSV" class="headerlink" title="CSV"></a>CSV</h3><ul>
+<li><code>pandas.read_csv(filepath_or_buffer, sep=&#39;,&#39;, delimiter=None)</code><ul>
+<li><code>filepath_or_buffer</code>：文件路径</li>
+<li><code>usecols</code>：指定要读取的<code>columns</code></li>
+<li><code>names</code>：读取后设置<code>columns</code>字段值</li>
+</ul>
+</li>
+<li><code>DataFrame.to_csv(path_or_buf=None, columns=None, header=True, index=True, index_label=None, mode=&#39;w&#39;, encoding=None)</code><ul>
+<li><code>mode</code>：读写模式</li>
+<li><code>index</code>：是否写<code>index</code>索引</li>
+<li><code>header</code>：是否写<code>columns</code>索引</li>
+</ul>
+</li>
+</ul>
+<h3 id="hdf5"><a href="#hdf5" class="headerlink" title="hdf5"></a>hdf5</h3><p>HDF5文件的读取和存储需要指定一个key，值为要存储的DataFrame</p>
+<ul>
+<li><code>pandas.read_hdf(path_or_buf, key=None, **kwargs)</code><ul>
+<li><code>key</code>：读取的键</li>
+<li><code>mode</code>：打开模式</li>
+</ul>
+</li>
+<li><code>DataFrame.to_hdf(path_or_buf, key, **kwargs)</code></li>
+</ul>
+<h3 id="json"><a href="#json" class="headerlink" title="json"></a>json</h3><ul>
+<li><code>pandas.read_json(path_or_buf=None, orient=None, typ=&#39;frame&#39;, lines=False)</code><ul>
+<li><code>orient</code>：一般填<code>&quot;records&quot;</code></li>
+<li><code>lines</code>：默认按行读取</li>
+</ul>
+</li>
+<li><code>DataFrame.to_json(path_or_buf=None, orient=None, typ=&#39;frame&#39;, lines=False)</code></li>
+</ul>
+]]></content>
+      <categories>
+        <category>Python</category>
+      </categories>
+      <tags>
+        <tag>数据分析</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Pandas库进阶</title>
     <url>/2021/02/17/Pandas%E5%BA%93%E8%BF%9B%E9%98%B6/</url>
     <content><![CDATA[<p>pandas库进阶</p>
@@ -1428,6 +1428,38 @@
       </tags>
   </entry>
   <entry>
+    <title>Windows internals - PPL进程</title>
+    <url>/2021/03/16/Windows-internals-PPL%E8%BF%9B%E7%A8%8B/</url>
+    <content><![CDATA[<h1 id="Protected-Process-Light"><a href="#Protected-Process-Light" class="headerlink" title="Protected Process Light"></a>Protected Process Light</h1><p>Protected Process Light即PPL，是从win8和Windows server 2012 R2开始引入的受保护进程的扩展</p>
+<a id="more"></a>
+
+<p>PPL的保护方式与经典受保护进程类似，用户态即使提权也无法打开（获取）受保护进程，而且PPL根据签名者具有的不同信任级别而划分不同的保护级别，如下图级别由高到低：</p>
+<p><img src="/2021/03/16/Windows-internals-PPL%E8%BF%9B%E7%A8%8B/1.png"></p>
+<p>PPL一般保护着系统级进程以及反病毒软件等</p>
+<h2 id="关闭PPL"><a href="#关闭PPL" class="headerlink" title="关闭PPL"></a>关闭PPL</h2><p>在未关闭PPL时，打开PPL进程会失败，即便是以system + SeDebug权限</p>
+<p><img src="/2021/03/16/Windows-internals-PPL%E8%BF%9B%E7%A8%8B/2.png"></p>
+<p>PPL相关的结构在<code>EPROCESS</code>中，如下：</p>
+<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">kd&gt; dt nt!_EPROCESS</span><br><span class="line">   +<span class="number">0</span>x000 Pcb              : _<span class="type">KPROCESS</span></span><br><span class="line">   ...</span><br><span class="line">   +<span class="number">0</span>x878 SignatureLevel   : <span class="type">UChar</span></span><br><span class="line">   +<span class="number">0</span>x879 SectionSignatureLevel : <span class="type">UChar</span></span><br><span class="line">   +<span class="number">0</span>x87a Protection       : _<span class="type">PS_PROTECTION</span></span><br><span class="line">   +<span class="number">0</span>x87b HangCount        : <span class="type">Pos</span> <span class="number">0</span>, <span class="number">3</span> Bits</span><br><span class="line">   +<span class="number">0</span>x87b GhostCount       : <span class="type">Pos</span> <span class="number">3</span>, <span class="number">3</span> Bits</span><br><span class="line">   ...</span><br></pre></td></tr></table></figure>
+<p>其中最关键的结构是<code>EPROCESS.Protection</code></p>
+<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">kd&gt; dt nt!_PS_PROTECTION</span><br><span class="line">   +<span class="number">0</span>x000 Level            : <span class="type">UChar</span></span><br><span class="line">   +<span class="number">0</span>x000 <span class="keyword">Type</span>             <span class="type">: </span>Pos <span class="number">0</span>, <span class="number">3</span> Bits</span><br><span class="line">   +<span class="number">0</span>x000 Audit            : <span class="type">Pos</span> <span class="number">3</span>, <span class="number">1</span> Bit</span><br><span class="line">   +<span class="number">0</span>x000 Signer           : <span class="type">Pos</span> <span class="number">4</span>, <span class="number">4</span> Bits</span><br></pre></td></tr></table></figure>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">kd</span>&gt; dt nt!_PS_PROTECTED_TYPE</span><br><span class="line">   <span class="attribute">PsProtectedTypeNone</span> = <span class="number">0</span>n<span class="number">0</span></span><br><span class="line">   <span class="attribute">PsProtectedTypeProtectedLight</span> = <span class="number">0</span>n<span class="number">1</span></span><br><span class="line">   <span class="attribute">PsProtectedTypeProtected</span> = <span class="number">0</span>n<span class="number">2</span></span><br><span class="line">   <span class="attribute">PsProtectedTypeMax</span> = <span class="number">0</span>n<span class="number">3</span></span><br><span class="line">   </span><br><span class="line"><span class="attribute">kd</span>&gt; dt nt!_PS_PROTECTED_SIGNER</span><br><span class="line">   <span class="attribute">PsProtectedSignerNone</span> = <span class="number">0</span>n<span class="number">0</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerAuthenticode</span> = <span class="number">0</span>n<span class="number">1</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerCodeGen</span> = <span class="number">0</span>n<span class="number">2</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerAntimalware</span> = <span class="number">0</span>n<span class="number">3</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerLsa</span> = <span class="number">0</span>n<span class="number">4</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerWindows</span> = <span class="number">0</span>n<span class="number">5</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerWinTcb</span> = <span class="number">0</span>n<span class="number">6</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerWinSystem</span> = <span class="number">0</span>n<span class="number">7</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerApp</span> = <span class="number">0</span>n<span class="number">8</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerMax</span> = <span class="number">0</span>n<span class="number">9</span></span><br></pre></td></tr></table></figure>
+<p>看一下services.exe的<code>EPROCESS.Protection</code></p>
+<p><img src="/2021/03/16/Windows-internals-PPL%E8%BF%9B%E7%A8%8B/3.png"></p>
+<p>可以看到Type类型为<code>PsProtectedTypeProtectedLight</code>，Signer为<code>PsProtectedSignerWinTcb</code></p>
+<p>将这个字段清0，再次试一下打开该进程就可以了（注意，此处必须要高权限system或者SeDebug）</p>
+<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">kd&gt; eb <span class="number">0</span>xffffc58780287080+<span class="number">0</span>x87a <span class="number">0</span>x00</span><br><span class="line">kd&gt; ?? ((nt!_EPROCESS *)<span class="number">0</span>xffffc58780287080)-&gt;Protection</span><br><span class="line">struct _PS_PROTECTION</span><br><span class="line">   +<span class="number">0</span>x000 Level            : 0 &#x27;&#x27;</span><br><span class="line">   +<span class="number">0</span>x000 <span class="keyword">Type</span>             <span class="type">: </span><span class="number">0</span>y000</span><br><span class="line">   +<span class="number">0</span>x000 Audit            : 0<span class="type">y0</span></span><br><span class="line">   +<span class="number">0</span>x000 Signer           : 0<span class="type">y0000</span></span><br></pre></td></tr></table></figure>
+<p><img src="/2021/03/16/Windows-internals-PPL%E8%BF%9B%E7%A8%8B/4.png"></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://www.crowdstrike.com/blog/evolution-protected-processes-part-1-pass-hash-mitigations-windows-81/">The Evolution of Protected Processes – Part 1: Pass-the-Hash Mitigations in Windows 8.1</a></p>
+<p>Windows Internals Part1 7th</p>
+]]></content>
+      <categories>
+        <category>攻防相关</category>
+      </categories>
+      <tags>
+        <tag>二进制安全</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>angr入门小试</title>
     <url>/2021/02/12/angr%E5%85%A5%E9%97%A8%E5%B0%8F%E8%AF%95/</url>
     <content><![CDATA[<p>angr 入门小试</p>
@@ -1494,38 +1526,6 @@
 ]]></content>
       <categories>
         <category>CTF</category>
-      </categories>
-      <tags>
-        <tag>二进制安全</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Windows internals - PPL进程</title>
-    <url>/2021/03/16/Windows-internals-PPL%E8%BF%9B%E7%A8%8B/</url>
-    <content><![CDATA[<h1 id="Protected-Process-Light"><a href="#Protected-Process-Light" class="headerlink" title="Protected Process Light"></a>Protected Process Light</h1><p>Protected Process Light即PPL，是从win8和Windows server 2012 R2开始引入的受保护进程的扩展</p>
-<a id="more"></a>
-
-<p>PPL的保护方式与经典受保护进程类似，用户态即使提权也无法打开（获取）受保护进程，而且PPL根据签名者具有的不同信任级别而划分不同的保护级别，如下图级别由高到低：</p>
-<p><img src="/2021/03/16/Windows-internals-PPL%E8%BF%9B%E7%A8%8B/1.png"></p>
-<p>PPL一般保护着系统级进程以及反病毒软件等</p>
-<h2 id="关闭PPL"><a href="#关闭PPL" class="headerlink" title="关闭PPL"></a>关闭PPL</h2><p>在未关闭PPL时，打开PPL进程会失败，即便是以system + SeDebug权限</p>
-<p><img src="/2021/03/16/Windows-internals-PPL%E8%BF%9B%E7%A8%8B/2.png"></p>
-<p>PPL相关的结构在<code>EPROCESS</code>中，如下：</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">kd&gt; dt nt!_EPROCESS</span><br><span class="line">   +<span class="number">0</span>x000 Pcb              : _<span class="type">KPROCESS</span></span><br><span class="line">   ...</span><br><span class="line">   +<span class="number">0</span>x878 SignatureLevel   : <span class="type">UChar</span></span><br><span class="line">   +<span class="number">0</span>x879 SectionSignatureLevel : <span class="type">UChar</span></span><br><span class="line">   +<span class="number">0</span>x87a Protection       : _<span class="type">PS_PROTECTION</span></span><br><span class="line">   +<span class="number">0</span>x87b HangCount        : <span class="type">Pos</span> <span class="number">0</span>, <span class="number">3</span> Bits</span><br><span class="line">   +<span class="number">0</span>x87b GhostCount       : <span class="type">Pos</span> <span class="number">3</span>, <span class="number">3</span> Bits</span><br><span class="line">   ...</span><br></pre></td></tr></table></figure>
-<p>其中最关键的结构是<code>EPROCESS.Protection</code></p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">kd&gt; dt nt!_PS_PROTECTION</span><br><span class="line">   +<span class="number">0</span>x000 Level            : <span class="type">UChar</span></span><br><span class="line">   +<span class="number">0</span>x000 <span class="keyword">Type</span>             <span class="type">: </span>Pos <span class="number">0</span>, <span class="number">3</span> Bits</span><br><span class="line">   +<span class="number">0</span>x000 Audit            : <span class="type">Pos</span> <span class="number">3</span>, <span class="number">1</span> Bit</span><br><span class="line">   +<span class="number">0</span>x000 Signer           : <span class="type">Pos</span> <span class="number">4</span>, <span class="number">4</span> Bits</span><br></pre></td></tr></table></figure>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">kd</span>&gt; dt nt!_PS_PROTECTED_TYPE</span><br><span class="line">   <span class="attribute">PsProtectedTypeNone</span> = <span class="number">0</span>n<span class="number">0</span></span><br><span class="line">   <span class="attribute">PsProtectedTypeProtectedLight</span> = <span class="number">0</span>n<span class="number">1</span></span><br><span class="line">   <span class="attribute">PsProtectedTypeProtected</span> = <span class="number">0</span>n<span class="number">2</span></span><br><span class="line">   <span class="attribute">PsProtectedTypeMax</span> = <span class="number">0</span>n<span class="number">3</span></span><br><span class="line">   </span><br><span class="line"><span class="attribute">kd</span>&gt; dt nt!_PS_PROTECTED_SIGNER</span><br><span class="line">   <span class="attribute">PsProtectedSignerNone</span> = <span class="number">0</span>n<span class="number">0</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerAuthenticode</span> = <span class="number">0</span>n<span class="number">1</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerCodeGen</span> = <span class="number">0</span>n<span class="number">2</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerAntimalware</span> = <span class="number">0</span>n<span class="number">3</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerLsa</span> = <span class="number">0</span>n<span class="number">4</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerWindows</span> = <span class="number">0</span>n<span class="number">5</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerWinTcb</span> = <span class="number">0</span>n<span class="number">6</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerWinSystem</span> = <span class="number">0</span>n<span class="number">7</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerApp</span> = <span class="number">0</span>n<span class="number">8</span></span><br><span class="line">   <span class="attribute">PsProtectedSignerMax</span> = <span class="number">0</span>n<span class="number">9</span></span><br></pre></td></tr></table></figure>
-<p>看一下services.exe的<code>EPROCESS.Protection</code></p>
-<p><img src="/2021/03/16/Windows-internals-PPL%E8%BF%9B%E7%A8%8B/3.png"></p>
-<p>可以看到Type类型为<code>PsProtectedTypeProtectedLight</code>，Signer为<code>PsProtectedSignerWinTcb</code></p>
-<p>将这个字段清0，再次试一下打开该进程就可以了（注意，此处必须要高权限system或者SeDebug）</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">kd&gt; eb <span class="number">0</span>xffffc58780287080+<span class="number">0</span>x87a <span class="number">0</span>x00</span><br><span class="line">kd&gt; ?? ((nt!_EPROCESS *)<span class="number">0</span>xffffc58780287080)-&gt;Protection</span><br><span class="line">struct _PS_PROTECTION</span><br><span class="line">   +<span class="number">0</span>x000 Level            : 0 &#x27;&#x27;</span><br><span class="line">   +<span class="number">0</span>x000 <span class="keyword">Type</span>             <span class="type">: </span><span class="number">0</span>y000</span><br><span class="line">   +<span class="number">0</span>x000 Audit            : 0<span class="type">y0</span></span><br><span class="line">   +<span class="number">0</span>x000 Signer           : 0<span class="type">y0000</span></span><br></pre></td></tr></table></figure>
-<p><img src="/2021/03/16/Windows-internals-PPL%E8%BF%9B%E7%A8%8B/4.png"></p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://www.crowdstrike.com/blog/evolution-protected-processes-part-1-pass-hash-mitigations-windows-81/">The Evolution of Protected Processes – Part 1: Pass-the-Hash Mitigations in Windows 8.1</a></p>
-<p>Windows Internals Part1 7th</p>
-]]></content>
-      <categories>
-        <category>攻防相关</category>
       </categories>
       <tags>
         <tag>二进制安全</tag>
